@@ -70,14 +70,16 @@ output::output(uint64_t value, const chain::script& script,
     validation.spender_height = spender_height;
 }
 
-output::output(uint64_t value, chain::script&& script)
-  : value_(value), script_(std::move(script)), validation{}
+output::output(uint64_t value, chain::script&& script, uint32_t spender_height /* = validation::not_spent*/)
+  : value_(value), script_(std::move(script))
 {
+    validation.spender_height = spender_height;
 }
 
-output::output(uint64_t value, const chain::script& script)
-  : value_(value), script_(script), validation{}
+output::output(uint64_t value, const chain::script& script, uint32_t spender_height /*= validation::not_spent*/)
+  : value_(value), script_(script)
 {
+    validation.spender_height = spender_height;
 }
 
 // Operators.

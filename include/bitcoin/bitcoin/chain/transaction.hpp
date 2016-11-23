@@ -85,6 +85,9 @@ public:
     //-----------------------------------------------------------------------------
 
     transaction();
+    
+    // explicit
+    // transaction(hash_digest&& hash);
 
     transaction(transaction&& other);
     transaction(const transaction& other);

@@ -61,8 +61,8 @@ public:
     output(output&& other);
     output(const output& other);
 
-    output(uint64_t value, chain::script&& script);
-    output(uint64_t value, const chain::script& script);
+    output(uint64_t value, chain::script&& script, uint32_t spender_height = validation::not_spent);
+    output(uint64_t value, const chain::script& script, uint32_t spender_height = validation::not_spent);
 
     // Operators.
     //-----------------------------------------------------------------------------
@@ -110,6 +110,10 @@ public:
     const chain::script& script() const;
     void set_script(const chain::script& value);
     void set_script(chain::script&& value);
+
+    //uint32_t spender_height() const;
+    //void set_spender_height(uint32_t x);
+
 
     // Validation.
     //-----------------------------------------------------------------------------
