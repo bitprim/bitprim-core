@@ -13,10 +13,10 @@ Table of Contents
       * [Installation](#installation)
         * [Using Conan](#using-conan)
         * [Build from source](#build-from-source)
-            * [Debian/Ubuntu]
-            * [MacOS]
-                * [Homebrew]
-                * [Macports]
+            * [Debian/Ubuntu](#debianubuntu)
+            * [MacOS](#macintosh)
+                * [Homebrew](#using-homebrew)
+                * [Macports](#using-macports)
         
 
 ## Installation
