@@ -11,7 +11,7 @@ Table of Contents
 
    * [Bitprim Core](#bitprim-core)
       * [Installation](#installation)
-        * [Using Conan](#using-conan)
+        * [Using Conan](#using-conan-recommended)
         * [Build from source](#build-from-source)
             * [Debian/Ubuntu](#debianubuntu)
             * [MacOS](#macintosh)
@@ -46,6 +46,7 @@ A build requires boost and libsecp256k1. The [bitprim/secp256k1](https://github.
 Detailed instructions are provided below.
   * [Debian/Ubuntu](#debianubuntu)
   * [Macintosh](#macintosh)
+  * [Windows with Visual Studio](#windows-with-visual-studio)
 
 #### Debian/Ubuntu
 
