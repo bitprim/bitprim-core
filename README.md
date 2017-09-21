@@ -17,7 +17,7 @@ Table of Contents
             * [MacOS](#macintosh)
                 * [Homebrew](#using-homebrew)
                 * [Macports](#using-macports)
-            * [Windows with Visual Studio]
+            * [Windows with Visual Studio](#windows-with-visual-studio)
         
 
 ## Installation
