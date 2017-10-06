@@ -73,3 +73,5 @@ CMakeSettings.json
 /.vs
 
 .vscode/
+
+check_files.py

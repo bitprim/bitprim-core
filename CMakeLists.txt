@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.4)
 # bitprim-core
 #==============================================================================
 project(bitprim-core
-  VERSION 3.0.0
+  VERSION 0.3.0
   LANGUAGES CXX C)
 
 
@@ -39,8 +39,8 @@ project(bitprim-core
 #  # using regular Clang or AppleClang
 #endif()
 
-message(CMAKE_CXX_COMPILER_ID)
-message(${CMAKE_CXX_COMPILER_ID})
+# message(CMAKE_CXX_COMPILER_ID)
+# message(${CMAKE_CXX_COMPILER_ID})
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if (NOT NOT_USE_CPP11_ABI)
