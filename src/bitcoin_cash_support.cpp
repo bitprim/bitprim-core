@@ -22,12 +22,19 @@
 
 namespace libbitcoin {
 
-static bool is_bitcoin_cash_= false;
+namespace {
 
+static bool is_bitcoin_cash_ = false;
+
+} // namespace anonymous
+
+
+//inline
 bool is_bitcoin_cash() {
     return is_bitcoin_cash_;
 }
 
+//inline
 void set_bitcoin_cash(bool value) {
     is_bitcoin_cash_ = value;
 }
