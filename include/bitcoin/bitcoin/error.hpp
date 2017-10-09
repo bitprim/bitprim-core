@@ -228,7 +228,10 @@ enum error_code_t
     op_check_sequence_verify4,
     op_check_sequence_verify5,
     op_check_sequence_verify6,
-    op_check_sequence_verify7
+    op_check_sequence_verify7,
+
+    //Emergent Consensus
+    block_size_excessive = 200
 };
 
 enum error_condition_t

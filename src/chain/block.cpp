@@ -146,7 +146,7 @@ static const std::string encoded_testnet_genesis_block =
 //-----------------------------------------------------------------------------
 
 block::block()
-  : header_{}, validation{}
+  : header_{}, validation{}, is_ec_(false)
 {
 }
 
@@ -154,25 +154,27 @@ block::block(const block& other)
   : block(other.header_, other.transactions_)
 {
     validation = other.validation;
+    is_ec_ = other.is_ec();
 }
 
 block::block(block&& other)
   : block(std::move(other.header_), std::move(other.transactions_))
 {
     validation = std::move(other.validation);
+    is_ec_ = other.is_ec();
 }
 
 // TODO: deal with possibility of inconsistent merkle root in relation to txs.
 block::block(const chain::header& header,
     const transaction::list& transactions)
-  : header_(header), transactions_(transactions), validation{}
+  : header_(header), transactions_(transactions), validation{}, is_ec_(false)
 {
 }
 
 // TODO: deal with possibility of inconsistent merkle root in relation to txs.
 block::block(chain::header&& header, transaction::list&& transactions)
   : header_(std::move(header)), transactions_(std::move(transactions)),
-    validation{}
+    validation{}, is_ec_(false)
 {
 }
 
@@ -184,6 +186,7 @@ block& block::operator=(block&& other)
     header_ = std::move(other.header_);
     transactions_ = std::move(other.transactions_);
     validation = std::move(other.validation);
+    is_ec_ = other.is_ec();
     return *this;
 }
 
@@ -757,10 +760,21 @@ code block::check() const
     if ((ec = header_.check()))
         return ec;
 
-    else if (serialized_size() > get_max_block_size(is_bitcoin_cash()))
-        return error::block_size_limit;
+    ec = error::success;
 
-    else if (transactions_.empty())
+    if (serialized_size() > get_max_block_size(is_bitcoin_cash())) 
+    {
+        if (is_bitcoin_cash()) 
+        {
+            ec = error::block_size_excessive;
+            is_ec_ = true;
+        } else 
+        {
+            return error::block_size_limit;
+        }
+    }
+
+    if (transactions_.empty())
         return error::empty_block;
 
     else if (!transactions_.front().is_coinbase())
@@ -787,8 +801,11 @@ code block::check() const
     ////else if (signature_operations(false) > get_max_block_sigops(is_bitcoin_cash()))
     ////    return error::block_legacy_sigop_limit;
 
-    else
-        return check_transactions();
+    else 
+    {
+        auto check_tx = check_transactions();
+        return check_tx == error::success ? ec : check_tx;
+    }
 }
 
 code block::accept(bool transactions) const
@@ -855,6 +872,17 @@ code block::connect(const chain_state& state) const
     else
         return connect_transactions(state);
 }
+
+bool block::is_ec() const
+{
+    return is_ec_;
+}
+
+void block::set_is_ec(bool ec_block)
+{
+    is_ec_ = ec_block;
+}
+
 
 } // namespace chain
 } // namespace libbitcoin
