@@ -25,7 +25,8 @@ namespace libbitcoin {
 namespace {
 
 static bool is_bitcoin_cash_ = false;
-
+static size_t max_block_size = 1000000;
+static size_t max_block_sigops = max_block_size / libbitcoin::max_sigops_factor;
 } // namespace anonymous
 
 
@@ -37,6 +38,24 @@ bool is_bitcoin_cash() {
 //inline
 void set_bitcoin_cash(bool value) {
     is_bitcoin_cash_ = value;
+    set_max_block_size(8000000);
+}
+
+void set_max_block_size(size_t value) {
+    max_block_size = value;
+    max_block_sigops = max_block_size / libbitcoin::max_sigops_factor;
+}
+
+size_t get_max_block_size() {
+    return max_block_size;
+}
+
+void set_max_block_sigops (size_t value ){
+    max_block_sigops = value;
+}
+
+size_t get_max_block_sigops (){
+    return max_block_sigops;
 }
 
 } /*namespace libbitcoin*/

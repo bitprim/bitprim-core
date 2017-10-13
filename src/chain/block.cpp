@@ -250,7 +250,7 @@ bool block::from_data(reader& source)
     const auto count = source.read_size_little_endian();
 
     // Guard against potential for arbitary memory allocation.
-    if (count > get_max_block_size(is_bitcoin_cash()))
+    if (count > get_max_block_size())
         source.invalidate();
     else
         transactions_.resize(count);
@@ -762,7 +762,7 @@ code block::check() const
 
     ec = error::success;
 
-    if (serialized_size() > get_max_block_size(is_bitcoin_cash())) 
+    if (serialized_size() > get_max_block_size())
     {
         if (is_bitcoin_cash()) 
         {
@@ -798,7 +798,7 @@ code block::check() const
     // case they are ignored. This means that p2sh sigops are not counted here.
     // This is a preliminary check, the final count must come from connect().
     // Reenable once sigop caching is implemented, otherwise is deoptimization.
-    ////else if (signature_operations(false) > get_max_block_sigops(is_bitcoin_cash()))
+    ////else if (signature_operations(false) > get_max_block_sigops())
     ////    return error::block_legacy_sigop_limit;
 
     else 
@@ -846,7 +846,7 @@ code block::accept(const chain_state& state, bool transactions) const
     // TODO: determine if performance benefit is worth excluding sigops here.
     // TODO: relates block limit to total of tx.sigops (pool cache tx.sigops).
     // This recomputes sigops to include p2sh from prevouts.
-    else if (transactions && (signature_operations(bip16) > get_max_block_sigops(is_bitcoin_cash())))
+    else if (transactions && (signature_operations(bip16) > get_max_block_sigops()))
         return error::block_embedded_sigop_limit;
 
     else if (transactions)

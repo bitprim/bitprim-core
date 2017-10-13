@@ -19,12 +19,21 @@
 #ifndef LIBBITCOIN_CASH_SUPPORT_HPP
 #define LIBBITCOIN_CASH_SUPPORT_HPP
 
+#include <bitcoin/bitcoin/constants.hpp>
+
 namespace libbitcoin {
 
 //bool is_bitcoin_cash_; /*= false;*/
 
 bool is_bitcoin_cash();
 void set_bitcoin_cash(bool value);
+
+void set_max_block_size(size_t value);
+size_t get_max_block_size();
+
+void set_max_block_sigops (size_t value);
+size_t get_max_block_sigops ();
+
 
 } /*namespace libbitcoin*/
 
