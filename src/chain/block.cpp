@@ -829,31 +829,34 @@ code block::accept(const chain_state& state, bool transactions) const
     if ((ec = header_.accept(state)))
         return ec;
 
-    else if (state.is_under_checkpoint())
+    if (state.is_under_checkpoint())
         return error::success;
 
-    else if (bip34 && !is_valid_coinbase_script(state.height()))
+    if (bip34 && !is_valid_coinbase_script(state.height()))
         return error::coinbase_height_mismatch;
 
     // TODO: relates height to total of tx.fee (pool cache tx.fee).
-    else if (!is_valid_coinbase_claim(state.height()))
+    if (!is_valid_coinbase_claim(state.height()))
         return error::coinbase_value_limit;
 
     // TODO: relates median time past to tx.locktime (pool cache min tx.time).
-    else if (!is_final(state.height(), block_time))
+    if (!is_final(state.height(), block_time))
         return error::block_non_final;
 
     // TODO: determine if performance benefit is worth excluding sigops here.
     // TODO: relates block limit to total of tx.sigops (pool cache tx.sigops).
     // This recomputes sigops to include p2sh from prevouts.
-    else if (transactions && (signature_operations(bip16) > get_max_block_sigops()))
+    
+    //If a block is emergent consensus and exceeds the maximum block size, 
+    // we also need to check against a greater max_sigops_limit
+    size_t allowed_sigops = is_ec()? get_allowed_sigops(serialized_size()) : get_max_block_sigops();    
+    if (transactions && (signature_operations(bip16) > allowed_sigops))
         return error::block_embedded_sigop_limit;
-
-    else if (transactions)
+    
+    if (transactions)
         return accept_transactions(state);
 
-    else
-        return ec;
+    return ec;
 }
 
 code block::connect() const

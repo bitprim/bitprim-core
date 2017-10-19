@@ -34,6 +34,8 @@ size_t get_max_block_size();
 void set_max_block_sigops (size_t value);
 size_t get_max_block_sigops ();
 
+size_t get_next_block_size(const size_t block_size);
+size_t get_allowed_sigops(const size_t ec_block_size);
 
 } /*namespace libbitcoin*/
 
