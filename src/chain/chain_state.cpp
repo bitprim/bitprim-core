@@ -331,7 +331,6 @@ timestamps_position(chain_state::timestamps const& times, bool tip) {
 std::vector<typename chain_state::timestamps::value_type> 
 timestamps_subset(chain_state::timestamps const& times, bool tip) {
     auto at = timestamps_position(times, tip);
-	// auto n = std::distance(at, times.end());
 	auto n = (std::min)((size_t)std::distance(at, times.end()), median_time_past_interval);
 
     std::vector<typename chain_state::timestamps::value_type> subset(n);
@@ -341,14 +340,6 @@ timestamps_subset(chain_state::timestamps const& times, bool tip) {
 }
 
 uint32_t chain_state::median_time_past(data const& values, uint32_t, bool tip /*= true*/) {
- 	// auto at = timestamps_position(values.timestamp.ordered, tip);
-	// // auto n = std::distance(at, values.timestamp.ordered.end());
-	// auto n = (std::min)(std::distance(at, values.timestamp.ordered.end()), median_time_past_interval);
-
-    // // Create a copy for the in-place sort.
-    // timestamps subset(n);
-    // std::copy_n(at, n, subset.begin());
-
     // Create a copy for the in-place sort.
     auto subset = timestamps_subset(values.timestamp.ordered, tip);
 
@@ -380,6 +371,8 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
     if (is_bitcoin_cash() && values.height > bitcoin_cash_activation_height) {
         auto last_time_span = median_time_past(values, 0, true);
         auto six_time_span = median_time_past(values, 0, false);
+
+        // precondition: last_time_span >= six_time_span
         if ((last_time_span - six_time_span) > (12 * 3600)) {
             return work_required_adjust_cash(values);
         }
