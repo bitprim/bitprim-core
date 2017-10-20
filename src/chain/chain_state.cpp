@@ -315,7 +315,7 @@ size_t chain_state::bip9_bit0_height(size_t height, uint32_t forks)
 }
 
 typename chain_state::timestamps::const_iterator 
-where(chain_state::timestamps const& times, bool tip) {
+timestamps_position(chain_state::timestamps const& times, bool tip) {
 
     if (tip) {
 		if (times.size() >= bitcoin_cash_retarget_blocks) {
@@ -328,52 +328,61 @@ where(chain_state::timestamps const& times, bool tip) {
     }
 }
 
-uint32_t chain_state::median_time_past(data const& values, uint32_t, bool tip /*= true*/)
-{
+std::vector<typename chain_state::timestamps::value_type> 
+timestamps_subset(chain_state::timestamps const& times, bool tip) {
+    auto at = timestamps_position(times, tip);
+	// auto n = std::distance(at, times.end());
+	auto n = (std::min)((size_t)std::distance(at, times.end()), median_time_past_interval);
+
+    std::vector<typename chain_state::timestamps::value_type> subset(n);
+    std::copy_n(at, n, subset.begin());
+
+    return subset;
+}
+
+uint32_t chain_state::median_time_past(data const& values, uint32_t, bool tip /*= true*/) {
+ 	// auto at = timestamps_position(values.timestamp.ordered, tip);
+	// // auto n = std::distance(at, values.timestamp.ordered.end());
+	// auto n = (std::min)(std::distance(at, values.timestamp.ordered.end()), median_time_past_interval);
+
+    // // Create a copy for the in-place sort.
+    // timestamps subset(n);
+    // std::copy_n(at, n, subset.begin());
+
     // Create a copy for the in-place sort.
-
-	//auto n = (std::min)(values.timestamp.ordered.size(), median_time_past_interval);
-
-	//timestamps times_subset(n);
- //   auto where_starts = where(values.timestamp.ordered, tip);
-
-	auto where_starts = where(values.timestamp.ordered, tip);
-	auto n = std::distance(where_starts, values.timestamp.ordered.end());
-
-	timestamps times_subset(n);
-
-
-    std::copy_n(where_starts, n, times_subset.begin());
+    auto subset = timestamps_subset(values.timestamp.ordered, tip);
 
     // Sort the times by value to obtain the median.
-    std::sort(times_subset.begin(), times_subset.end());
+    std::sort(subset.begin(), subset.end());
 
     // Consensus defines median time using modulo 2 element selection.
     // This differs from arithmetic median which averages two middle values.
-    return times_subset.empty() ? 0 : times_subset[times_subset.size() / 2];
+    return subset.empty() ? 0 : subset[subset.size() / 2];
 }
 
 // work_required
 //-----------------------------------------------------------------------------
 
-// uint32_t chain_state::work_required(const data& values, uint32_t forks, bool bitcoin_cash /*= false */)
-uint32_t chain_state::work_required(const data& values, uint32_t forks)
-{
+uint32_t chain_state::work_required(const data& values, uint32_t forks) {
     // Invalid parameter via public interface, test is_valid for results.
-    if (values.height == 0)
+    if (values.height == 0) {
         return{};
+    }
 
-    if (is_retarget_height(values.height))
+    if (is_retarget_height(values.height)) {
         return work_required_retarget(values);
+    }
 
-    if (script::is_enabled(forks, rule_fork::easy_blocks))
+    if (script::is_enabled(forks, rule_fork::easy_blocks)) {
         return easy_work_required(values);
+    }
 
     if (is_bitcoin_cash() && values.height > bitcoin_cash_activation_height) {
-        auto lastTimeSpan = median_time_past(values, 0, true);
-        auto sixTimeSpan = median_time_past(values, 0, false);
-        if ((lastTimeSpan - sixTimeSpan) > (12 * 3600))
+        auto last_time_span = median_time_past(values, 0, true);
+        auto six_time_span = median_time_past(values, 0, false);
+        if ((last_time_span - six_time_span) > (12 * 3600)) {
             return work_required_adjust_cash(values);
+        }
     }
 
     return bits_high(values);
