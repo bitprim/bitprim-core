@@ -140,6 +140,27 @@ static const std::string encoded_testnet_genesis_block =
     "43"
     "4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
     "00000000";
+
+static const std::string encoded_ebp_testnet_genesis_block =
+    "01000000"
+    "0000000000000000000000000000000000000000000000000000000000000000"
+    "70825c54b8030be772a5e4a2633ccf016cb7f646ae740eb683b44bed063395f4"
+    "60e13259"
+    "ffff001d"
+    "b92e0438"
+    "01"
+    "01000000"
+    "01"
+    "0000000000000000000000000000000000000000000000000000000000000000ffffffff"
+    "22"
+    "04ffff001d01041a50325020456c656374726f6e696320436173682053797374656d"
+    "ffffffff"
+    "01"
+    "00f2052a01000000"
+    "43"
+    "4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
+    "00000000";
+
 #endif //LITECOIN
 
 // Constructors.
@@ -417,6 +438,19 @@ chain::block block::genesis_testnet()
     BITCOIN_ASSERT(genesis.generate_merkle_root() == genesis.header().merkle());
     return genesis;
 }
+
+chain::block block::genesis_ebp_testnet()
+{
+    data_chunk data;
+    decode_base16(data, encoded_ebp_testnet_genesis_block);
+    const auto genesis = chain::block::factory_from_data(data);
+
+    BITCOIN_ASSERT(genesis.is_valid());
+    BITCOIN_ASSERT(genesis.transactions().size() == 1);
+    BITCOIN_ASSERT(genesis.generate_merkle_root() == genesis.header().merkle());
+    return genesis;
+}
+
 
 // With a 32 bit chain the size of the result should not exceed 43 and with a
 // 64 bit chain should not exceed 75, using a limit of: 10 + log2(height) + 1.
