@@ -176,6 +176,9 @@ public:
     // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
     mutable validation validation;
 
+    bool is_ebp() const;
+    void set_is_ebp(bool ebp_block);
+
 protected:
     void reset();
     size_t non_coinbase_input_count() const;
@@ -186,6 +189,8 @@ private:
 
     mutable boost::optional<size_t> total_inputs_;
     mutable upgrade_mutex mutex_;
+
+    mutable bool is_ebp_;
 };
 
 } // namespace chain

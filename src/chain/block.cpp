@@ -146,7 +146,7 @@ static const std::string encoded_testnet_genesis_block =
 //-----------------------------------------------------------------------------
 
 block::block()
-  : header_{}, validation{}
+  : header_{}, validation{}, is_ebp_(false)
 {
 }
 
@@ -154,25 +154,27 @@ block::block(const block& other)
   : block(other.header_, other.transactions_)
 {
     validation = other.validation;
+    is_ebp_ = other.is_ebp();
 }
 
 block::block(block&& other)
   : block(std::move(other.header_), std::move(other.transactions_))
 {
     validation = std::move(other.validation);
+    is_ebp_ = other.is_ebp();
 }
 
 // TODO: deal with possibility of inconsistent merkle root in relation to txs.
 block::block(const chain::header& header,
     const transaction::list& transactions)
-  : header_(header), transactions_(transactions), validation{}
+  : header_(header), transactions_(transactions), validation{}, is_ebp_(false)
 {
 }
 
 // TODO: deal with possibility of inconsistent merkle root in relation to txs.
 block::block(chain::header&& header, transaction::list&& transactions)
   : header_(std::move(header)), transactions_(std::move(transactions)),
-    validation{}
+    validation{}, is_ebp_(false)
 {
 }
 
@@ -184,6 +186,7 @@ block& block::operator=(block&& other)
     header_ = std::move(other.header_);
     transactions_ = std::move(other.transactions_);
     validation = std::move(other.validation);
+    is_ebp_ = other.is_ebp();
     return *this;
 }
 
@@ -247,7 +250,7 @@ bool block::from_data(reader& source)
     const auto count = source.read_size_little_endian();
 
     // Guard against potential for arbitary memory allocation.
-    if (count > get_max_block_size(is_bitcoin_cash()))
+    if (count > get_max_block_size())
         source.invalidate();
     else
         transactions_.resize(count);
@@ -757,10 +760,21 @@ code block::check() const
     if ((ec = header_.check()))
         return ec;
 
-    else if (serialized_size() > get_max_block_size(is_bitcoin_cash()))
-        return error::block_size_limit;
+    ec = error::success;
 
-    else if (transactions_.empty())
+    if (serialized_size() > get_max_block_size())
+    {
+        if (is_bitcoin_cash()) 
+        {
+            ec = error::block_size_excessive;
+            is_ebp_ = true;
+        } else 
+        {
+            return error::block_size_limit;
+        }
+    }
+
+    if (transactions_.empty())
         return error::empty_block;
 
     else if (!transactions_.front().is_coinbase())
@@ -784,11 +798,14 @@ code block::check() const
     // case they are ignored. This means that p2sh sigops are not counted here.
     // This is a preliminary check, the final count must come from connect().
     // Reenable once sigop caching is implemented, otherwise is deoptimization.
-    ////else if (signature_operations(false) > get_max_block_sigops(is_bitcoin_cash()))
+    ////else if (signature_operations(false) > get_max_block_sigops())
     ////    return error::block_legacy_sigop_limit;
 
-    else
-        return check_transactions();
+    else 
+    {
+        auto check_tx = check_transactions();
+        return check_tx == error::success ? ec : check_tx;
+    }
 }
 
 code block::accept(bool transactions) const
@@ -812,31 +829,34 @@ code block::accept(const chain_state& state, bool transactions) const
     if ((ec = header_.accept(state)))
         return ec;
 
-    else if (state.is_under_checkpoint())
+    if (state.is_under_checkpoint())
         return error::success;
 
-    else if (bip34 && !is_valid_coinbase_script(state.height()))
+    if (bip34 && !is_valid_coinbase_script(state.height()))
         return error::coinbase_height_mismatch;
 
     // TODO: relates height to total of tx.fee (pool cache tx.fee).
-    else if (!is_valid_coinbase_claim(state.height()))
+    if (!is_valid_coinbase_claim(state.height()))
         return error::coinbase_value_limit;
 
     // TODO: relates median time past to tx.locktime (pool cache min tx.time).
-    else if (!is_final(state.height(), block_time))
+    if (!is_final(state.height(), block_time))
         return error::block_non_final;
 
     // TODO: determine if performance benefit is worth excluding sigops here.
     // TODO: relates block limit to total of tx.sigops (pool cache tx.sigops).
     // This recomputes sigops to include p2sh from prevouts.
-    else if (transactions && (signature_operations(bip16) > get_max_block_sigops(is_bitcoin_cash())))
+    
+    //If a block is emergent consensus and exceeds the maximum block size, 
+    // we also need to check against a greater max_sigops_limit
+    size_t allowed_sigops = is_ebp()? get_allowed_sigops(serialized_size()) : get_max_block_sigops();    
+    if (transactions && (signature_operations(bip16) > allowed_sigops))
         return error::block_embedded_sigop_limit;
-
-    else if (transactions)
+    
+    if (transactions)
         return accept_transactions(state);
 
-    else
-        return ec;
+    return ec;
 }
 
 code block::connect() const
@@ -855,6 +875,17 @@ code block::connect(const chain_state& state) const
     else
         return connect_transactions(state);
 }
+
+bool block::is_ebp() const
+{
+    return is_ebp_;
+}
+
+void block::set_is_ebp(bool ebp_block)
+{
+    is_ebp_ = ebp_block;
+}
+
 
 } // namespace chain
 } // namespace libbitcoin

@@ -91,8 +91,8 @@ BC_CONSTEXPR size_t chain_state_timestamp_count = new_bitcoin_cash_retarget_algo
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11;
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 6;
 
-BC_CONSTEXPR size_t max_block_size = 1000000;
-BC_CONSTEXPR size_t max_block_size_cash = 8000000;
+//BC_CONSTEXPR size_t max_block_size = 1000000;
+//BC_CONSTEXPR size_t max_block_size_cash = 8000000;
 
 BC_CONSTEXPR size_t coinbase_maturity = 100;
 // BC_CONSTEXPR size_t median_time_past_interval = 11;
@@ -109,21 +109,21 @@ BC_CONSTEXPR size_t max_work_bits = 0x1d00ffff;
 BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1d00ffff;
 #endif // LITECOIN
 
-// Derived.
+//// Derived.
 BC_CONSTEXPR size_t max_sigops_factor = 50;
-BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
-BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
-
-
-constexpr
-size_t get_max_block_size(bool bitcoin_cash) {
-    return bitcoin_cash ? max_block_size_cash : max_block_size;
-}
-
-constexpr
-size_t get_max_block_sigops(bool bitcoin_cash) {
-    return bitcoin_cash ? max_block_sigops_cash : max_block_sigops;
-}
+//BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor;
+//BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
+//
+//
+//constexpr
+//size_t get_max_block_size(bool bitcoin_cash) {
+//    return bitcoin_cash ? max_block_size_cash : max_block_size;
+//}
+//
+//constexpr
+//size_t get_max_block_sigops(bool bitcoin_cash) {
+//    return bitcoin_cash ? max_block_sigops_cash : max_block_sigops;
+//}
 
 
 

@@ -480,7 +480,7 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
             }
         } else {
             return cash_difficulty_adjustment(values);
-	}
+	    }
     }
 
     return bits_high(values);
