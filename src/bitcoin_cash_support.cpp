@@ -26,7 +26,9 @@ namespace {
 
 static bool already_set_max_size = false;
 static bool is_bitcoin_cash_ = false;
-static size_t max_block_size = 1000000;
+static const size_t one_mb_block = 1000000;
+static const size_t sigops_per_mb = 20000;
+static size_t max_block_size = one_mb_block;
 static size_t max_block_sigops = max_block_size / libbitcoin::max_sigops_factor;
 } // namespace anonymous
 
@@ -64,9 +66,9 @@ size_t get_max_block_sigops (){
     return max_block_sigops;
 }
 
-size_t get_next_block_size(const size_t ebp_block_size){
+size_t get_next_block_size(const size_t block_size){
     size_t next_block_size = max_block_size;
-    while(next_block_size <  ebp_block_size)
+    while(next_block_size <  block_size)
     {
         next_block_size = next_block_size * 2;    
     }
@@ -74,9 +76,10 @@ size_t get_next_block_size(const size_t ebp_block_size){
     return next_block_size;
 }
 
-size_t get_allowed_sigops(const size_t ebp_block_size)
+size_t get_allowed_sigops(const size_t block_size)
 {
-    return (get_next_block_size(ebp_block_size) / libbitcoin::max_sigops_factor);
+    auto nMbRoundedUp = 1 + ((block_size - 1) / one_mb_block);
+    return nMbRoundedUp * sigops_per_mb;
 }
 
 } /*namespace libbitcoin*/

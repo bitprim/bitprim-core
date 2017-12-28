@@ -883,7 +883,7 @@ code block::accept(const chain_state& state, bool transactions) const
     
     //If a block is emergent consensus and exceeds the maximum block size, 
     // we also need to check against a greater max_sigops_limit
-    size_t allowed_sigops = is_ebp()? get_allowed_sigops(serialized_size()) : get_max_block_sigops();    
+    size_t allowed_sigops = get_allowed_sigops(serialized_size());
     if (transactions && (signature_operations(bip16) > allowed_sigops))
         return error::block_embedded_sigop_limit;
     
