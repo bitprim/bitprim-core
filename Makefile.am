@@ -46,6 +46,8 @@ src_libbitcoin_la_SOURCES = \
     src/chain/output_point.cpp \
     src/chain/point.cpp \
     src/chain/point_iterator.cpp \
+    src/chain/point_value.cpp \
+    src/chain/points_value.cpp \
     src/chain/script.cpp \
     src/chain/transaction.cpp \
     src/config/authority.cpp \
@@ -160,6 +162,7 @@ src_libbitcoin_la_SOURCES = \
     src/utility/monitor.cpp \
     src/utility/ostream_writer.cpp \
     src/utility/png.cpp \
+    src/utility/prioritized_mutex.cpp \
     src/utility/random.cpp \
     src/utility/scope_lock.cpp \
     src/utility/sequencer.cpp \
@@ -233,6 +236,8 @@ test_libbitcoin_test_SOURCES = \
     test/chain/output_point.cpp \
     test/chain/point.cpp \
     test/chain/point_iterator.cpp \
+    test/chain/point_value.cpp \
+    test/chain/points_value.cpp \
     test/chain/satoshi_words.cpp \
     test/chain/script.cpp \
     test/chain/script.hpp \
@@ -317,6 +322,7 @@ test_libbitcoin_test_SOURCES = \
     test/wallet/mnemonic.hpp \
     test/wallet/payment_address.cpp \
     test/wallet/qrcode.cpp \
+    test/wallet/select_outputs.cpp \
     test/wallet/stealth_address.cpp \
     test/wallet/stealth_receiver.cpp \
     test/wallet/stealth_sender.cpp \
@@ -354,6 +360,8 @@ include_bitcoin_bitcoin_chain_HEADERS = \
     include/bitcoin/bitcoin/chain/output_point.hpp \
     include/bitcoin/bitcoin/chain/point.hpp \
     include/bitcoin/bitcoin/chain/point_iterator.hpp \
+    include/bitcoin/bitcoin/chain/point_value.hpp \
+    include/bitcoin/bitcoin/chain/points_value.hpp \
     include/bitcoin/bitcoin/chain/script.hpp \
     include/bitcoin/bitcoin/chain/stealth.hpp \
     include/bitcoin/bitcoin/chain/transaction.hpp
@@ -417,7 +425,6 @@ include_bitcoin_bitcoin_impl_utility_HEADERS = \
     include/bitcoin/bitcoin/impl/utility/deserializer.ipp \
     include/bitcoin/bitcoin/impl/utility/endian.ipp \
     include/bitcoin/bitcoin/impl/utility/istream_reader.ipp \
-    include/bitcoin/bitcoin/impl/utility/notifier.ipp \
     include/bitcoin/bitcoin/impl/utility/ostream_writer.ipp \
     include/bitcoin/bitcoin/impl/utility/pending.ipp \
     include/bitcoin/bitcoin/impl/utility/resubscriber.ipp \
@@ -543,10 +550,10 @@ include_bitcoin_bitcoin_utility_HEADERS = \
     include/bitcoin/bitcoin/utility/istream_reader.hpp \
     include/bitcoin/bitcoin/utility/monitor.hpp \
     include/bitcoin/bitcoin/utility/noncopyable.hpp \
-    include/bitcoin/bitcoin/utility/notifier.hpp \
     include/bitcoin/bitcoin/utility/ostream_writer.hpp \
     include/bitcoin/bitcoin/utility/pending.hpp \
     include/bitcoin/bitcoin/utility/png.hpp \
+    include/bitcoin/bitcoin/utility/prioritized_mutex.hpp \
     include/bitcoin/bitcoin/utility/random.hpp \
     include/bitcoin/bitcoin/utility/reader.hpp \
     include/bitcoin/bitcoin/utility/resubscriber.hpp \

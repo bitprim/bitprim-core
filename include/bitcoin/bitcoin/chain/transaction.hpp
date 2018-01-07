@@ -129,7 +129,7 @@ public:
     // Deprecated (unsafe).
     ins& inputs();
 
-    const input::list& inputs() const;
+    const ins& inputs() const;
     void set_inputs(const ins& value);
     void set_inputs(ins&& value);
 
@@ -149,7 +149,8 @@ public:
     //-----------------------------------------------------------------------------
 
     uint64_t fees() const;
-    output_point::list missing_previous_outputs() const;
+    point::list previous_outputs() const;
+    point::list missing_previous_outputs() const;
     hash_list missing_previous_transactions() const;
     uint64_t total_input_value() const;
     uint64_t total_output_value() const;
@@ -159,11 +160,14 @@ public:
     bool is_coinbase() const;
     bool is_null_non_coinbase() const;
     bool is_oversized_coinbase() const;
-    bool is_immature(size_t target_height) const;
+    bool is_mature(size_t height) const;
     bool is_overspent() const;
+    bool is_internal_double_spend() const;
     bool is_double_spend(bool include_unconfirmed) const;
+    bool is_dusty(uint64_t minimum_output_value) const;
     bool is_missing_previous_outputs() const;
     bool is_final(size_t block_height, uint32_t block_time) const;
+    bool is_locked(size_t block_height, uint32_t median_time_past) const;
     bool is_locktime_conflict() const;
 
     code check(bool transaction_pool=true) const;
@@ -188,8 +192,8 @@ private:
     output::list outputs_;
 
     // These share a mutex as they are not expected to conflict.
-    mutable boost::optional<size_t> total_input_value_;
-    mutable boost::optional<size_t> total_output_value_;
+    mutable boost::optional<uint64_t> total_input_value_;
+    mutable boost::optional<uint64_t> total_output_value_;
     mutable std::shared_ptr<hash_digest> hash_;
     mutable upgrade_mutex mutex_;
 };

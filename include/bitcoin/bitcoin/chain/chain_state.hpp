@@ -34,6 +34,7 @@ namespace libbitcoin {
 namespace chain {
 
 class block;
+class header;
 
 class BC_API chain_state
 {
@@ -74,11 +75,14 @@ public:
         /// (block - 0)
         size_t timestamp_self;
 
-        /// (block - 2016) | map::unrequested
+        /// (block - (block % 2016 == 0 ? 2016 : block % 2016))
         size_t timestamp_retarget;
 
         /// mainnet: 227931, testnet: 21111 (or map::unrequested)
         size_t allow_collisions_height;
+
+        /// mainnet: 419328, testnet: 770112 (or map::unrequested)
+        size_t bip9_bit0_height;
     };
 
     /// Values used to populate chain state at the target height.
@@ -92,6 +96,9 @@ public:
 
         /// Hash of the allow_collisions block or null_hash if unrequested.
         hash_digest allow_collisions_hash;
+
+        /// Hash of the bip9_bit0 block or null_hash if unrequested.
+        hash_digest bip9_bit0_hash;
 
         /// Values must be ordered by height with high (block - 1) last.
         struct
@@ -120,11 +127,16 @@ public:
     static map get_map(size_t height, const checkpoints& checkpoints,
         uint32_t forks);
 
-    /// Create pool state from top block chain state.
-    chain_state(const chain_state& top, uint32_t version);
+    static uint32_t signal_version(uint32_t forks);
 
-    /// Create block state from pool chain state of same height.
+    /// Create pool state from top chain top block state.
+    chain_state(const chain_state& top);
+
+    /// Create block state from tx pool chain state of same height.
     chain_state(const chain_state& pool, const chain::block& block);
+
+    /// Create header state from header pool chain state of previous height.
+    chain_state(const chain_state& parent, const chain::header& header);
 
     /// Checkpoints must be ordered by height with greatest at back.
     /// Forks and checkpoints must match those provided for map creation.
@@ -149,9 +161,11 @@ public:
     /// This block height is less than or equal to that of the top checkpoint.
     bool is_under_checkpoint() const;
 
-    static bool is_retarget_height(size_t height); //FOR LITECOIN
+    static bool is_retarget_height(size_t height); //Need to be public, for Litecoin
 
     static uint256_t difficulty_adjustment_cash(uint256_t);
+
+    uint32_t get_next_work_required(uint32_t time_now);
 
 protected:
     struct activations
@@ -164,48 +178,55 @@ protected:
     };
 
     static activations activation(const data& values, uint32_t forks);
-    static uint32_t median_time_past(const data& values, uint32_t forks, const bool tip = true);
+    static uint32_t median_time_past(data const& values, uint32_t forks, bool tip = true);
 
 //    static uint32_t work_required(const data& values, uint32_t forks, bool bitcoin_cash = false);
     static uint32_t work_required(const data& values, uint32_t forks);
 
 private:
     static size_t bits_count(size_t height, uint32_t forks);
-    static size_t version_count(size_t height, uint32_t forks,
-        const checkpoints& checkpoints);
-    static size_t timestamp_count(size_t height,
-        const checkpoints& checkpoints);
-    static size_t retarget_height(size_t height);
-    static size_t collision_height(size_t height, uint32_t forks,
-        const checkpoints& checkpoints);
+    static size_t version_count(size_t height, uint32_t forks);
+    static size_t timestamp_count(size_t height, uint32_t forks);
 
-    static data to_pool(const chain_state& top, uint32_t version);
-    static data to_block(const chain_state& pool_state, const block& block);
+    // TODO(bitprim): make function private again. Moved to public in the litecoin merge
+    static size_t retarget_height(size_t height, uint32_t forks);
+    static size_t collision_height(size_t height, uint32_t forks);
+    static size_t bip9_bit0_height(size_t height, uint32_t forks);
+
+    static data to_pool(const chain_state& top);
+    static data to_block(const chain_state& pool, const block& block);
+    static data to_header(const chain_state& parent, const header& header);
 
     static uint32_t work_required_retarget(const data& values);
     static uint32_t retarget_timespan(const chain_state::data& values);
 
-    //static uint32_t work_required_testnet(const data& values);
-    //static bool is_retarget_or_nonmax(size_t height, uint32_t bits);
-    // TODO: BITPRIM: make function private again. Moved to public in the litecoin merge
+
+    // TODO(bitprim): make function private again. Moved to public in the litecoin merge
     // static bool is_retarget_height(size_t height);
 
     // easy blocks
-    static uint32_t work_required_easy(const data& values); //TODO: BITPRIM: nueva, producto del merge Febrero2017
+
+    //TODO(bitprim):
+    
+    static uint32_t cash_difficulty_adjustment(data const& values);
+    static uint32_t work_required_easy(const data& values);
     static uint32_t elapsed_time_limit(const chain_state::data& values);
-    static bool is_retarget_or_non_limit(size_t height, uint32_t bits); //TODO: BITPRIM: nueva, producto del merge Febrero2017
+    static bool is_retarget_or_non_limit(size_t height, uint32_t bits); 
     
     static uint32_t work_required_adjust_cash(const data& values);
 
-
+    static uint32_t easy_work_required(const data& values, bool daa_active);
+    static uint32_t easy_time_limit(const chain_state::data& values);
+    static size_t retarget_distance(size_t height);
+    
     // This is retained as an optimization for other constructions.
     // A similar height clone can be partially computed, reducing query cost.
     const data data_;
 
-    // Forks are saved for state transitions.
+    // Configured forks are saved for state transitions.
     const uint32_t forks_;
 
-    // Configured checkpoints are used to answer is_checkpoint_failure.
+    // Checkpoints do not affect the data that is collected or promoted.
     const config::checkpoint::list& checkpoints_;
 
     // These are computed on construct from sample and checkpoints.

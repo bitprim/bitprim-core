@@ -25,7 +25,7 @@
 #include <boost/program_options.hpp>
 #include <boost/throw_exception.hpp>
 #include <bitcoin/bitcoin/unicode/ifstream.hpp>
-
+#include <iostream>
 namespace libbitcoin {
 namespace config {
 
@@ -47,11 +47,9 @@ path parser::get_config_option(variables_map& variables,
 {
     // read config from the map so we don't require an early notify
     const auto& config = variables[name];
-
     // prevent exception in the case where the config variable is not set
     if (config.empty())
         return path();
-
     return config.as<path>();
 }
 
@@ -85,7 +83,8 @@ void parser::load_environment_variables(variables_map& variables,
     store(environment, variables);
 }
 
-bool parser::load_configuration_variables(variables_map& variables,
+//1 success, 0 default, -1 non-existing file
+int parser::load_configuration_variables(variables_map& variables,
     const std::string& option_name)
 {
     const auto config_settings = load_settings();
@@ -93,6 +92,7 @@ bool parser::load_configuration_variables(variables_map& variables,
 
     // If the existence test errors out we pretend there's no file :/.
     error_code code;
+
     if (!config_path.empty() && exists(config_path, code))
     {
         const auto& path = config_path.string();
@@ -105,14 +105,14 @@ bool parser::load_configuration_variables(variables_map& variables,
 
         const auto config = parse_config_file(file, config_settings);
         store(config, variables);
-        return true;
-    }
+        return 1;
+    } else if(!config_path.empty() && !exists(config_path, code)) return -1;
 
     // Loading from an empty stream causes the defaults to populate.
     std::stringstream stream;
     const auto config = parse_config_file(stream, config_settings);
     store(config, variables);
-    return false;
+    return 0;
 }
 
 } // namespace config

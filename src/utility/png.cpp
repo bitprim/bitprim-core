@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#ifdef WITH_PNG
+
 #include <bitcoin/bitcoin/utility/png.hpp>
 
 #include <cstddef>
@@ -31,8 +34,6 @@
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
 
 namespace libbitcoin {
-
-#ifdef WITH_PNG
 
 bool png::write_png(const data_chunk& data, uint32_t size, std::ostream& out)
 {
@@ -196,6 +197,6 @@ bool png::write_png(std::istream& in, uint32_t size, uint32_t dots_per_inch,
     return true;
 }
 
-#endif
-
 } // namespace libbitcoin
+
+#endif // WITH_PNG

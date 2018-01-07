@@ -61,7 +61,7 @@ protected:
     virtual void load_command_variables(variables_map& variables,
         int argc, const char* argv[]);
 
-    virtual bool load_configuration_variables(variables_map& variables,
+    virtual int load_configuration_variables(variables_map& variables,
         const std::string& option_name);
 
     virtual void load_environment_variables(variables_map& variables,

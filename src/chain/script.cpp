@@ -26,6 +26,7 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
+#include <boost/range/adaptor/reversed.hpp>
 #include <bitcoin/bitcoin/constants.hpp>
 #include <bitcoin/bitcoin/chain/transaction.hpp>
 #include <bitcoin/bitcoin/error.hpp>
@@ -52,11 +53,7 @@ namespace libbitcoin {
 namespace chain {
 
 using namespace bc::machine;
-
-static const auto sighash_all = sighash_algorithm::all;
-static const auto sighash_none = sighash_algorithm::none;
-static const auto sighash_single = sighash_algorithm::single;
-static const auto anyone_flag = sighash_algorithm::anyone_can_pay;
+using namespace boost::adaptors;
 
 // bit.ly/2cPazSa
 static const auto one_hash = hash_literal(
@@ -194,14 +191,17 @@ bool script::from_data(reader& source, bool prefix)
     {
         const auto size = source.read_size_little_endian();
 
-        // Guard against potential for arbitary memory allocation.
+        // The max_script_size constant limits evaluation, but not all scripts
+        // evaluate, so use max_block_size to guard memory allocation here.
         if (size > get_max_block_size(is_bitcoin_cash()))
             source.invalidate();
         else
             bytes_ = source.read_bytes(size);
     }
     else
+    {
         bytes_ = source.read_bytes();
+    }
 
     if (!source)
         reset();
@@ -217,7 +217,7 @@ bool script::from_string(const std::string& mnemonic)
     // There is strictly one operation per string token.
     const auto tokens = split(mnemonic);
     operation::list ops;
-    ops.resize(tokens.size());
+    ops.resize(tokens.empty() || tokens.front().empty() ? 0 : tokens.size());
 
     // Create an op list from the split tokens, one operation per token.
     for (size_t index = 0; index < ops.size(); ++index)
@@ -252,7 +252,8 @@ void script::from_operations(const operation::list& ops)
 data_chunk script::operations_to_data(const operation::list& ops)
 {
     data_chunk out;
-    out.reserve(serialized_size(ops));
+    const auto size = serialized_size(ops);
+    out.reserve(size);
     const auto concatenate = [&out](const operation& op)
     {
         auto bytes = op.to_data();
@@ -260,7 +261,7 @@ data_chunk script::operations_to_data(const operation::list& ops)
     };
 
     std::for_each(ops.begin(), ops.end(), concatenate);
-    BITCOIN_ASSERT(out.size() == serialized_size(ops));
+    BITCOIN_ASSERT(out.size() == size);
     return out;
 }
 
@@ -307,11 +308,12 @@ bool script::is_valid_operations() const
 data_chunk script::to_data(bool prefix) const
 {
     data_chunk data;
-    data.reserve(serialized_size(prefix));
+    const auto size = serialized_size(prefix);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(ostream, prefix);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(prefix));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 
@@ -436,9 +438,16 @@ const operation::list& script::operations() const
     // One operation per byte is the upper limit of operations.
     operations_.reserve(size);
 
+    // ************************************************************************
+    // CONSENSUS: In the case of a coinbase script we must parse the entire
+    // script, beyond just the BIP34 requirements, so that sigops can be
+    // calculated from the script. These are counted despite being irrelevant.
+    // In this case an invalid script is parsed to the extent possible.
+    // ************************************************************************
+
     // If an op fails it is pushed to operations and the loop terminates.
-    // To validate the ops the caller must test the last op.is_valid().
-    // This is not necessary during script validation as it is autmoatic.
+    // To validate the ops the caller must test the last op.is_valid(), or may
+    // text script.is_valid_operations(), which is done in script validation.
     while (!source.is_exhausted())
     {
         op.from_data(source);
@@ -459,8 +468,15 @@ const operation::list& script::operations() const
 
 inline sighash_algorithm to_sighash_enum(uint8_t sighash_type)
 {
-    return static_cast<sighash_algorithm>(
-        sighash_type & ~sighash_algorithm::anyone_can_pay);
+    switch (sighash_type & sighash_algorithm::mask)
+    {
+        case sighash_algorithm::single:
+            return sighash_algorithm::single;
+        case sighash_algorithm::none:
+            return sighash_algorithm::none;
+        default:
+            return sighash_algorithm::all;
+    }
 }
 
 inline uint8_t is_sighash_enum(uint8_t sighash_type, sighash_algorithm value)
@@ -468,22 +484,18 @@ inline uint8_t is_sighash_enum(uint8_t sighash_type, sighash_algorithm value)
     return to_sighash_enum(sighash_type) == value;
 }
 
-inline bool is_sighash_flag(uint8_t sighash_type, sighash_algorithm value)
-{
-    return (sighash_type & value) != 0;
-}
-
 static hash_digest sign_none(const transaction& tx, uint32_t input_index,
-    const script& script_code, uint8_t sighash_type, bool anyone)
+    const script& script_code, uint8_t sighash_type)
 {
     input::list ins;
     const auto& inputs = tx.inputs();
-    ins.reserve(anyone ? 1 : inputs.size());
+    const auto any = (sighash_type & sighash_algorithm::anyone_can_pay) != 0;
+    ins.reserve(any ? 1 : inputs.size());
 
     BITCOIN_ASSERT(input_index < inputs.size());
     const auto& self = inputs[input_index];
 
-    if (anyone)
+    if (any)
     {
         // Retain only self.
         ins.emplace_back(self.previous_output(), script_code, self.sequence());
@@ -505,16 +517,17 @@ static hash_digest sign_none(const transaction& tx, uint32_t input_index,
 }
 
 static hash_digest sign_single(const transaction& tx, uint32_t input_index,
-    const script& script_code, uint8_t sighash_type, bool anyone)
+    const script& script_code, uint8_t sighash_type)
 {
     input::list ins;
     const auto& inputs = tx.inputs();
-    ins.reserve(anyone ? 1 : inputs.size());
+    const auto any = (sighash_type & sighash_algorithm::anyone_can_pay) != 0;
+    ins.reserve(any ? 1 : inputs.size());
 
     BITCOIN_ASSERT(input_index < inputs.size());
     const auto& self = inputs[input_index];
 
-    if (anyone)
+    if (any)
     {
         // Retain only self.
         ins.emplace_back(self.previous_output(), script_code, self.sequence());
@@ -543,16 +556,17 @@ static hash_digest sign_single(const transaction& tx, uint32_t input_index,
 }
 
 static hash_digest sign_all(const transaction& tx, uint32_t input_index,
-    const script& script_code, uint8_t sighash_type, bool anyone)
+    const script& script_code, uint8_t sighash_type)
 {
     input::list ins;
     const auto& inputs = tx.inputs();
-    ins.reserve(anyone ? 1 : inputs.size());
+    const auto any = (sighash_type & sighash_algorithm::anyone_can_pay) != 0;
+    ins.reserve(any ? 1 : inputs.size());
 
     BITCOIN_ASSERT(input_index < inputs.size());
     const auto& self = inputs[input_index];
 
-    if (anyone)
+    if (any)
     {
         // Retain only self.
         ins.emplace_back(self.previous_output(), script_code, self.sequence());
@@ -587,14 +601,15 @@ static script strip_code_seperators(const script& script_code)
 }
 
 // static
+// Use bool for version && bip143.
 hash_digest script::generate_signature_hash(const transaction& tx,
     uint32_t input_index, const script& script_code, uint8_t sighash_type)
 {
-    const auto any = is_sighash_flag(sighash_type, anyone_flag);
-    const auto single = is_sighash_enum(sighash_type, sighash_single);
+    const auto sighash = to_sighash_enum(sighash_type);
 
     if (input_index >= tx.inputs().size() ||
-        (input_index >= tx.outputs().size() && single))
+        (input_index >= tx.outputs().size() &&
+            sighash == sighash_algorithm::single))
     {
         //*********************************************************************
         // CONSENSUS: wacky satoshi behavior we must perpetuate.
@@ -608,15 +623,15 @@ hash_digest script::generate_signature_hash(const transaction& tx,
     const auto stripped = strip_code_seperators(script_code);
 
     // The sighash serializations are isolated for clarity and optimization.
-    switch (to_sighash_enum(sighash_type))
+    switch (sighash)
     {
-        case sighash_none:
-            return sign_none(tx, input_index, stripped, sighash_type, any);
-        case sighash_single:
-            return sign_single(tx, input_index, stripped, sighash_type, any);
+        case sighash_algorithm::none:
+            return sign_none(tx, input_index, stripped, sighash_type);
+        case sighash_algorithm::single:
+            return sign_single(tx, input_index, stripped, sighash_type);
         default:
-        case sighash_all:
-            return sign_all(tx, input_index, stripped, sighash_type, any);
+        case sighash_algorithm::all:
+            return sign_all(tx, input_index, stripped, sighash_type);
     }
 }
 
@@ -641,6 +656,8 @@ bool script::create_endorsement(endorsement& out, const ec_secret& secret,
     const script& prevout_script, const transaction& tx, uint32_t input_index,
     uint8_t sighash_type)
 {
+    out.reserve(max_endorsement_size);
+
     // This always produces a valid signature hash, including one_hash.
     const auto sighash = script::generate_signature_hash(tx, input_index,
         prevout_script, sighash_type);
@@ -652,6 +669,7 @@ bool script::create_endorsement(endorsement& out, const ec_secret& secret,
 
     // Add the sighash type to the end of the DER signature -> endorsement.
     out.push_back(sighash_type);
+    out.shrink_to_fit();
     return true;
 }
 
@@ -681,23 +699,43 @@ bool script::is_relaxed_push(const operation::list& ops)
     return std::all_of(ops.begin(), ops.end(), push);
 }
 
+//*****************************************************************************
+// CONSENSUS: BIP34 requires the coinbase script to begin with one byte that
+// indicates the height size. This is inconsistent with an extreme future where
+// the size byte overflows. However satoshi actually requires nominal encoding.
+//*****************************************************************************
 bool script::is_coinbase_pattern(const operation::list& ops, size_t height)
 {
-    return !ops.empty() && ops.front().data() == number(height).data();
+    return !ops.empty()
+        && ops[0].is_nominal_push()
+        && ops[0].data() == number(height).data();
 }
+
+// The satoshi client tests for 83 bytes total. This allows for the waste of
+// one byte to represent up to 75 bytes using the push_one_size opcode.
+////bool script::is_null_data_pattern(const operation::list& ops)
+////{
+////    static constexpr auto op_76 = static_cast<uint8_t>(opcode::push_one_size);
+////
+////    return ops.size() == 2
+////        && ops[0].code() == opcode::return_
+////        && static_cast<uint8_t>(ops[1].code()) <= op_76
+////        && ops[1].data().size() <= max_null_data_size;
+////}
 
 bool script::is_null_data_pattern(const operation::list& ops)
 {
     return ops.size() == 2
         && ops[0].code() == opcode::return_
-        && ops[1].is_push()
+        && ops[1].is_minimal_push()
         && ops[1].data().size() <= max_null_data_size;
 }
 
+// TODO: confirm that the type of data opcode is unrestricted for policy.
 bool script::is_pay_multisig_pattern(const operation::list& ops)
 {
-    static constexpr size_t op_1 = static_cast<uint8_t>(opcode::push_positive_1);
-    static constexpr size_t op_16 = static_cast<uint8_t>(opcode::push_positive_16);
+    static constexpr auto op_1 = static_cast<uint8_t>(opcode::push_positive_1);
+    static constexpr auto op_16 = static_cast<uint8_t>(opcode::push_positive_16);
 
     const auto op_count = ops.size();
 
@@ -723,20 +761,20 @@ bool script::is_pay_multisig_pattern(const operation::list& ops)
     return true;
 }
 
+// TODO: confirm that the type of data opcode is unrestricted for policy.
 bool script::is_pay_public_key_pattern(const operation::list& ops)
 {
     return ops.size() == 2
-        ////&& ops[0].is_push()
         && is_public_key(ops[0].data())
         && ops[1].code() == opcode::checksig;
 }
 
+// TODO: confirm that the type of data opcode is unrestricted for policy.
 bool script::is_pay_key_hash_pattern(const operation::list& ops)
 {
     return ops.size() == 5
         && ops[0].code() == opcode::dup
         && ops[1].code() == opcode::hash160
-        ////&& ops[2].is_push()
         && ops[2].data().size() == short_hash_size
         && ops[3].code() == opcode::equalverify
         && ops[4].code() == opcode::checksig;
@@ -754,26 +792,25 @@ bool script::is_pay_script_hash_pattern(const operation::list& ops)
         && ops[2].code() == opcode::equal;
 }
 
+// The leading zero is wacky satoshi behavior that we must perpetuate.
 bool script::is_sign_multisig_pattern(const operation::list& ops)
 {
-    if (ops.size() < 2 || !is_push_only(ops))
-        return false;
-
-    if (ops.front().code() != opcode::push_size_0)
-        return false;
-
-    return true;
+    return ops.size() >= 2
+        && ops[0].code() == opcode::push_size_0
+        && is_push_only(ops);
 }
 
 bool script::is_sign_public_key_pattern(const operation::list& ops)
 {
-    return ops.size() == 1 && is_push_only(ops);
+    return ops.size() == 1
+        && is_push_only(ops);
 }
 
 bool script::is_sign_key_hash_pattern(const operation::list& ops)
 {
-    return ops.size() == 2 && is_push_only(ops) &&
-        is_public_key(ops.back().data());
+    return ops.size() == 2
+        && is_push_only(ops)
+        && is_public_key(ops.back().data());
 }
 
 bool script::is_sign_script_hash_pattern(const operation::list& ops)
@@ -791,7 +828,7 @@ bool script::is_sign_script_hash_pattern(const operation::list& ops)
     if (!redeem.from_data(redeem_data, false))
         return false;
 
-    // Is the redeem script a standard pay (output) script?
+    // Is the redeem script a common output script?
     const auto redeem_script_pattern = redeem.pattern();
     return redeem_script_pattern == script_pattern::pay_multisig
         || redeem_script_pattern == script_pattern::pay_public_key
@@ -878,25 +915,29 @@ operation::list script::to_pay_multisig_pattern(uint8_t signatures,
 
     operation::list ops;
     ops.reserve(points.size() + 3);
-    ops.push_back({ op_m });
+    ops.emplace_back(op_m);
 
     for (const auto point: points)
     {
         if (!is_public_key(point))
             return{};
 
-        ops.push_back(point);
+        ops.emplace_back(point);
     }
 
-    ops.push_back({ op_n });
-    ops.push_back({ opcode::checkmultisig });
+    ops.emplace_back(op_n);
+    ops.emplace_back(opcode::checkmultisig);
     return ops;
 }
 
 // Utilities (non-static).
 //-----------------------------------------------------------------------------
 
-// This excludes the bip34 coinbase pattern as it is not "standard".
+// TODO: create output_pattern() and input_pattern() so that each can be tested
+// in isolation, reducing wasteful processing of the others.
+// TODO: implement standardness tests in blockchain, not in system.
+
+// This excludes the bip34 coinbase pattern, which can be tested independently.
 script_pattern script::pattern() const
 {
     // The first operations access must be method-based to guarantee the cache.
@@ -995,6 +1036,8 @@ size_t script::embedded_sigops(const script& prevout_script) const
 
 //*****************************************************************************
 // CONSENSUS: this is a pointless, broken, premature optimization attempt.
+// The comparison and erase are not limited to a single operation and so can
+// erase arbitrary upstream data from the script.
 //*****************************************************************************
 void script::find_and_delete_(const data_chunk& endorsement)
 {
@@ -1007,27 +1050,29 @@ void script::find_and_delete_(const data_chunk& endorsement)
     // Non-minimally-encoded target values will therefore not match.
     const auto value = operation(endorsement, false).to_data();
 
-    // No copying occurs below. If a match is found the remainder is shifted
-    // into its place (erase). No memory allocation is caused by the shift.
-
     operation op;
     data_source stream(bytes_);
     istream_reader source(stream);
-    auto begin = bytes_.begin();
+    std::vector<data_chunk::iterator> found;
 
-    // This test handles stream end and op deserialization failure.
-    while (!source.is_exhausted())
+    // The exhaustion test handles stream end and op deserialization failure.
+    for (auto it = bytes_.begin(); !source.is_exhausted();
+        it += op.serialized_size())
     {
-        // This is the 'broken' aspect of this method. The comparison and erase
-        // are not limited to a single operation and so can erase arbitrary
-        // upstream data from the script. Unfortunately that is now consensus.
-        while (starts_with(begin, bytes_.end(), value))
-            begin = bytes_.erase(begin, begin + value.size());
+        // Track all found values for later deletion.
+        for (; starts_with(it, bytes_.end(), value); it += value.size())
+        {
+            source.skip(value.size());
+            found.push_back(it);
+        }
 
-        // The source is not affected by changes upstream of its position.
+        // Read the next op code following last found value.
         op.from_data(source);
-        begin += op.serialized_size();
     }
+
+    // Delete any found values, reversed to prevent iterator invalidation.
+    for (const auto it: reverse(found))
+        bytes_.erase(it, it + value.size());
 }
 
 // Concurrent read/write is not supported, so no critical section.
@@ -1048,13 +1093,23 @@ void script::find_and_delete(const data_stack& endorsements)
 ////{
 ////    const auto actual = to_data(false);
 ////
-////    // Create the expected script as a byte vector.
-////    script expected_script(operation::list{ { number(height).data() } });
-////    const auto expected = expected_script.to_data(false);
+////    // Create the expected script as a non-minimal byte vector.
+////    script compare(operation::list{ { number(height).data(), false } });
+////    const auto expected = compare.to_data(false);
 ////
-////    // Require that the actual script start wtih the expected coinbase script.
+////    // Require the actual script start with the expected coinbase script.
 ////    return std::equal(expected.begin(), expected.end(), actual.begin());
 ////}
+
+// An unspendable script is any that can provably not be spent under any
+// circumstance. This allows for exclusion of the output as unspendable.
+// The criteria below are need not be comprehensive but are fast to eval.
+bool script::is_unspendable() const
+{
+    // The first operations access must be method-based to guarantee the cache.
+    return (!operations().empty() && operations_[0].code() == opcode::return_)
+        || satoshi_content_size() > max_script_size;
+}
 
 // Validation.
 //-----------------------------------------------------------------------------

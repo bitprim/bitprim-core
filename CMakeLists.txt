@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.4)
 # bitprim-core
 #==============================================================================
 project(bitprim-core
-  VERSION 3.0.0
+  VERSION 0.4.0
   LANGUAGES CXX C)
 
 
@@ -39,8 +39,8 @@ project(bitprim-core
 #  # using regular Clang or AppleClang
 #endif()
 
-message(CMAKE_CXX_COMPILER_ID)
-message(${CMAKE_CXX_COMPILER_ID})
+# message(CMAKE_CXX_COMPILER_ID)
+# message(${CMAKE_CXX_COMPILER_ID})
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if (NOT NOT_USE_CPP11_ABI)
@@ -120,6 +120,12 @@ if (WITH_QRENCODE)
   add_definitions(-DWITH_QRENCODE)
   message(FATAL_ERROR "WITH_QRENCODE not yet implemented")
 endif()
+
+
+
+
+set(BITPRIM_BUILD_NUMBER "-" CACHE STRING "Specify the Bitprim Build Number.")
+# message(${BITPRIM_BUILD_NUMBER})
 
 
 
@@ -295,6 +301,10 @@ set(bitprim_core_sources
         src/chain/output_point.cpp
         src/chain/point.cpp
         src/chain/point_iterator.cpp
+
+        src/chain/point_value.cpp
+        src/chain/points_value.cpp
+
         src/chain/script.cpp
         src/chain/transaction.cpp
 
@@ -321,6 +331,7 @@ set(bitprim_core_sources
 
         src/error.cpp
         src/bitcoin_cash_support.cpp
+        src/version.cpp
 
         src/formats/base_10.cpp
         src/formats/base_16.cpp
@@ -420,7 +431,10 @@ set(bitprim_core_sources
         src/utility/istream_reader.cpp
         src/utility/monitor.cpp
         src/utility/ostream_writer.cpp
+        
         src/utility/png.cpp
+        src/utility/prioritized_mutex.cpp
+
         src/utility/random.cpp
         src/utility/scope_lock.cpp
         src/utility/sequencer.cpp
@@ -455,7 +469,10 @@ set(bitprim_core_sources
         src/wallet/parse_encrypted_keys/parse_encrypted_token.cpp
         src/wallet/parse_encrypted_keys/parse_encrypted_token.hpp
         src/wallet/payment_address.cpp
+        
         src/wallet/qrcode.cpp
+        src/wallet/select_outputs.cpp
+
         src/wallet/select_outputs.cpp
         src/wallet/stealth_address.cpp
         src/wallet/stealth_receiver.cpp
@@ -492,8 +509,9 @@ endif()
 target_include_directories(bitprim-core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-
+  
 target_compile_definitions(bitprim-core PUBLIC -DBC_STATIC)
+target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_BUILD_NUMBER="\\"${BITPRIM_BUILD_NUMBER}\\"")
 
 target_include_directories(bitprim-core SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 
@@ -802,7 +820,12 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/chain/output.hpp
     bitcoin/bitcoin/chain/output_point.hpp
     bitcoin/bitcoin/chain/point.hpp
+    
     bitcoin/bitcoin/chain/point_iterator.hpp
+
+    bitcoin/bitcoin/chain/point_value.hpp
+    bitcoin/bitcoin/chain/points_value.hpp
+
     bitcoin/bitcoin/chain/script.hpp
     bitcoin/bitcoin/chain/stealth.hpp
     bitcoin/bitcoin/chain/transaction.hpp
@@ -862,7 +885,6 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/impl/utility/deserializer.ipp
     bitcoin/bitcoin/impl/utility/endian.ipp
     bitcoin/bitcoin/impl/utility/istream_reader.ipp
-    bitcoin/bitcoin/impl/utility/notifier.ipp
     bitcoin/bitcoin/impl/utility/ostream_writer.ipp
     bitcoin/bitcoin/impl/utility/pending.ipp    
     bitcoin/bitcoin/impl/utility/resubscriber.ipp
@@ -894,9 +916,7 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/math/crypto.hpp
     bitcoin/bitcoin/math/elliptic_curve.hpp
     bitcoin/bitcoin/math/hash.hpp
-    # bitcoin/bitcoin/math/hash_number.hpp
     bitcoin/bitcoin/math/limits.hpp
-    #bitcoin/bitcoin/math/script_number.hpp
     bitcoin/bitcoin/math/stealth.hpp
     bitcoin/bitcoin/math/uint256.hpp
     
@@ -968,10 +988,12 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/utility/istream_reader.hpp
     bitcoin/bitcoin/utility/monitor.hpp
     bitcoin/bitcoin/utility/noncopyable.hpp
-    bitcoin/bitcoin/utility/notifier.hpp
     bitcoin/bitcoin/utility/ostream_writer.hpp
     bitcoin/bitcoin/utility/pending.hpp
+
     bitcoin/bitcoin/utility/png.hpp
+    bitcoin/bitcoin/utility/prioritized_mutex.hpp
+
     bitcoin/bitcoin/utility/random.hpp
     bitcoin/bitcoin/utility/reader.hpp
     bitcoin/bitcoin/utility/resubscriber.hpp
@@ -987,7 +1009,6 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/utility/threadpool.hpp
     bitcoin/bitcoin/utility/timer.hpp
     bitcoin/bitcoin/utility/track.hpp
-    #bitcoin/bitcoin/utility/variable_uint_size.hpp
     bitcoin/bitcoin/utility/work.hpp
     bitcoin/bitcoin/utility/writer.hpp
     

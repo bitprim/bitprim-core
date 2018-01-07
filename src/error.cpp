@@ -57,6 +57,7 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::file_system, "file system error" },
         { error::non_standard, "transaction not standard" },
         { error::not_implemented, "feature not implemented" },
+        { error::oversubscribed, "service oversubscribed" },
 
         // database
         { error::store_block_invalid_height, "block out of order" },
@@ -75,16 +76,17 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::channel_timeout, "connection timed out" },
         { error::address_blocked, "address blocked by policy" },
         { error::channel_stopped, "channel stopped" },
+        { error::peer_throttling, "unresponsive peer may be throttling" },
 
-        // block pool
+        // blockchain
         { error::duplicate_block, "duplicate block" },
         { error::orphan_block, "missing block parent" },
         { error::invalid_previous_block, "previous block failed to validate" },
         { error::insufficient_work, "insufficient work to reorganize" },
-
-        // transaction pool
         { error::orphan_transaction, "missing transaction parent" },
         { error::insufficient_fee, "insufficient transaction fee" },
+        { error::dusty_transaction, "output value too low" },
+        { error::stale_chain, "blockchain too far behind" },
 
         // check header
         { error::invalid_proof_of_work, "proof of work invalid" },
@@ -102,12 +104,12 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::first_not_coinbase, "first transaction not a coinbase" },
         { error::extra_coinbases, "more than one coinbase" },
         { error::internal_duplicate, "matching transaction hashes in block" },
-        { error::internal_double_spend, "double spend internal to block" },
+        { error::block_internal_double_spend, "double spend internal to block" },
         { error::merkle_mismatch, "merkle root mismatch" },
         { error::block_legacy_sigop_limit, "too many block legacy signature operations" },
 
         // accept block
-        { error::non_final_transaction, "block contains a non-final transaction" },
+        { error::block_non_final, "block contains a non-final transaction" },
         { error::coinbase_height_mismatch, "block height mismatch in coinbase" },
         { error::coinbase_value_limit, "coinbase value too high" },
         { error::block_embedded_sigop_limit, "too many block embedded signature operations" },
@@ -118,9 +120,11 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::spend_overflow, "spend outside valid range" },
         { error::invalid_coinbase_script_size, "coinbase script too small or large" },
         { error::coinbase_transaction, "coinbase transaction disallowed in memory pool" },
+        { error::transaction_internal_double_spend, "double spend internal to transaction" },
         { error::transaction_legacy_sigop_limit, "too many transaction legacy signature operations" },
 
         // accept transaction
+        { error::transaction_non_final, "transaction currently non-final for next block" },
         { error::premature_validation, "transaction validation under checkpoint" },
         { error::unspent_duplicate, "matching transaction with unspent outputs" },
         { error::missing_previous_output, "previous output not found" },
@@ -128,6 +132,7 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::coinbase_maturity, "immature coinbase spent" },
         { error::spend_exceeds_value, "spend exceeds value of inputs" },
         { error::transaction_embedded_sigop_limit, "too many transaction embedded signature operations" },
+        { error::sequence_locked, "transaction currently locked" },
 
         // connect input
         { error::invalid_script, "invalid script" },
@@ -218,7 +223,14 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         { error::op_check_locktime_verify3, "op_check_locktime_verify3" },
         { error::op_check_locktime_verify4, "op_check_locktime_verify4" },
         { error::op_check_locktime_verify5, "op_check_locktime_verify5" },
-        { error::op_check_locktime_verify6, "op_check_locktime_verify6" }
+        { error::op_check_locktime_verify6, "op_check_locktime_verify6" },
+        { error::op_check_sequence_verify1, "op_check_sequence_verify1" },
+        { error::op_check_sequence_verify2, "op_check_sequence_verify2" },
+        { error::op_check_sequence_verify3, "op_check_sequence_verify3" },
+        { error::op_check_sequence_verify4, "op_check_sequence_verify4" },
+        { error::op_check_sequence_verify5, "op_check_sequence_verify5" },
+        { error::op_check_sequence_verify6, "op_check_sequence_verify6" },
+        { error::op_check_sequence_verify7, "op_check_sequence_verify7" }
     };
 
     const auto message = messages.find(ev);
@@ -370,6 +382,39 @@ namespace error {
             case boost_error::result_out_of_range:
             case boost_error::state_not_recoverable:
             case boost_error::value_too_large:
+            default:
+                return error::unknown;
+        }
+    }
+
+    error_code_t posix_to_error_code(int ec)
+    {
+        // TODO: expand mapping for database scenario.
+        switch (ec)
+        {
+            // protocol codes (from zeromq)
+            case ENOBUFS:
+            case ENOTSUP:
+            case EPROTONOSUPPORT:
+                return error::operation_failed;
+            case ENETDOWN:
+                return error::network_unreachable;
+            case EADDRINUSE:
+                return error::address_in_use;
+            case EADDRNOTAVAIL:
+                return error::resolve_failed;
+            case ECONNREFUSED:
+                return error::accept_failed;
+            case EINPROGRESS:
+                return error::channel_timeout;
+                return error::bad_stream;
+            case EAGAIN:
+                return error::channel_timeout;
+            case EFAULT:
+                return error::bad_stream;
+            case EINTR:
+            case ENOTSOCK:
+                return error::service_stopped;
             default:
                 return error::unknown;
         }

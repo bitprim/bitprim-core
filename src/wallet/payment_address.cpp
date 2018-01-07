@@ -243,13 +243,14 @@ payment_address payment_address::extract(const chain::script& script,
     uint8_t p2kh_version, uint8_t p2sh_version)
 {
     if (!script.is_valid())
-        return payment_address();
+        return{};
 
     short_hash hash;
+    const auto pattern = script.pattern();
 
     // Split out the assertions for readability.
     // We know that the script is valid and can therefore rely on these.
-    switch (script.pattern())
+    switch (pattern)
     {
         // pay
         // --------------------------------------------------------------------
@@ -290,13 +291,14 @@ payment_address payment_address::extract(const chain::script& script,
     }
 
     // Convert data to hash or point and construct address.
-    switch (script.pattern())
+    switch (pattern)
     {
         // pay
         // --------------------------------------------------------------------
 
+        // TODO: extract addresses into a vector result.
         case script_pattern::pay_multisig:
-            return payment_address();
+            return{};
 
         case script_pattern::pay_public_key:
         {
@@ -322,11 +324,13 @@ payment_address payment_address::extract(const chain::script& script,
         // sign
         // --------------------------------------------------------------------
 
+        // TODO: extract addresses into a vector result.
         case script_pattern::sign_multisig:
-            return payment_address();
+            return{};
 
+        // There is no address in a sign_public_key script.
         case script_pattern::sign_public_key:
-            return payment_address();
+            return{};
 
         case script_pattern::sign_key_hash:
         {
@@ -347,7 +351,7 @@ payment_address payment_address::extract(const chain::script& script,
 
         case script_pattern::non_standard:
         default:
-            return payment_address();
+            return{};
     }
 }
 

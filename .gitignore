@@ -71,3 +71,7 @@ cmake-build-release/
 CMakeSettings.json
 /.vs/bitprim-core/v15
 /.vs
+
+.vscode/
+
+check_files.py

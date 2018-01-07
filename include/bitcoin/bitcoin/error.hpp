@@ -54,6 +54,7 @@ enum error_code_t
     file_system = 42,
     non_standard = 17,
     not_implemented = 4,
+    oversubscribed = 71,
 
     // network
     service_stopped = 1,
@@ -67,21 +68,22 @@ enum error_code_t
     channel_timeout = 13,
     address_blocked = 44,
     channel_stopped = 45,
+    peer_throttling = 73,
 
     // database
     store_block_duplicate = 66,
     store_block_invalid_height = 67,
     store_block_missing_parent = 68,
 
-    // block pool
+    // blockchain
     duplicate_block = 51,
     orphan_block = 5,
     invalid_previous_block = 24,
     insufficient_work = 48,
-
-    // transaction pool
     orphan_transaction = 14,
     insufficient_fee = 70,
+    dusty_transaction = 76,
+    stale_chain = 75,
 
     // check header
     invalid_proof_of_work = 26,
@@ -99,12 +101,12 @@ enum error_code_t
     first_not_coinbase = 28,
     extra_coinbases = 29,
     internal_duplicate = 49,
-    internal_double_spend = 15,
+    block_internal_double_spend = 15,
     merkle_mismatch = 31,
     block_legacy_sigop_limit = 30,
 
     // accept block
-    non_final_transaction = 34,
+    block_non_final = 34,
     coinbase_height_mismatch = 37,
     coinbase_value_limit = 41,
     block_embedded_sigop_limit = 52,
@@ -115,10 +117,12 @@ enum error_code_t
     spend_overflow = 21,
     invalid_coinbase_script_size = 22,
     coinbase_transaction = 16,
+    transaction_internal_double_spend = 72,
     transaction_size_limit = 53,
     transaction_legacy_sigop_limit = 54,
 
     // accept transaction
+    transaction_non_final = 74,
     premature_validation = 69,
     unspent_duplicate = 38,
     missing_previous_output = 19,
@@ -126,6 +130,7 @@ enum error_code_t
     coinbase_maturity = 46,
     spend_exceeds_value = 40,
     transaction_embedded_sigop_limit = 55,
+    sequence_locked = 78,
 
     // connect input
     invalid_script = 39,
@@ -216,19 +221,24 @@ enum error_code_t
     op_check_locktime_verify3,
     op_check_locktime_verify4,
     op_check_locktime_verify5,
-    op_check_locktime_verify6
+    op_check_locktime_verify6,
+    op_check_sequence_verify1,
+    op_check_sequence_verify2,
+    op_check_sequence_verify3,
+    op_check_sequence_verify4,
+    op_check_sequence_verify5,
+    op_check_sequence_verify6,
+    op_check_sequence_verify7
 };
 
 enum error_condition_t
 {
-    //// validate
-    //validate_failed = 1,
-    //forced_removal
 };
 
 BC_API code make_error_code(error_code_t e);
 BC_API std::error_condition make_error_condition(error_condition_t e);
 BC_API error_code_t boost_to_error_code(const boost_code& ec);
+BC_API error_code_t posix_to_error_code(int ec);
 
 } // namespace error
 } // namespace libbitcoin

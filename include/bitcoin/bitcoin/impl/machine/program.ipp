@@ -39,8 +39,7 @@ namespace machine {
 inline bool program::is_valid() const
 {
     // An invalid sequence indicates a failure deserializing operations.
-    return script_.is_valid_operations() &&
-        (script_.satoshi_content_size() <= max_script_size);
+    return script_.is_valid_operations() && !script_.is_unspendable();
 }
 
 inline uint32_t program::forks() const
@@ -101,7 +100,7 @@ inline bool program::increment_operation_count(const operation& op)
 inline bool program::increment_multisig_public_key_count(int32_t count)
 {
     // bit.ly/2d1bsdB
-    if (count < 0 || count > max_script_public_keys)
+    if (count < 0 || count > static_cast<int32_t>(max_script_public_keys))
         return false;
 
     // Addition is safe due to script size validation.
@@ -146,13 +145,13 @@ inline void program::push(bool value)
 // Be explicit about the intent to move or copy, to get compiler help.
 inline void program::push_move(value_type&& item)
 {
-    primary_.emplace_back(std::move(item));
+    primary_.push_back(std::move(item));
 }
 
 // Be explicit about the intent to move or copy, to get compiler help.
 inline void program::push_copy(const value_type& item)
 {
-    primary_.emplace_back(item);
+    primary_.push_back(item);
 }
 
 // Primary stack (pop).
@@ -222,7 +221,7 @@ inline bool program::pop(data_stack& section, size_t count)
         return false;
 
     for (size_t i = 0; i < count; ++i)
-        section.emplace_back(pop());
+        section.push_back(pop());
 
     return true;
 }
@@ -354,7 +353,7 @@ inline bool program::empty_alternate() const
 
 inline void program::push_alternate(value_type&& value)
 {
-    alternate_.emplace_back(std::move(value));
+    alternate_.push_back(std::move(value));
 }
 
 // This must be guarded.
@@ -371,6 +370,7 @@ inline program::value_type program::pop_alternate()
 
 inline void program::open(bool value)
 {
+    negative_count_ += (value ? 0 : 1);
     condition_.push_back(value);
 }
 
@@ -378,14 +378,26 @@ inline void program::open(bool value)
 inline void program::negate()
 {
     BITCOIN_ASSERT(!closed());
-    condition_.back() = !condition_.back();
+
+    const auto value = condition_.back();
+    negative_count_ += (value ? 1 : -1);
+    condition_.back() = !value;
+
+    // Optimized above to avoid succeeded loop.
+    ////condition_.back() = !condition_.back();
 }
 
 // This must be guarded.
 inline void program::close()
 {
     BITCOIN_ASSERT(!closed());
+
+    const auto value = condition_.back();
+    negative_count_ += (value ? 0 : -1);
     condition_.pop_back();
+
+    // Optimized above to avoid succeeded loop.
+    ////condition_.pop_back();
 }
 
 inline bool program::closed() const
@@ -395,8 +407,11 @@ inline bool program::closed() const
 
 inline bool program::succeeded() const
 {
-    const auto is_true = [](bool value) { return value; };
-    return std::all_of(condition_.begin(), condition_.end(), is_true);
+    return negative_count_ == 0;
+
+    // Optimized above to avoid succeeded loop.
+    ////const auto is_true = [](bool value) { return value; };
+    ////return std::all_of(condition_.begin(), condition_.end(), true);
 }
 
 } // namespace machine

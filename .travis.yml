@@ -24,7 +24,7 @@ branches:
 
 env:
    global:
-     - CONAN_REFERENCE: "bitprim-core/0.2"
+     - CONAN_REFERENCE: "bitprim-core/0.4"
      - CONAN_USERNAME: "bitprim"
      - CONAN_LOGIN_USERNAME: "bitprim-bintray"
      - CONAN_CHANNEL: "testing"
@@ -42,16 +42,30 @@ osx: &osx
    os: osx
    language: generic
 
+
 matrix:
    include:
+      # - os: osx
+      #   osx_image: xcode9.1
+      #   env: CHECK_FORMATTING=true
+
+      - <<: *linux
+        env: CHECK_FORMATTING=true
+   
+      - <<: *linux
+        env: PUSH_TO_REPOS=true
+
       - <<: *linux
         env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49
 
       - <<: *linux
-        env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54
+        env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc54
 
       - <<: *linux
-        env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63
+        env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc63
+
+      - <<: *linux
+        env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc72
 
       - <<: *linux
         env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39
@@ -63,23 +77,63 @@ matrix:
         osx_image: xcode7.3
         env: CONAN_APPLE_CLANG_VERSIONS=7.3
 
-      - <<: *osx
-        osx_image: xcode8.2
-        env: CONAN_APPLE_CLANG_VERSIONS=8.0
+      # - <<: *osx
+      #   osx_image: xcode8.2
+      #   env: CONAN_APPLE_CLANG_VERSIONS=8.0
 
       - <<: *osx
         osx_image: xcode8.3
         env: CONAN_APPLE_CLANG_VERSIONS=8.1
 
+
+      # # - <<: *linux
+      # - <<: *osx
+      #   env: PUSH_TO_REPOS=true
+
 install:
   - cd ${TRAVIS_BUILD_DIR}
-  - chmod +x .travis/install.sh
-  - ./.travis/install.sh
+
+  - |
+    # if [[ "${PUSH_TO_REPOS}" != "true" ]]; then
+    if [[ "${PUSH_TO_REPOS}" != "true" && "${CHECK_FORMATTING}" != "true" ]]; then
+      chmod +x .travis/install.sh
+      ./.travis/install.sh
+    fi    
+
 
 script:
-  - cd ${TRAVIS_BUILD_DIR}
-  - chmod +x .travis/run.sh
-  - ./.travis/run.sh
+  - git fetch --unshallow
+  # - git rev-list --count --first-parent HEAD
+  # - git rev-list --count HEAD
+  # - export BITPRIM_BUILD_NUMBER="$(git rev-list --count --first-parent HEAD)"
+  # - echo "${BITPRIM_BUILD_NUMBER}"
+  - export BITPRIM_BUILD_NUMBER="$(git describe)"
+  - echo "${BITPRIM_BUILD_NUMBER}"
+
+  - |
+    if [[ "${CHECK_FORMATTING}" == "true" ]]; then
+      cd ${TRAVIS_BUILD_DIR}
+      chmod a+x .travis/check_format.sh
+      /usr/bin/docker run --rm -ti -v ${TRAVIS_BUILD_DIR}:/home/conan/project \
+                                   -v ${TRAVIS_BUILD_DIR}/.travis/check_format.sh:/tmp/check_format.sh lasote/conanclang40 \
+                                   /bin/bash \
+                                   -c /tmp/check_format.sh
+
+    fi
+
+  - |
+    if [[ "${PUSH_TO_REPOS}" == "true" ]]; then
+      chmod +x .travis/push_other_repo.sh
+      ./.travis/push_other_repo.sh
+    fi    
+
+  - |
+    if [[ "${PUSH_TO_REPOS}" != "true" && "${CHECK_FORMATTING}" != "true" ]]; then
+      cd ${TRAVIS_BUILD_DIR}
+      chmod +x .travis/run.sh
+      ./.travis/run.sh
+    fi    
+
 
 notifications:
   email: false

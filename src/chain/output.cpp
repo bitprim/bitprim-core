@@ -168,11 +168,12 @@ bool output::is_valid() const
 data_chunk output::to_data(bool wire) const
 {
     data_chunk data;
-    data.reserve(serialized_size(wire));
+    const auto size = serialized_size(wire);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(ostream, wire);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(wire));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 
@@ -239,6 +240,12 @@ void output::set_script(chain::script&& value)
     invalidate_cache();
 }
 
+bool output::is_dust(uint64_t minimum_value) const
+{
+    // If provably unspendable it does not expand the unspent output set.
+    return value_ < minimum_value && !script_.is_unspendable();
+}
+
 // protected
 void output::invalidate_cache() const
 {
@@ -259,7 +266,7 @@ void output::invalidate_cache() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-payment_address output::address() const
+payment_address output::address(bool testnet /* = false */) const
 {
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
@@ -269,8 +276,16 @@ payment_address output::address() const
     {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
-        address_ = std::make_shared<payment_address>(
-            payment_address::extract(script_));
+
+        // TODO: limit this to output patterns.
+        if (testnet){
+            address_ = std::make_shared<payment_address>(
+                    payment_address::extract(script_, payment_address::testnet_p2kh, payment_address::testnet_p2sh));
+        } else {
+            address_ = std::make_shared<payment_address>(
+                    payment_address::extract(script_));
+        }
+
         mutex_.unlock_and_lock_upgrade();
         //---------------------------------------------------------------------
     }

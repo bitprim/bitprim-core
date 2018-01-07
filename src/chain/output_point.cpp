@@ -27,8 +27,6 @@
 namespace libbitcoin {
 namespace chain {
 
-const size_t output_point::validation_type::not_specified = max_size_t;
-
 // Constructors.
 //-----------------------------------------------------------------------------
 
@@ -121,38 +119,39 @@ bool output_point::operator!=(const output_point& other) const
 // Deserialization.
 //-----------------------------------------------------------------------------
 
-output_point output_point::factory_from_data(const data_chunk& data)
+output_point output_point::factory_from_data(const data_chunk& data, bool wire)
 {
     output_point instance;
-    instance.from_data(data);
+    instance.from_data(data, wire);
     return instance;
 }
 
-output_point output_point::factory_from_data(std::istream& stream)
+output_point output_point::factory_from_data(std::istream& stream, bool wire)
 {
     output_point instance;
-    instance.from_data(stream);
+    instance.from_data(stream, wire);
     return instance;
 }
 
-output_point output_point::factory_from_data(reader& source)
+output_point output_point::factory_from_data(reader& source, bool wire)
 {
     output_point instance;
-    instance.from_data(source);
+    instance.from_data(source, wire);
     return instance;
 }
 
 // Validation.
 //-----------------------------------------------------------------------------
 
-// For tx pool validation target_height is that of any candidate block.
-bool output_point::is_mature(size_t target_height) const
+// For tx pool validation height is that of the candidate block.
+bool output_point::is_mature(size_t height) const
 {
-    if (validation.height == validation_type::not_specified)
+    // Coinbase (null) inputs and those with non-coinbase prevouts are mature.
+    if (!validation.coinbase || is_null())
         return true;
 
-    // The (non-coinbase) outpoint refers to a coinbase output, measure depth.
-    return (target_height - validation.height) >= coinbase_maturity;
+    // The (non-coinbase) input refers to a coinbase output, so validate depth.
+    return floor_subtract(height, validation.height) >= coinbase_maturity;
 }
 
 } // namespace chain

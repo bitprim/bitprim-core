@@ -37,7 +37,7 @@ const uint32_t get_block_transactions::version_minimum = version::level::bip152;
 const uint32_t get_block_transactions::version_maximum = version::level::bip152;
 
 get_block_transactions get_block_transactions::factory_from_data(
-    const uint32_t version, const data_chunk& data)
+    uint32_t version, const data_chunk& data)
 {
     get_block_transactions instance;
     instance.from_data(version, data);
@@ -45,7 +45,7 @@ get_block_transactions get_block_transactions::factory_from_data(
 }
 
 get_block_transactions get_block_transactions::factory_from_data(
-    const uint32_t version, std::istream& stream)
+    uint32_t version, std::istream& stream)
 {
     get_block_transactions instance;
     instance.from_data(version, stream);
@@ -53,7 +53,7 @@ get_block_transactions get_block_transactions::factory_from_data(
 }
 
 get_block_transactions get_block_transactions::factory_from_data(
-    const uint32_t version, reader& source)
+    uint32_t version, reader& source)
 {
     get_block_transactions instance;
     instance.from_data(version, source);
@@ -141,11 +141,12 @@ bool get_block_transactions::from_data(uint32_t version,
 data_chunk get_block_transactions::to_data(uint32_t version) const
 {
     data_chunk data;
-    data.reserve(serialized_size(version));
+    const auto size = serialized_size(version);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(version, ostream);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(version));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 

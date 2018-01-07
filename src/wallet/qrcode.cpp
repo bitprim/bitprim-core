@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef WITH_QRENCODE
+
 #include <bitcoin/bitcoin/wallet/qrcode.hpp>
 
 #include <iostream>
@@ -28,7 +30,6 @@
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
 
-#ifdef WITH_QRENCODE
 
 namespace libbitcoin {
 namespace wallet {

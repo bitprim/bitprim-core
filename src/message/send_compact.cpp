@@ -32,24 +32,24 @@ const std::string send_compact::command = "sendcmpct";
 const uint32_t send_compact::version_minimum = version::level::bip152;
 const uint32_t send_compact::version_maximum = version::level::bip152;
 
-send_compact send_compact::factory_from_data(
-    const uint32_t version, const data_chunk& data)
+send_compact send_compact::factory_from_data(uint32_t version,
+    const data_chunk& data)
 {
     send_compact instance;
     instance.from_data(version, data);
     return instance;
 }
 
-send_compact send_compact::factory_from_data(
-    const uint32_t version, std::istream& stream)
+send_compact send_compact::factory_from_data(uint32_t version,
+    std::istream& stream)
 {
     send_compact instance;
     instance.from_data(version, stream);
     return instance;
 }
 
-send_compact send_compact::factory_from_data(
-    const uint32_t version, reader& source)
+send_compact send_compact::factory_from_data(uint32_t version,
+    reader& source)
 {
     send_compact instance;
     instance.from_data(version, source);
@@ -133,11 +133,12 @@ bool send_compact::from_data(uint32_t version,
 data_chunk send_compact::to_data(uint32_t version) const
 {
     data_chunk data;
-    data.reserve(serialized_size(version));
+    const auto size = serialized_size(version);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(version, ostream);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(version));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 

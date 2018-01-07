@@ -130,11 +130,11 @@ bool input::from_data(std::istream& stream, bool wire)
     return from_data(source, wire);
 }
 
-bool input::from_data(reader& source, bool)
+bool input::from_data(reader& source, bool wire)
 {
     reset();
 
-    if (!previous_output_.from_data(source))
+    if (!previous_output_.from_data(source, wire))
         return false;
 
     script_.from_data(source, true);
@@ -165,11 +165,12 @@ bool input::is_valid() const
 data_chunk input::to_data(bool wire) const
 {
     data_chunk data;
-    data.reserve(serialized_size(wire));
+    const auto size = serialized_size(wire);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(ostream, wire);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(wire));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 
@@ -179,9 +180,9 @@ void input::to_data(std::ostream& stream, bool wire) const
     to_data(sink, wire);
 }
 
-void input::to_data(writer& sink, bool) const
+void input::to_data(writer& sink, bool wire) const
 {
-    previous_output_.to_data(sink);
+    previous_output_.to_data(sink, wire);
     script_.to_data(sink, true);
     sink.write_4_bytes_little_endian(sequence_);
 }
@@ -189,9 +190,9 @@ void input::to_data(writer& sink, bool) const
 // Size.
 //-----------------------------------------------------------------------------
 
-size_t input::serialized_size(bool) const
+size_t input::serialized_size(bool wire) const
 {
-    return previous_output_.serialized_size() +
+    return previous_output_.serialized_size(wire) +
         script_.serialized_size(true) + sizeof(sequence_);
 }
 
@@ -280,6 +281,8 @@ payment_address input::address() const
     {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
+
+        // TODO: limit this to input patterns.
         address_ = std::make_shared<payment_address>(
             payment_address::extract(script_));
         mutex_.unlock_and_lock_upgrade();
@@ -299,6 +302,28 @@ payment_address input::address() const
 bool input::is_final() const
 {
     return sequence_ == max_input_sequence;
+}
+
+bool input::is_locked(size_t block_height, uint32_t median_time_past) const
+{
+    if ((sequence_ & relative_locktime_disabled) != 0)
+        return false;
+
+    // bip68: a minimum block-height constraint over the input's age.
+    const auto minimum = (sequence_ & relative_locktime_mask);
+    const auto& prevout = previous_output_.validation;
+
+    if ((sequence_ & relative_locktime_time_locked) != 0)
+    {
+        // Median time past must be monotonically-increasing by block.
+        BITCOIN_ASSERT(median_time_past >= prevout.median_time_past);
+        const auto age_seconds = median_time_past - prevout.median_time_past;
+        return age_seconds < (minimum << relative_locktime_seconds_shift);
+    }
+
+    BITCOIN_ASSERT(block_height >= prevout.height);
+    const auto age_blocks = block_height - prevout.height;
+    return age_blocks < minimum;
 }
 
 size_t input::signature_operations(bool bip16_active) const

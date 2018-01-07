@@ -33,7 +33,7 @@ const std::string transaction::command = "tx";
 const uint32_t transaction::version_minimum = version::level::minimum;
 const uint32_t transaction::version_maximum = version::level::maximum;
 
-transaction transaction::factory_from_data(const uint32_t version,
+transaction transaction::factory_from_data(uint32_t version,
     const data_chunk& data)
 {
     transaction instance;
@@ -41,7 +41,7 @@ transaction transaction::factory_from_data(const uint32_t version,
     return instance;
 }
 
-transaction transaction::factory_from_data(const uint32_t version,
+transaction transaction::factory_from_data(uint32_t version,
     std::istream& stream)
 {
     transaction instance;
@@ -49,7 +49,7 @@ transaction transaction::factory_from_data(const uint32_t version,
     return instance;
 }
 
-transaction transaction::factory_from_data(const uint32_t version,
+transaction transaction::factory_from_data(uint32_t version,
     reader& source)
 {
     transaction instance;
@@ -97,37 +97,37 @@ transaction::transaction(uint32_t version, uint32_t locktime,
 
 bool transaction::from_data(uint32_t, const data_chunk& data)
 {
-    return chain::transaction::from_data(data);
+    return chain::transaction::from_data(data, true);
 }
 
 bool transaction::from_data(uint32_t, std::istream& stream)
 {
-    return chain::transaction::from_data(stream);
+    return chain::transaction::from_data(stream, true);
 }
 
 bool transaction::from_data(uint32_t, reader& source)
 {
-    return chain::transaction::from_data(source);
+    return chain::transaction::from_data(source, true);
 }
 
 data_chunk transaction::to_data(uint32_t) const
 {
-    return chain::transaction::to_data();
+    return chain::transaction::to_data(true);
 }
 
 void transaction::to_data(uint32_t, std::ostream& stream) const
 {
-    chain::transaction::to_data(stream);
+    chain::transaction::to_data(stream, true);
 }
 
 void transaction::to_data(uint32_t, writer& sink) const
 {
-    chain::transaction::to_data(sink);
+    chain::transaction::to_data(sink, true);
 }
 
 size_t transaction::serialized_size(uint32_t) const
 {
-    return chain::transaction::serialized_size();
+    return chain::transaction::serialized_size(true);
 }
 
 transaction& transaction::operator=(chain::transaction&& other)

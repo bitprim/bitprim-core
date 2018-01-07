@@ -147,11 +147,12 @@ bool headers::from_data(uint32_t version, reader& source)
 data_chunk headers::to_data(uint32_t version) const
 {
     data_chunk data;
-    data.reserve(serialized_size(version));
+    const auto size = serialized_size(version);
+    data.reserve(size);
     data_sink ostream(data);
     to_data(version, ostream);
     ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(version));
+    BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 
@@ -167,6 +168,24 @@ void headers::to_data(uint32_t version, writer& sink) const
 
     for (const auto& element: elements_)
         element.to_data(version, sink);
+}
+
+bool headers::is_sequential() const
+{
+    if (elements_.empty())
+        return true;
+
+    auto previous = elements_.front().hash();
+
+    for (auto it = elements_.begin() + 1; it != elements_.end(); ++it)
+    {
+        if (it->previous_block_hash() != previous)
+            return false;
+
+        previous = it->hash();
+    }
+
+    return true;
 }
 
 void headers::to_hashes(hash_list& out) const
