@@ -129,6 +129,8 @@ public:
     uint32_t bits() const;
     void set_bits(uint32_t value);
 
+    double difficulty() const;
+
     uint32_t nonce() const;
     void set_nonce(uint32_t value);
 
