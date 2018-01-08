@@ -159,7 +159,6 @@ protected:
     void invalidate_cache() const;
 
 private:
-
     mutable upgrade_mutex mutex_;
     mutable std::shared_ptr<hash_digest> hash_;
 
