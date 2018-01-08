@@ -159,6 +159,7 @@ protected:
     void invalidate_cache() const;
 
 private:
+
     mutable upgrade_mutex mutex_;
     mutable std::shared_ptr<hash_digest> hash_;
 
@@ -169,6 +170,8 @@ private:
     uint32_t bits_;
     uint32_t nonce_;
 };
+
+double bits_to_difficulty (const uint32_t & bits);
 
 } // namespace chain
 } // namespace libbitcoin

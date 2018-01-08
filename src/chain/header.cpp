@@ -359,15 +359,18 @@ double header::difficulty() const
     return bits_to_difficulty(bits_);
 }
 
-double bits_to_difficulty (const uint32_t & bits){
+double bits_to_difficulty (const uint32_t & bits)
+{
     double diff = 1.0;
     int shift = (bits >> 24) & 0xff;
     diff = (double)0x0000ffff / (double)(bits & 0x00ffffff);
-    while (shift < 29) {
+    while (shift < 29)
+    {
         diff *= 256.0;
         ++shift;
     }
-    while (shift > 29) {
+    while (shift > 29)
+    {
         diff /= 256.0;
         --shift;
     }
