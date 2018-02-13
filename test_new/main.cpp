@@ -27,7 +27,7 @@
 using namespace libbitcoin::wallet;
 using namespace std;
 
-
+#ifdef BITPRIM_CURRENCY_BCH
 TEST_CASE("[payment_address__construct__payment__valid_expected] payment_address__construct__payment__valid_expected") {
 
     libbitcoin::set_bitcoin_cash(true);
@@ -47,4 +47,6 @@ TEST_CASE("[payment_address__construct__payment__valid_expected] payment_address
         CHECK(from_legacy.encoded_cashaddr() == from_cashaddr.encoded_cashaddr());
     }
 }
+#endif //BITPRIM_CURRENCY_BCH
+
 

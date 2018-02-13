@@ -133,6 +133,7 @@ inline uint32_t bits_high(const chain_state::data& values)
     return values.bits.ordered.back();
 }
 
+#ifdef BITPRIM_CURRENCY_BCH
 uint256_t chain_state::difficulty_adjustment_cash(uint256_t target) {
     return target + (target >> 2);
 }
@@ -140,6 +141,8 @@ uint256_t chain_state::difficulty_adjustment_cash(uint256_t target) {
 bool is_cash_hf_enabled(const uint32_t median_time_past) {
     return (median_time_past > bitcoin_cash_daa_activation_time);
 }
+#endif //BITPRIM_CURRENCY_BCH
+
 
 // Statics.
 // activation
@@ -204,7 +207,7 @@ chain_state::activations chain_state::activation(const data& values,
     }
 
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     if (bip34_ice)
     {
         result.forks |= (rule_fork::bip34_rule & forks);
@@ -259,10 +262,12 @@ chain_state::activations chain_state::activation(const data& values,
         result.minimum_version = first_version;
     }
 
-    if (is_bitcoin_cash() && is_cash_hf_enabled(median_time_past(values, 0)))
-    {
+#ifdef BITPRIM_CURRENCY_BCH
+    if (is_cash_hf_enabled(median_time_past(values, 0))) {
         result.forks |= (rule_fork::cash_low_s_rule & forks);
     }
+#endif //BITPRIM_CURRENCY_BCH
+
     return result;
 }
 
@@ -270,7 +275,12 @@ size_t chain_state::bits_count(size_t height, uint32_t forks)
 {
     const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
     const auto easy_work = testnet && !is_retarget_height(height);
+
+#ifdef BITPRIM_CURRENCY_BCH
     return easy_work ? std::min(height, retargeting_interval) : std::min(height, chain_state_timestamp_count);
+#else
+    return easy_work ? std::min(height, retargeting_interval) : 1;
+#endif //BITPRIM_CURRENCY_BCH
 }
 
 size_t chain_state::version_count(size_t height, uint32_t forks)
@@ -287,9 +297,12 @@ size_t chain_state::version_count(size_t height, uint32_t forks)
 
 size_t chain_state::timestamp_count(size_t height, uint32_t)
 {
-    // const auto checked = is_checkpointed(height, checkpoints);
-    // return checked ? 1 : std::min(height, chain_state_timestamp_count); //TODO(bitprim): check what happens with Bitcoin Legacy...?
+
+#ifdef BITPRIM_CURRENCY_BCH
     return std::min(height, chain_state_timestamp_count); //TODO(bitprim): check what happens with Bitcoin Legacy...?
+#else
+    return std::min(height, median_time_past_interval);
+#endif //BITPRIM_CURRENCY_BCH
 }
 
 size_t chain_state::retarget_height(size_t height, uint32_t)
@@ -327,6 +340,7 @@ size_t chain_state::bip9_bit0_height(size_t height, uint32_t forks)
 typename chain_state::timestamps::const_iterator 
 timestamps_position(chain_state::timestamps const& times, bool tip) {
 
+#ifdef BITPRIM_CURRENCY_BCH
     if (tip) {
         if (times.size() >= bitcoin_cash_offset_tip)
             return times.begin() + bitcoin_cash_offset_tip;
@@ -334,6 +348,8 @@ timestamps_position(chain_state::timestamps const& times, bool tip) {
         if (times.size() >= bitcoin_cash_offset_tip_minus_6)
             return times.begin() + bitcoin_cash_offset_tip_minus_6;
     }
+#endif //BITPRIM_CURRENCY_BCH
+
 
     if (times.size() > 11) {
         return times.begin() + (times.size() - 11);
@@ -402,6 +418,8 @@ auto select_1_3(T&& a, U&& b, V&& c, R r) FN(
 // ------------------------------------------------------------------------------------------------------------
 
 
+#ifdef BITPRIM_CURRENCY_BCH
+
 // New algorithm
 uint32_t chain_state::cash_difficulty_adjustment(data const& values) {
     // precondition: values.timestamp.size() >= 147
@@ -448,6 +466,8 @@ uint32_t chain_state::cash_difficulty_adjustment(data const& values) {
     return compact(nextTarget).normal();
 }
 
+#endif //BITPRIM_CURRENCY_BCH
+
 // work_required
 //-----------------------------------------------------------------------------
 
@@ -457,11 +477,13 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
         return{};
     }
         
-    bool daa_active = false;
     auto last_time_span = median_time_past(values, 0, true);
-    if ((last_time_span >= bitcoin_cash_daa_activation_time) && (is_bitcoin_cash())){
-        daa_active = true;
-    }
+
+#ifdef BITPRIM_CURRENCY_BCH
+    bool daa_active = last_time_span >= bitcoin_cash_daa_activation_time;
+#else
+    bool daa_active = false;
+#endif //BITPRIM_CURRENCY_BCH
 
     if (is_retarget_height(values.height) && !(daa_active)) {
         return work_required_retarget(values);
@@ -471,8 +493,9 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
         return easy_work_required(values, daa_active);
     }
 
-    if (is_bitcoin_cash() && values.height > bitcoin_cash_activation_height) {
-        if (!daa_active) {
+#ifdef BITPRIM_CURRENCY_BCH
+    if (values.height > bitcoin_cash_activation_height) {
+        if ( ! daa_active) {
             auto six_time_span = median_time_past(values, 0, false);
             // precondition: last_time_span >= six_time_span
             if ((last_time_span - six_time_span) > (12 * 3600)) {
@@ -480,28 +503,31 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
             }
         } else {
             return cash_difficulty_adjustment(values);
-	}
+	    }
     }
+#endif //BITPRIM_CURRENCY_BCH
 
     return bits_high(values);
 }
 
-uint32_t chain_state::work_required_adjust_cash(const data& values)
-{
+
+#ifdef BITPRIM_CURRENCY_BCH
+uint32_t chain_state::work_required_adjust_cash(const data& values) {
     const compact bits(bits_high(values));
     uint256_t target(bits);
     target = difficulty_adjustment_cash(target); //target += (target >> 2);
     static const uint256_t pow_limit(compact{ proof_of_work_limit });
     return target > pow_limit ? proof_of_work_limit : compact(target).normal();
-
 }
+#endif //BITPRIM_CURRENCY_BCH
+
 
 // [CalculateNextWorkRequired]
 uint32_t chain_state::work_required_retarget(const data& values)
 {
     const compact bits(bits_high(values));
     
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     uint256_t target(bits);
     static const uint256_t pow_limit("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     // hash_number retarget_new;
@@ -531,7 +557,7 @@ uint32_t chain_state::work_required_retarget(const data& values)
     return target > pow_limit ? proof_of_work_limit : compact(target).normal();
 
 
-#else //BITPRIM_LITECOIN
+#else //BITPRIM_CURRENCY_LTC
     BITCOIN_ASSERT_MSG(!bits.is_overflowed(), "previous block has bad bits");
 	static const uint256_t pow_limit(compact{ proof_of_work_limit });    
 
@@ -541,7 +567,7 @@ uint32_t chain_state::work_required_retarget(const data& values)
 
     // The proof_of_work_limit constant is pre-normalized.
     return target > pow_limit ? proof_of_work_limit : compact(target).normal();
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 }
 
 // Get the bounded total time spanning the highest 2016 blocks.
@@ -558,8 +584,7 @@ uint32_t chain_state::retarget_timespan(const data& values)
     return range_constrain(timespan, min_timespan, max_timespan);
 }
 
-uint32_t chain_state::easy_work_required(const data& values, bool daa_active)
-{
+uint32_t chain_state::easy_work_required(const data& values, bool daa_active) {
     BITCOIN_ASSERT(values.height != 0);
 
     // If the time limit has passed allow a minimum difficulty block.
@@ -569,13 +594,20 @@ uint32_t chain_state::easy_work_required(const data& values, bool daa_active)
     auto height = values.height;
     auto& bits = values.bits.ordered;
 
-    if(daa_active) 
+    if (daa_active) { 
+#ifdef BITPRIM_CURRENCY_BCH
         return cash_difficulty_adjustment(values);
-    else
+#else
+//Note: Could not happend: DAA and not BCH
+#endif //BITPRIM_CURRENCY_BCH
+    } else {
     // Reverse iterate the ordered-by-height list of header bits.
-        for (auto bit = bits.rbegin(); bit != bits.rend(); ++bit)
-            if (is_retarget_or_non_limit(--height, *bit))
+        for (auto bit = bits.rbegin(); bit != bits.rend(); ++bit) {
+            if (is_retarget_or_non_limit(--height, *bit)) {
                 return *bit;
+            }
+        }
+    }
 
     // Since the set of heights is either a full retarget range or ends at
     // zero this is not reachable unless the data set is invalid.

@@ -33,23 +33,25 @@ class BitprimCoreConan(ConanFile):
 
     options = {"shared": [True, False],
                "fPIC": [True, False],
-               "with_litecoin": [True, False],
                "with_icu": [True, False],
                "with_qrencode": [True, False],
                "with_tests": [True, False],
-               "with_examples": [True, False]
+               "with_examples": [True, False],
+               "currency": "ANY" #["BCH", "BTC", "LTC", ...]
     }
 
-            #    "with_png": [True, False],
+        # "with_litecoin": [True, False],
+    #    "with_png": [True, False],
 
     default_options = "shared=False", \
         "fPIC=True", \
-        "with_litecoin=False", \
         "with_icu=False", \
         "with_qrencode=False", \
         "with_tests=False", \
-        "with_examples=False"
+        "with_examples=False", \
+        "currency=BCH"
 
+        # "with_litecoin=False", \
         # "with_png=False", \
 
 
@@ -127,7 +129,13 @@ class BitprimCoreConan(ConanFile):
         cmake.definitions["WITH_TESTS"] = option_on_off(self.options.with_tests)
         cmake.definitions["WITH_EXAMPLES"] = option_on_off(self.options.with_examples)
 
-        cmake.definitions["WITH_LITECOIN"] = option_on_off(self.options.with_litecoin)
+        # cmake.definitions["WITH_LITECOIN"] = option_on_off(self.options.with_litecoin)
+
+        # cmake.definitions["WITH_LTC"] = option_on_off(self.options.currency == 'LTC')
+        # cmake.definitions["WITH_BTC"] = option_on_off(self.options.currency == 'LTC')
+        # cmake.definitions["WITH_LITECOIN"] = option_on_off(self.options.currency == 'LTC')
+
+        cmake.definitions["CURRENCY"] = self.options.currency
 
         cmake.definitions["WITH_ICU"] = option_on_off(self.options.with_icu)
         cmake.definitions["WITH_QRENCODE"] = option_on_off(self.options.with_qrencode)

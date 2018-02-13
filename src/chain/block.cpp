@@ -57,7 +57,7 @@ namespace chain {
 using namespace bc::config;
 using namespace bc::machine;
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 //Litecoin mainnet genesis block
 static const std::string encoded_mainnet_genesis_block =
     "01000000" //version
@@ -99,7 +99,7 @@ static const std::string encoded_testnet_genesis_block =
     "43" //pk_script length
     "41040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9ac" //pk_script
     "00000000"; //locktime
-#else //BITPRIM_LITECOIN
+#else //BITPRIM_CURRENCY_LTC
 
 static const std::string encoded_mainnet_genesis_block =
     "01000000"
@@ -140,7 +140,7 @@ static const std::string encoded_testnet_genesis_block =
     "43"
     "4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
     "00000000";
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 
 // Constructors.
 //-----------------------------------------------------------------------------
@@ -247,7 +247,7 @@ bool block::from_data(reader& source)
     const auto count = source.read_size_little_endian();
 
     // Guard against potential for arbitary memory allocation.
-    if (count > get_max_block_size(is_bitcoin_cash()))
+    if (count > get_max_block_size())
         source.invalidate();
     else
         transactions_.resize(count);
@@ -757,7 +757,7 @@ code block::check() const
     if ((ec = header_.check()))
         return ec;
 
-    else if (serialized_size() > get_max_block_size(is_bitcoin_cash()))
+    else if (serialized_size() > get_max_block_size())
         return error::block_size_limit;
 
     else if (transactions_.empty())
@@ -784,7 +784,7 @@ code block::check() const
     // case they are ignored. This means that p2sh sigops are not counted here.
     // This is a preliminary check, the final count must come from connect().
     // Reenable once sigop caching is implemented, otherwise is deoptimization.
-    ////else if (signature_operations(false) > get_max_block_sigops(is_bitcoin_cash()))
+    ////else if (signature_operations(false) > get_max_block_sigops())
     ////    return error::block_legacy_sigop_limit;
 
     else

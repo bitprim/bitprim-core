@@ -81,6 +81,8 @@ BC_CONSTEXPR size_t min_coinbase_size = 2;
 BC_CONSTEXPR size_t max_coinbase_size = 100;
 
 BC_CONSTEXPR size_t median_time_past_interval = 11;
+
+#ifdef BITPRIM_CURRENCY_BCH
 BC_CONSTEXPR size_t bitcoin_cash_retarget_blocks = 6;
 //BC_CONSTEXPR size_t chain_state_timestamp_count = median_time_past_interval + bitcoin_cash_retarget_blocks;
 
@@ -90,9 +92,11 @@ BC_CONSTEXPR size_t chain_state_timestamp_count = new_bitcoin_cash_retarget_algo
 
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11;
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 6;
+BC_CONSTEXPR size_t max_block_size_cash = 8000000;
+#endif //BITPRIM_CURRENCY_BCH
+
 
 BC_CONSTEXPR size_t max_block_size = 1000000;
-BC_CONSTEXPR size_t max_block_size_cash = 8000000;
 
 static const size_t one_mb_block = 1000000;
 static const size_t sigops_per_mb = 20000;
@@ -103,31 +107,56 @@ BC_CONSTEXPR size_t coinbase_maturity = 100;
 BC_CONSTEXPR size_t locktime_threshold = 500000000;
 // BC_CONSTEXPR size_t max_block_size = 1000000;
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 //0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1e0fffff;
-#else // BITPRIM_LITECOIN
+#else // BITPRIM_CURRENCY_LTC
 BC_CONSTEXPR size_t max_work_bits = 0x1d00ffff;
 // This may not be flexible, keep internal.
 //0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1d00ffff;
-#endif // BITPRIM_LITECOIN
+#endif // BITPRIM_CURRENCY_LTC
 
 // Derived.
 BC_CONSTEXPR size_t max_sigops_factor = 50;
 BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
+
+#ifdef BITPRIM_CURRENCY_BCH
 BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
+#endif //BITPRIM_CURRENCY_BCH
+
+
+
+// constexpr
+// size_t get_max_block_size(bool bitcoin_cash) {
+//     return bitcoin_cash ? max_block_size_cash : max_block_size;
+// }
+
+// constexpr
+// size_t get_max_block_sigops(bool bitcoin_cash) {
+//     return bitcoin_cash ? max_block_sigops_cash : max_block_sigops;
+// }
 
 
 constexpr
-size_t get_max_block_size(bool bitcoin_cash) {
-    return bitcoin_cash ? max_block_size_cash : max_block_size;
+size_t get_max_block_size() {
+#ifdef BITPRIM_CURRENCY_BCH
+    return max_block_size_cash;
+#else
+    return max_block_size;
+#endif //BITPRIM_CURRENCY_BCH
 }
 
 constexpr
-size_t get_max_block_sigops(bool bitcoin_cash) {
-    return bitcoin_cash ? max_block_sigops_cash : max_block_sigops;
+size_t get_max_block_sigops() {
+#ifdef BITPRIM_CURRENCY_BCH
+    return max_block_sigops_cash;
+#else
+    return max_block_sigops;
+#endif //BITPRIM_CURRENCY_BCH
 }
+
+
 
 BC_CONSTFUNC
 size_t get_allowed_sigops(const size_t block_size)
@@ -150,13 +179,13 @@ BC_CONSTEXPR uint32_t relative_locktime_time_locked = 0x00400000;
 
 BC_CONSTEXPR uint32_t retargeting_factor = 4;
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 BC_CONSTEXPR uint32_t target_spacing_seconds = 10 * 15;
 BC_CONSTEXPR uint32_t target_timespan_seconds = 2 * 7 * 24 * 60 * 15;
-#else //BITPRIM_LITECOIN
+#else //BITPRIM_CURRENCY_LTC
 BC_CONSTEXPR uint32_t target_spacing_seconds = 10 * 60;
 BC_CONSTEXPR uint32_t target_timespan_seconds = 2 * 7 * 24 * 60 * 60;
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 BC_CONSTEXPR uint32_t timestamp_future_seconds = 2 * 60 * 60;  //TODO(bitprim): New on v3.3.0 merge (September 2017), see how this affects Litecoin
 
 BC_CONSTEXPR uint32_t easy_spacing_factor = 2;
@@ -188,11 +217,14 @@ BC_CONSTEXPR size_t bip65_version = 4;
 BC_CONSTEXPR uint32_t bip9_version_bit0 = 0x00000001;
 BC_CONSTEXPR uint32_t bip9_version_base = 0x20000000;
 
+#ifdef BITPRIM_CURRENCY_BCH
 BC_CONSTEXPR size_t bitcoin_cash_activation_height = 478558;
 //November 13 2017
 BC_CONSTEXPR uint32_t bitcoin_cash_daa_activation_time = 1510600000;
+#endif //BITPRIM_CURRENCY_BCH
 
-#ifdef BITPRIM_LITECOIN
+
+#ifdef BITPRIM_CURRENCY_LTC
 
 // Mainnet activation parameters (bip34-style activations).
 BC_CONSTEXPR size_t mainnet_active = 750;
@@ -247,7 +279,7 @@ static const config::checkpoint testnet_allow_collisions_checkpoint
 };
 
 
-#else //BITPRIM_LITECOIN
+#else //BITPRIM_CURRENCY_LTC
 // Mainnet activation parameters (bip34-style activations).
 BC_CONSTEXPR size_t mainnet_active = 750;
 BC_CONSTEXPR size_t mainnet_enforce = 950;
@@ -298,7 +330,7 @@ static const config::checkpoint testnet_bip34_active_checkpoint
 {
     "0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8", 21111
 };
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 
 // These cannot be reactivated in a future branch due to window expiration.
 static const config::checkpoint mainnet_bip9_bit0_active_checkpoint
@@ -359,13 +391,13 @@ BC_CONSTFUNC uint64_t initial_block_subsidy_satoshi()
     return bitcoin_to_satoshi(initial_block_subsidy_bitcoin);
 }
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 // BC_CONSTEXPR uint64_t reward_interval = 840000;
 BC_CONSTEXPR uint64_t subsidy_interval = 840000;
-#else //BITPRIM_LITECOIN
+#else //BITPRIM_CURRENCY_LTC
 // BC_CONSTEXPR uint64_t reward_interval = 210000;
 BC_CONSTEXPR uint64_t subsidy_interval = 210000;
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 BC_CONSTEXPR uint64_t recursive_money = 0x02540be3f5;
 BC_CONSTFUNC uint64_t max_money()
 {

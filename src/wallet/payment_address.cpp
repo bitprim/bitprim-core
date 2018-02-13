@@ -29,14 +29,18 @@
 #include <bitcoin/bitcoin/multi_crypto_support.hpp>
 #include <bitcoin/bitcoin/wallet/ec_private.hpp>
 #include <bitcoin/bitcoin/wallet/ec_public.hpp>
+
+#ifdef BITPRIM_CURRENCY_BCH
 #include <bitcoin/bitcoin/wallet/cashaddr.hpp>
+#endif //BITPRIM_CURRENCY_BCH
+
 
 namespace libbitcoin {
 namespace wallet {
 
 using namespace bc::machine;
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 const uint8_t payment_address::mainnet_p2kh = 0x30;
 #else
 const uint8_t payment_address::mainnet_p2kh = 0x00;
@@ -103,6 +107,8 @@ bool payment_address::is_address(data_slice decoded)
 
 // Factories.
 // ----------------------------------------------------------------------------
+
+#ifdef BITPRIM_CURRENCY_BCH
 
 template <int frombits, int tobits, bool pad, typename O, typename I>
 bool ConvertBits(O &out, I it, I end) {
@@ -204,15 +210,16 @@ payment_address payment_address::from_string_cashaddr(std::string const& address
     // return {type, std::move(data)};
 }
 
+#endif //BITPRIM_CURRENCY_BCH
+
 payment_address payment_address::from_string(const std::string& address) {
     payment decoded;
     if ( ! decode_base58(decoded, address) || !is_address(decoded)) {
-        
-        if (is_bitcoin_cash()) {
-            return from_string_cashaddr(address);
-        } else {
-            return payment_address();
-        }
+#ifdef BITPRIM_CURRENCY_BCH
+    return from_string_cashaddr(address);
+#else
+    return payment_address();
+#endif //BITPRIM_CURRENCY_BCH
     }
 
     return payment_address(decoded);
@@ -273,6 +280,7 @@ std::string payment_address::encoded() const {
     return encode_base58(wrap(version_, hash_));
 }
 
+#ifdef BITPRIM_CURRENCY_BCH
 
 // Convert the data part to a 5 bit representation.
 template <typename T>
@@ -333,6 +341,8 @@ std::string encode_cashaddr_(payment_address const& wallet) {
 std::string payment_address::encoded_cashaddr() const {
     return encode_cashaddr_(*this);
 }
+
+#endif //BITPRIM_CURRENCY_BCH
 
 // Accessors.
 // ----------------------------------------------------------------------------

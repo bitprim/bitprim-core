@@ -163,7 +163,10 @@ public:
 
     static bool is_retarget_height(size_t height); //Need to be public, for Litecoin
 
+#ifdef BITPRIM_CURRENCY_BCH
     static uint256_t difficulty_adjustment_cash(uint256_t);
+#endif //BITPRIM_CURRENCY_BCH
+
 
     uint32_t get_next_work_required(uint32_t time_now);
 
@@ -207,14 +210,16 @@ private:
     // easy blocks
 
     //TODO(bitprim):
-    
+
+#ifdef BITPRIM_CURRENCY_BCH
     static uint32_t cash_difficulty_adjustment(data const& values);
+    static uint32_t work_required_adjust_cash(const data& values);
+#endif //BITPRIM_CURRENCY_BCH
+    
     static uint32_t work_required_easy(const data& values);
     static uint32_t elapsed_time_limit(const chain_state::data& values);
     static bool is_retarget_or_non_limit(size_t height, uint32_t bits); 
     
-    static uint32_t work_required_adjust_cash(const data& values);
-
     static uint32_t easy_work_required(const data& values, bool daa_active);
     static uint32_t easy_time_limit(const chain_state::data& values);
     static size_t retarget_distance(size_t height);

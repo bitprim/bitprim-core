@@ -83,8 +83,11 @@ public:
 
     /// Serializer.
     std::string encoded() const;
-    std::string encoded_cashaddr() const;
 
+#ifdef BITPRIM_CURRENCY_BCH
+    std::string encoded_cashaddr() const;
+#endif //BITPRIM_CURRENCY_BCH
+    
     /// Accessors.
     uint8_t version() const;
     const short_hash& hash() const;
@@ -98,7 +101,11 @@ private:
 
     /// Factories.
     static payment_address from_string(const std::string& address);
+
+#ifdef BITPRIM_CURRENCY_BCH
     static payment_address from_string_cashaddr(std::string const& address);
+#endif //BITPRIM_CURRENCY_BCH
+    
     static payment_address from_payment(const payment& decoded);
     static payment_address from_private(const ec_private& secret);
     static payment_address from_public(const ec_public& point, uint8_t version);

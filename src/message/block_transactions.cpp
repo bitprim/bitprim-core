@@ -121,7 +121,7 @@ bool block_transactions::from_data(uint32_t version, reader& source)
     const auto count = source.read_size_little_endian();
 
     // Guard against potential for arbitary memory allocation.
-    if (count > get_max_block_size(is_bitcoin_cash()))
+    if (count > get_max_block_size())
         source.invalidate();
     else
         transactions_.resize(count);

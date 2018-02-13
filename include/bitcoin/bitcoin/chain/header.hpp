@@ -134,9 +134,9 @@ public:
 
     hash_digest hash() const;
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     hash_digest litecoin_proof_of_work_hash() const;
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 
     // Validation.
     //-----------------------------------------------------------------------------

@@ -61,7 +61,10 @@ enum rule_fork : uint32_t
     /// Use median time past for locktime (soft fork, feature).
     bip113_rule = 1u << 10,
 
+#ifdef BITPRIM_CURRENCY_BCH
     cash_low_s_rule = 1u << 15,
+#endif //BITPRIM_CURRENCY_BCH
+
 
     /// Sentinel bit to indicate tx has not been validated.
     unverified = 1u << 31,

@@ -36,17 +36,17 @@ static std::string cashaddr_prefix_ = "bitcoincash";
 
 
 void set_currency(config::currency x) {
-#ifndef BITPRIM_LITECOIN
+#ifndef BITPRIM_CURRENCY_LTC
     currency_ = x;
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 }
 
 config::currency get_currency() {
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     return config::currency::litecoin;
 #else
     return currency_;
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 }
 
 
@@ -55,7 +55,7 @@ void set_network(config::settings x) {
 }
 
 void set_network(uint32_t identifier, bool bitcoin_cash) {
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     switch(identifier) {
         case netmagic::ltc_mainnet: set_network(config::settings::mainnet); break;
         case netmagic::ltc_testnet: set_network(config::settings::testnet); break;
@@ -78,7 +78,7 @@ void set_network(uint32_t identifier, bool bitcoin_cash) {
             default: set_network(config::settings::none);
         }
     }
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 }
 
 config::settings get_network() {
@@ -105,7 +105,7 @@ void set_cashaddr_prefix(std::string const& x) {
 }
 
 bool is_testnet(uint32_t identifier, bool bitcoin_cash) {
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
     return identifier == 0xf1c8d2fdu //4056470269u; //Litecoin Testnet Netmagic
 #else
     if (bitcoin_cash) {
@@ -113,7 +113,7 @@ bool is_testnet(uint32_t identifier, bool bitcoin_cash) {
     } else {
         return identifier == 0x0709110bu;  //Bitcoin Testnet Netmagic
     }
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 }
 
 } /*namespace libbitcoin*/

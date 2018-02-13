@@ -75,7 +75,7 @@ public:
         no_blocks_start = 32000,
 
         // This preceded the BIP system.
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
         headers = 70002,
 #else 
         headers = 31800,
@@ -107,8 +107,9 @@ public:
         // The network is capable and willing to handle bloom-filtered connections.
         bloom_filters = (1 << 2),
 
+#ifdef BITPRIM_CURRENCY_BCH
         node_network_cash = (1 << 5) //TODO(bitprim): check what happens with node_network (or node_network_cash)
-
+#endif //BITPRIM_CURRENCY_BCH
     };
 
     static version factory_from_data(uint32_t version, const data_chunk& data);

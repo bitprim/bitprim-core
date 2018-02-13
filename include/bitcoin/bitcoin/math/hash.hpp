@@ -124,10 +124,10 @@ BC_API data_chunk scrypt(data_slice data, data_slice salt, uint64_t N,
 /// Generate a bitcoin hash.
 BC_API hash_digest bitcoin_hash(data_slice data);
 
-#ifdef BITPRIM_LITECOIN
+#ifdef BITPRIM_CURRENCY_LTC
 /// Generate a litecoin hash.
 BC_API hash_digest litecoin_hash(data_slice data);
-#endif //BITPRIM_LITECOIN
+#endif //BITPRIM_CURRENCY_LTC
 
 /// Generate a bitcoin short hash.
 BC_API short_hash bitcoin_short_hash(data_slice data);

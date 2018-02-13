@@ -100,11 +100,11 @@ endif()
 
 # Implement --with-litecoin.
 #------------------------------------------------------------------------------
-option(WITH_LITECOIN "Compile with Litecoin support." OFF)
-if (WITH_LITECOIN)
-  add_definitions(-DWITH_LITECOIN)
-  add_definitions(-DBITPRIM_LITECOIN)
-endif()
+# option(WITH_LITECOIN "Compile with Litecoin support." OFF)
+# if (WITH_LITECOIN)
+#   add_definitions(-DWITH_LITECOIN)
+#   add_definitions(-DBITPRIM_LITECOIN)
+# endif()
 
 # Implement --with-qrencode and output ${qrencode}.
 #------------------------------------------------------------------------------
@@ -121,6 +121,20 @@ endif()
 set(BITPRIM_BUILD_NUMBER "-" CACHE STRING "Specify the Bitprim Build Number.")
 # message(${BITPRIM_BUILD_NUMBER})
 
+set(CURRENCY "BCH" CACHE STRING "Specify the Cryptocurrency (BCH|BTC|LTC).")
+
+
+if (${CURRENCY} STREQUAL "BCH")
+  add_definitions(-DBITPRIM_CURRENCY_BCH)
+elseif (${CURRENCY} STREQUAL "BTC")
+  add_definitions(-DBITPRIM_CURRENCY_BTC)
+elseif (${CURRENCY} STREQUAL "LTC")
+  # add_definitions(-DWITH_LITECOIN)
+  # add_definitions(-DBITPRIM_LITECOIN)
+  add_definitions(-DBITPRIM_CURRENCY_LTC)
+else()
+  message(FATAL_ERROR "Invalid Cryptocurrency: ${CURRENCY}")
+endif()
 
 
 # message( STATUS "1 NO_CONAN_AT_ALL: " ${NO_CONAN_AT_ALL} )
@@ -223,7 +237,8 @@ endif()
 
 # Require OpenSSL
 #------------------------------------------------------------------------------
-if (WITH_LITECOIN)
+# if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "LTC")
   find_package(OpenSSL 1.0.1 REQUIRED)  #TODO(fernando): manage with conan
 endif()
 
@@ -484,7 +499,8 @@ set(bitprim_core_sources
         src/utility/work.cpp
 
         src/wallet/bitcoin_uri.cpp
-        src/wallet/cashaddr.cpp
+        
+
         src/wallet/dictionary.cpp
         src/wallet/ec_private.cpp
         src/wallet/ec_public.cpp
@@ -518,7 +534,14 @@ set(bitprim_core_sources
         src/wallet/stealth_sender.cpp
         src/wallet/uri.cpp)
 
-if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "BCH")
+    set(bitprim_core_sources ${bitprim_core_sources}         
+      src/wallet/cashaddr.cpp)
+endif()
+
+
+# if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "LTC")
     set(bitprim_core_sources ${bitprim_core_sources}         
       src/math/external/scrypt.cpp
       src/math/external/scrypt-sse2.cpp)
@@ -541,7 +564,8 @@ endif(ENABLE_POSITION_INDEPENDENT_CODE)
 #        src/wallet/uri.cpp)
 
 
-if (WITH_LITECOIN)
+# if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "LTC")
   target_include_directories(bitprim-core SYSTEM PUBLIC ${OPENSSL_INCLUDE_DIR}) #TODO(fernando): manage with Conan????
 endif()
 
@@ -557,7 +581,8 @@ target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_BUILD_NUMBER="\\"${BITP
 
 target_include_directories(bitprim-core SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 
-if (WITH_LITECOIN)
+# if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "LTC")
   target_include_directories(bitprim-core SYSTEM PUBLIC ${OPENSSL_INCLUDE_DIR})
 endif()
 
@@ -599,7 +624,8 @@ if (WITH_PNG)
     endif (NO_CONAN_AT_ALL)
 endif()
 
-if (WITH_LITECOIN)
+# if (WITH_LITECOIN)
+if (${CURRENCY} STREQUAL "LTC")
   target_link_libraries(bitprim-core PUBLIC ${OPENSSL_CRYPTO_LIBRARY})  #TODO(fernando): manage with Conan
 
   # OPENSSL_CRYPTO_LIBRARY
@@ -1122,7 +1148,9 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/utility/writer.hpp
     
     bitcoin/bitcoin/wallet/bitcoin_uri.hpp
+    
     bitcoin/bitcoin/wallet/cashaddr.hpp
+
     bitcoin/bitcoin/wallet/dictionary.hpp
     bitcoin/bitcoin/wallet/ec_private.hpp
     bitcoin/bitcoin/wallet/ec_public.hpp
