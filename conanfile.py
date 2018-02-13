@@ -37,8 +37,11 @@ class BitprimCoreConan(ConanFile):
                "with_qrencode": [True, False],
                "with_tests": [True, False],
                "with_examples": [True, False],
-               "currency": "ANY" #["BCH", "BTC", "LTC", ...]
+            #    "currency": "ANY" #["BCH", "BTC", "LTC", ...]
+               "currency": ['BCH', 'BTC', 'LTC']
     }
+
+
 
         # "with_litecoin": [True, False],
     #    "with_png": [True, False],

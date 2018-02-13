@@ -85,17 +85,7 @@ config::settings get_network() {
     return network_;
 }
 
-
-bool is_bitcoin_cash() {
-    // return is_bitcoin_cash_;
-    return get_currency() == config::currency::bitcoin_cash;
-}
-
-void set_bitcoin_cash(bool value) {
-    // is_bitcoin_cash_ = value;
-    set_currency(config::currency::bitcoin_cash);
-}
-
+#ifdef BITPRIM_CURRENCY_BCH
 std::string cashaddr_prefix() {
     return cashaddr_prefix_;
 }
@@ -103,18 +93,30 @@ std::string cashaddr_prefix() {
 void set_cashaddr_prefix(std::string const& x) {
     cashaddr_prefix_ = x;
 }
+#endif //BITPRIM_CURRENCY_BCH
 
-bool is_testnet(uint32_t identifier, bool bitcoin_cash) {
-#ifdef BITPRIM_CURRENCY_LTC
-    return identifier == 0xf1c8d2fdu //4056470269u; //Litecoin Testnet Netmagic
-#else
-    if (bitcoin_cash) {
-        return identifier == 0xf4f3e5f4u;  //Bitcoin Cash Testnet Netmagic
-    } else {
-        return identifier == 0x0709110bu;  //Bitcoin Testnet Netmagic
-    }
-#endif //BITPRIM_CURRENCY_LTC
-}
+
+// bool is_bitcoin_cash() {
+//     // return is_bitcoin_cash_;
+//     return get_currency() == config::currency::bitcoin_cash;
+// }
+
+// void set_bitcoin_cash(bool value) {
+//     // is_bitcoin_cash_ = value;
+//     set_currency(config::currency::bitcoin_cash);
+// }
+
+// bool is_testnet(uint32_t identifier, bool bitcoin_cash) {
+// #ifdef BITPRIM_CURRENCY_LTC
+//     return identifier == 0xf1c8d2fdu //4056470269u; //Litecoin Testnet Netmagic
+// #else
+//     if (bitcoin_cash) {
+//         return identifier == 0xf4f3e5f4u;  //Bitcoin Cash Testnet Netmagic
+//     } else {
+//         return identifier == 0x0709110bu;  //Bitcoin Testnet Netmagic
+//     }
+// #endif //BITPRIM_CURRENCY_LTC
+// }
 
 } /*namespace libbitcoin*/
 

@@ -27,15 +27,15 @@ if __name__ == "__main__":
 
             opts_bch = copy.deepcopy(options)
             opts_btc = copy.deepcopy(options)
-            opts_ltc = copy.deepcopy(options)
+            # opts_ltc = copy.deepcopy(options)
 
             opts_bch["bitprim-core:currency"] = "BCH"
             opts_btc["bitprim-core:currency"] = "BTC"
-            opts_ltc["bitprim-core:currency"] = "LTC"
+            # opts_ltc["bitprim-core:currency"] = "LTC"
 
             filtered_builds.append([settings, opts_bch, env_vars, build_requires])
             filtered_builds.append([settings, opts_btc, env_vars, build_requires])
-            filtered_builds.append([settings, opts_ltc, env_vars, build_requires])
+            # filtered_builds.append([settings, opts_ltc, env_vars, build_requires])
 
 
     builder.builds = filtered_builds

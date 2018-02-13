@@ -123,7 +123,6 @@ set(BITPRIM_BUILD_NUMBER "-" CACHE STRING "Specify the Bitprim Build Number.")
 
 set(CURRENCY "BCH" CACHE STRING "Specify the Cryptocurrency (BCH|BTC|LTC).")
 
-
 if (${CURRENCY} STREQUAL "BCH")
   add_definitions(-DBITPRIM_CURRENCY_BCH)
 elseif (${CURRENCY} STREQUAL "BTC")
