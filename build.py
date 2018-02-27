@@ -1,6 +1,8 @@
-import os
 from conan.packager import ConanMultiPackager
+import os
 import copy
+import re
+import platform
 
 
 def get_content(path):
