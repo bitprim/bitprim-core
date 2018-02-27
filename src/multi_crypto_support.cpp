@@ -62,7 +62,7 @@ void set_network(uint32_t identifier) {
         case netmagic::ltc_regtest: set_network(config::settings::regtest); break;
         default: set_network(config::settings::none);
     }
-#elif define(#ifdef BITPRIM_CURRENCY_BCH)
+#elif defined(BITPRIM_CURRENCY_BCH)
     switch(identifier) {
         case netmagic::bch_mainnet: set_network(config::settings::mainnet); break;
         case netmagic::bch_testnet: set_network(config::settings::testnet); break;
