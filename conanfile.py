@@ -23,9 +23,24 @@ from conans import ConanFile, CMake
 def option_on_off(option):
     return "ON" if option else "OFF"
 
+def get_content(path):
+    print(os.path.dirname(os.path.abspath(__file__)))
+    print(os.getcwd())
+    with open(path, 'r') as f:
+        return f.read()
+
+def get_version():
+    return get_content('conan_version')
+
+def get_channel():
+    return get_content('conan_channel')
+
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
-    version = "0.7"
+    
+    # version = "0.7"
+    version = get_version()
+
     license = "http://www.boost.org/users/license.html"
     url = "https://github.com/bitprim/bitprim-core"
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
@@ -41,8 +56,6 @@ class BitprimCoreConan(ConanFile):
                "currency": ['BCH', 'BTC', 'LTC']
     }
 
-
-
         # "with_litecoin": [True, False],
     #    "with_png": [True, False],
 
@@ -57,17 +70,17 @@ class BitprimCoreConan(ConanFile):
         # "with_litecoin=False", \
         # "with_png=False", \
 
-
     generators = "cmake"
+    exports = "conan_channel", "conan_version"
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "bitprimbuildinfo.cmake", "include/*", "test/*", "examples/*"
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
-    # requires = (("bitprim-conan-boost/1.66.0@bitprim/stable"),
-    #            ("secp256k1/0.3@bitprim/testing"))
-
     requires = (("boost/1.66.0@bitprim/stable"),
                ("secp256k1/0.3@bitprim/testing"))
+
+    # requires = (("boost/1.66.0@bitprim/stable"),
+    #            ("secp256k1/0.3@bitprim/%s" % get_channel()))
 
     @property
     def msvc_mt_build(self):
