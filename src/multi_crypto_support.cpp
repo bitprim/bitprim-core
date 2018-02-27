@@ -29,26 +29,38 @@ namespace {
 
 static config::currency currency_ = config::currency::none;
 static config::settings network_ = config::settings::none;
-// static bool is_bitcoin_cash_= false;
+
+#ifdef BITPRIM_CURRENCY_BCH
 static std::string cashaddr_prefix_ = "bitcoincash";
+#endif // BITPRIM_CURRENCY_BCH
 
 } // namespace anonymous
 
 
-void set_currency(config::currency x) {
-#ifndef BITPRIM_CURRENCY_LTC
-    currency_ = x;
-#endif //BITPRIM_CURRENCY_LTC
-}
+// void set_currency(config::currency x) {
+// #ifndef BITPRIM_CURRENCY_LTC
+//     currency_ = x;
+// #endif //BITPRIM_CURRENCY_LTC
+// }
+
+// config::currency get_currency() {
+// #ifdef BITPRIM_CURRENCY_LTC
+//     return config::currency::litecoin;
+// #else
+//     return currency_;
+// #endif //BITPRIM_CURRENCY_LTC
+// }
+
 
 config::currency get_currency() {
 #ifdef BITPRIM_CURRENCY_LTC
     return config::currency::litecoin;
+#elif defined(BITPRIM_CURRENCY_BCH)
+    return config::currency::bitcoin_cash;
 #else
-    return currency_;
+    return config::currency::bitcoin;
 #endif //BITPRIM_CURRENCY_LTC
 }
-
 
 void set_network(config::settings x) {
     network_ = x;
