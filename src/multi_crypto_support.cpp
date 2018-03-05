@@ -36,22 +36,6 @@ static std::string cashaddr_prefix_ = "bitcoincash";
 
 } // namespace anonymous
 
-
-// void set_currency(config::currency x) {
-// #ifndef BITPRIM_CURRENCY_LTC
-//     currency_ = x;
-// #endif //BITPRIM_CURRENCY_LTC
-// }
-
-// config::currency get_currency() {
-// #ifdef BITPRIM_CURRENCY_LTC
-//     return config::currency::litecoin;
-// #else
-//     return currency_;
-// #endif //BITPRIM_CURRENCY_LTC
-// }
-
-
 config::currency get_currency() {
 #ifdef BITPRIM_CURRENCY_LTC
     return config::currency::litecoin;
@@ -105,16 +89,6 @@ void set_cashaddr_prefix(std::string const& x) {
 }
 #endif //BITPRIM_CURRENCY_BCH
 
-
-// bool is_bitcoin_cash() {
-//     // return is_bitcoin_cash_;
-//     return get_currency() == config::currency::bitcoin_cash;
-// }
-
-// void set_bitcoin_cash(bool value) {
-//     // is_bitcoin_cash_ = value;
-//     set_currency(config::currency::bitcoin_cash);
-// }
 
 // bool is_testnet(uint32_t identifier, bool bitcoin_cash) {
 // #ifdef BITPRIM_CURRENCY_LTC
