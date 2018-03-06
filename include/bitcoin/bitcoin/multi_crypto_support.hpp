@@ -49,13 +49,12 @@ enum class currency {
 
 } // namespace config
 
-// void set_currency(config::currency x);
 config::currency get_currency();
 
-void set_network(config::settings x);
-void set_network(uint32_t identifier);
-config::settings get_network();
-
+// void set_network(config::settings x);
+// void set_network(uint32_t identifier);
+// config::settings get_network();
+config::settings get_network(uint32_t identifier);
 
 #ifdef BITPRIM_CURRENCY_BCH
 std::string cashaddr_prefix();
