@@ -19,6 +19,8 @@
 
 import os
 from conans import ConanFile, CMake
+from conans import __version__ as conan_version
+from conans.model.version import Version
 
 def option_on_off(option):
     return "ON" if option else "OFF"
@@ -45,6 +47,10 @@ class BitprimCoreConan(ConanFile):
     url = "https://github.com/bitprim/bitprim-core"
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
     settings = "os", "compiler", "build_type", "arch"
+
+
+    if conan_version < Version("1.1"):
+        raise Exception ("Conan version should be greater or equal than 1.1")
 
     options = {"shared": [True, False],
                "fPIC": [True, False],
@@ -75,9 +81,6 @@ class BitprimCoreConan(ConanFile):
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "bitprimbuildinfo.cmake", "include/*", "test/*", "examples/*"
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
-
-    # requires = (("boost/1.66.0@bitprim/stable"),
-    #            ("secp256k1/0.3@bitprim/testing"))
 
     requires = (("boost/1.66.0@bitprim/stable"),
                ("secp256k1/0.3@bitprim/%s" % get_channel()))
