@@ -135,6 +135,8 @@ else()
   message(FATAL_ERROR "Invalid Cryptocurrency: ${CURRENCY}")
 endif()
 
+message(STATUS "Bitprim: Cryptocurrency: ${CURRENCY}")
+
 
 # message( STATUS "1 NO_CONAN_AT_ALL: " ${NO_CONAN_AT_ALL} )
 # message( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
