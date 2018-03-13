@@ -25,10 +25,13 @@ from conans.model.version import Version
 def option_on_off(option):
     return "ON" if option else "OFF"
 
-def get_content(path):
+def get_content(file_name):
     # print(os.path.dirname(os.path.abspath(__file__)))
     # print(os.getcwd())
-    with open(path, 'r') as f:
+    # with open(path, 'r') as f:
+    #     return f.read()
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
+    with open(file_path, 'r') as f:
         return f.read()
 
 def get_version():
@@ -43,10 +46,7 @@ def get_conan_req_version():
 
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
-    
-    # version = "0.7"
     version = get_version()
-
     license = "http://www.boost.org/users/license.html"
     url = "https://github.com/bitprim/bitprim-core"
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
@@ -80,7 +80,7 @@ class BitprimCoreConan(ConanFile):
         # "with_png=False", \
 
     generators = "cmake"
-    exports = "conan_channel", "conan_version"
+    exports = "conan_channel", "conan_version", "conan_req_version"
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "bitprimbuildinfo.cmake", "include/*", "test/*", "examples/*"
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
