@@ -564,12 +564,6 @@ endif(ENABLE_POSITION_INDEPENDENT_CODE)
 # add_library(bitprim-core ${MODE}
 #        src/wallet/uri.cpp)
 
-
-# if (WITH_LITECOIN)
-if (${CURRENCY} STREQUAL "LTC")
-  target_include_directories(bitprim-core SYSTEM PUBLIC ${OPENSSL_INCLUDE_DIR}) #TODO(fernando): manage with Conan????
-endif()
-
 target_include_directories(bitprim-core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
