@@ -33,7 +33,6 @@ namespace libbitcoin {
 // This guards assumptions within the codebase.
 static_assert(sizeof(size_t) >= sizeof(uint32_t), "unsupported size_t");
 
-// #define BC_USER_AGENT "/libbitcoin:" LIBBITCOIN_VERSION "/"
 #define BC_USER_AGENT "/bitprim:" LIBBITCOIN_VERSION "/"
 
 // Generic constants.
@@ -92,16 +91,15 @@ BC_CONSTEXPR size_t chain_state_timestamp_count = new_bitcoin_cash_retarget_algo
 
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11;
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 6;
-BC_CONSTEXPR size_t max_block_size_cash = 8'000'000;
+
+// BC_CONSTEXPR size_t max_block_size_cash = 8000000;
+BC_CONSTEXPR size_t max_block_size = 8000000; //eight million bytes
+
+#else
+
+BC_CONSTEXPR size_t max_block_size = 1000000; //one million bytes
+
 #endif //BITPRIM_CURRENCY_BCH
-
-//TODO(fernando): fix it. Should not be used
-BC_CONSTEXPR size_t max_block_size = 1'000'000;
-
-//TODO(fernando): fix it
-static const size_t one_mb_block = 1000000;
-//TODO(fernando): fix it
-static const size_t sigops_per_mb = 20000;
 
 
 BC_CONSTEXPR size_t coinbase_maturity = 100;
@@ -121,52 +119,32 @@ BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1d00ffff;
 
 // Derived.
 BC_CONSTEXPR size_t max_sigops_factor = 50;
+
+#ifdef BITPRIM_CURRENCY_BCH
+// BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
+BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor;
+#else
 BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
-
-#ifdef BITPRIM_CURRENCY_BCH
-BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
 #endif //BITPRIM_CURRENCY_BCH
 
-
-
-// constexpr
-// size_t get_max_block_size(bool bitcoin_cash) {
-//     return bitcoin_cash ? max_block_size_cash : max_block_size;
-// }
-
-// constexpr
-// size_t get_max_block_sigops(bool bitcoin_cash) {
-//     return bitcoin_cash ? max_block_sigops_cash : max_block_sigops;
-// }
-
-
-constexpr
+constexpr inline
 size_t get_max_block_size() {
-#ifdef BITPRIM_CURRENCY_BCH
-    return max_block_size_cash;
-#else
     return max_block_size;
-#endif //BITPRIM_CURRENCY_BCH
 }
 
-constexpr
+constexpr inline
 size_t get_max_block_sigops() {
-#ifdef BITPRIM_CURRENCY_BCH
-    return max_block_sigops_cash;
-#else
     return max_block_sigops;
-#endif //BITPRIM_CURRENCY_BCH
 }
 
+// BC_CONSTEXPR size_t one_million_bytes_block = 1000000;
+BC_CONSTEXPR size_t sigops_per_million_bytes = 20000;
 
-
-//TODO(fernando): fix it
-BC_CONSTFUNC
-size_t get_allowed_sigops(const size_t block_size)
-{
-    return (1 + ((block_size - 1) / one_mb_block)) * sigops_per_mb;
+BC_CONSTFUNC inline
+size_t get_allowed_sigops(size_t block_size) {
+    // return (1 + ((block_size - 1) / one_million_bytes_block)) * sigops_per_million_bytes;
+    return (block_size - 1) / max_sigops_factor + sigops_per_million_bytes;
 }
-
 
 // Relative locktime constants.
 //-----------------------------------------------------------------------------
@@ -189,8 +167,8 @@ BC_CONSTEXPR uint32_t target_timespan_seconds = 2 * 7 * 24 * 60 * 15;
 BC_CONSTEXPR uint32_t target_spacing_seconds = 10 * 60;
 BC_CONSTEXPR uint32_t target_timespan_seconds = 2 * 7 * 24 * 60 * 60;
 #endif //BITPRIM_CURRENCY_LTC
-BC_CONSTEXPR uint32_t timestamp_future_seconds = 2 * 60 * 60;  //TODO(bitprim): New on v3.3.0 merge (September 2017), see how this affects Litecoin
 
+BC_CONSTEXPR uint32_t timestamp_future_seconds = 2 * 60 * 60;  //TODO(bitprim): New on v3.3.0 merge (September 2017), see how this affects Litecoin
 BC_CONSTEXPR uint32_t easy_spacing_factor = 2;
 
 // BC_CONSTEXPR uint32_t easy_spacing_seconds = 20 * 60;
@@ -199,15 +177,12 @@ BC_CONSTEXPR uint32_t easy_spacing_seconds = easy_spacing_factor * target_spacin
 
 
 // The upper and lower bounds for the retargeting timespan.
-BC_CONSTEXPR uint32_t min_timespan =
-    target_timespan_seconds / retargeting_factor;
-BC_CONSTEXPR uint32_t max_timespan =
-    target_timespan_seconds * retargeting_factor;
+BC_CONSTEXPR uint32_t min_timespan = target_timespan_seconds / retargeting_factor;
+BC_CONSTEXPR uint32_t max_timespan = target_timespan_seconds * retargeting_factor;
 
 // Bitcoin:  The target number of blocks for 2 weeks of work (2016 blocks).
 // Litecoin: The target number of blocks for 3.5 days of work (2016 blocks).
-BC_CONSTEXPR size_t retargeting_interval =
-    target_timespan_seconds / target_spacing_seconds;
+BC_CONSTEXPR size_t retargeting_interval = target_timespan_seconds / target_spacing_seconds;
 
 // Fork constants.
 //-----------------------------------------------------------------------------
@@ -221,9 +196,8 @@ BC_CONSTEXPR uint32_t bip9_version_bit0 = 0x00000001;
 BC_CONSTEXPR uint32_t bip9_version_base = 0x20000000;
 
 #ifdef BITPRIM_CURRENCY_BCH
-BC_CONSTEXPR size_t bitcoin_cash_activation_height = 478558;
-//November 13 2017
-BC_CONSTEXPR uint32_t bitcoin_cash_daa_activation_time = 1510600000;
+BC_CONSTEXPR size_t bitcoin_cash_activation_height = 478558;            //2017-August-01
+BC_CONSTEXPR uint32_t bitcoin_cash_daa_activation_time = 1510600000;    //2017-November-13
 #endif //BITPRIM_CURRENCY_BCH
 
 
@@ -255,32 +229,28 @@ BC_CONSTEXPR uint32_t bip16_activation_time = 0x4f779a80;
 
 // Block 170060 was mined with an invalid p2sh (code shipped late).
 // bitcointalk.org/index.php?topic=63165.msg788832#msg788832
-static const config::checkpoint mainnet_bip16_exception_checkpoint
-{
+static const config::checkpoint mainnet_bip16_exception_checkpoint {
     "00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22", 170060
 };
 
 // github.com/bitcoin/bips/blob/master/bip-0030.mediawiki#specification
-static const config::checkpoint mainnet_bip30_exception_checkpoint1
-{
+static const config::checkpoint mainnet_bip30_exception_checkpoint1 {
     // TODO: figure out why this block validates without an exception.
     "00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec", 91842
 };
-static const config::checkpoint mainnet_bip30_exception_checkpoint2
-{
+
+static const config::checkpoint mainnet_bip30_exception_checkpoint2 {
     "00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721", 91880
 };
 
 // Hard fork to stop checking unspent duplicates above fixed bip34 activation.
-static const config::checkpoint mainnet_allow_collisions_checkpoint
-{
+static const config::checkpoint mainnet_allow_collisions_checkpoint {
     "fa09d204a83a768ed5a7c8d441fa62f2043abf420cff1226c7b4329aeb9d51cf", 710000
 };
-static const config::checkpoint testnet_allow_collisions_checkpoint
-{
+
+static const config::checkpoint testnet_allow_collisions_checkpoint {
     "0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8", 21111
 };
-
 
 #else //BITPRIM_CURRENCY_LTC
 // Mainnet activation parameters (bip34-style activations).
@@ -309,39 +279,36 @@ BC_CONSTEXPR uint32_t bip16_activation_time = 0x4f779a80;
 
 // Block 170060 was mined with an invalid p2sh (code shipped late).
 // bitcointalk.org/index.php?topic=63165.msg788832#msg788832
-static const config::checkpoint mainnet_bip16_exception_checkpoint
-{
+static const config::checkpoint mainnet_bip16_exception_checkpoint {
     "00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22", 170060
 };
 
 // github.com/bitcoin/bips/blob/master/bip-0030.mediawiki#specification
-static const config::checkpoint mainnet_bip30_exception_checkpoint1
-{
+static const config::checkpoint mainnet_bip30_exception_checkpoint1 {
     "00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec", 91842
 };
-static const config::checkpoint mainnet_bip30_exception_checkpoint2
-{
+
+static const config::checkpoint mainnet_bip30_exception_checkpoint2 {
     "00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721", 91880
 };
 
 // bip90 stops checking unspent duplicates above this bip34 activation.
-static const config::checkpoint mainnet_bip34_active_checkpoint
-{
+static const config::checkpoint mainnet_bip34_active_checkpoint {
     "000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8", 227931
 };
-static const config::checkpoint testnet_bip34_active_checkpoint
-{
+
+static const config::checkpoint testnet_bip34_active_checkpoint {
     "0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8", 21111
 };
+
 #endif //BITPRIM_CURRENCY_LTC
 
 // These cannot be reactivated in a future branch due to window expiration.
-static const config::checkpoint mainnet_bip9_bit0_active_checkpoint
-{
+static const config::checkpoint mainnet_bip9_bit0_active_checkpoint {
     "000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5", 419328
 };
-static const config::checkpoint testnet_bip9_bit0_active_checkpoint
-{
+
+static const config::checkpoint testnet_bip9_bit0_active_checkpoint {
     "00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb", 770112
 };
 
@@ -377,20 +344,22 @@ BC_CONSTEXPR uint8_t string_terminator = 0x00;
 // Currency unit constants (uint64_t).
 //-----------------------------------------------------------------------------
 
-BC_CONSTFUNC uint64_t max_money_recursive(uint64_t money)
-{
+BC_CONSTFUNC inline
+uint64_t max_money_recursive(uint64_t money) {
     return money > 0 ? money + max_money_recursive(money >> 1) : 0;
 }
 
 BC_CONSTEXPR uint64_t satoshi_per_bitcoin = 100000000;
-BC_CONSTFUNC uint64_t bitcoin_to_satoshi(uint64_t bitcoin_uints=1)
-{
+
+BC_CONSTFUNC inline 
+uint64_t bitcoin_to_satoshi(uint64_t bitcoin_uints=1) {
     return bitcoin_uints * satoshi_per_bitcoin;
 }
 
 BC_CONSTEXPR uint64_t initial_block_subsidy_bitcoin = 50;
-BC_CONSTFUNC uint64_t initial_block_subsidy_satoshi()
-{
+
+BC_CONSTFUNC inline 
+uint64_t initial_block_subsidy_satoshi() {
     return bitcoin_to_satoshi(initial_block_subsidy_bitcoin);
 }
 
@@ -401,9 +370,11 @@ BC_CONSTEXPR uint64_t subsidy_interval = 840000;
 // BC_CONSTEXPR uint64_t reward_interval = 210000;
 BC_CONSTEXPR uint64_t subsidy_interval = 210000;
 #endif //BITPRIM_CURRENCY_LTC
+
 BC_CONSTEXPR uint64_t recursive_money = 0x02540be3f5;
-BC_CONSTFUNC uint64_t max_money()
-{
+
+BC_CONSTFUNC inline 
+uint64_t max_money() {
     ////// Optimize out the derivation of recursive_money.
     ////BITCOIN_ASSERT(recursive_money == max_money_recursive(
     ////    initial_block_subsidy_satoshi()));
