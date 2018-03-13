@@ -26,8 +26,8 @@ def option_on_off(option):
     return "ON" if option else "OFF"
 
 def get_content(path):
-    print(os.path.dirname(os.path.abspath(__file__)))
-    print(os.getcwd())
+    # print(os.path.dirname(os.path.abspath(__file__)))
+    # print(os.getcwd())
     with open(path, 'r') as f:
         return f.read()
 
@@ -36,6 +36,10 @@ def get_version():
 
 def get_channel():
     return get_content('conan_channel')
+
+def get_conan_req_version():
+    return get_content('conan_req_version')
+
 
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
@@ -48,9 +52,8 @@ class BitprimCoreConan(ConanFile):
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
     settings = "os", "compiler", "build_type", "arch"
 
-
-    if conan_version < Version("1.1"):
-        raise Exception ("Conan version should be greater or equal than 1.1")
+    if conan_version < Version(get_conan_req_version()):
+        raise Exception ("Conan version should be greater or equal than %s" % (get_conan_req_version(), ))
 
     options = {"shared": [True, False],
                "fPIC": [True, False],
