@@ -120,12 +120,13 @@ BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1d00ffff;
 // Derived.
 BC_CONSTEXPR size_t max_sigops_factor = 50;
 
-#ifdef BITPRIM_CURRENCY_BCH
+// #ifdef BITPRIM_CURRENCY_BCH
 // BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
+// #else
+// BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
+// #endif //BITPRIM_CURRENCY_BCH
+
 BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor;
-#else
-BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
-#endif //BITPRIM_CURRENCY_BCH
 
 constexpr inline
 size_t get_max_block_size() {
