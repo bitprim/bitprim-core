@@ -92,13 +92,15 @@ BC_CONSTEXPR size_t chain_state_timestamp_count = new_bitcoin_cash_retarget_algo
 
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11;
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 6;
-BC_CONSTEXPR size_t max_block_size_cash = 8000000;
+BC_CONSTEXPR size_t max_block_size_cash = 8'000'000;
 #endif //BITPRIM_CURRENCY_BCH
 
+//TODO(fernando): fix it. Should not be used
+BC_CONSTEXPR size_t max_block_size = 1'000'000;
 
-BC_CONSTEXPR size_t max_block_size = 1000000;
-
+//TODO(fernando): fix it
 static const size_t one_mb_block = 1000000;
+//TODO(fernando): fix it
 static const size_t sigops_per_mb = 20000;
 
 
@@ -158,6 +160,7 @@ size_t get_max_block_sigops() {
 
 
 
+//TODO(fernando): fix it
 BC_CONSTFUNC
 size_t get_allowed_sigops(const size_t block_size)
 {
