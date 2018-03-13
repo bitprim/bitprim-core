@@ -131,6 +131,8 @@ public:
     uint32_t bits() const;
     void set_bits(uint32_t value);
 
+    double difficulty() const;
+
     uint32_t nonce() const;
     void set_nonce(uint32_t value);
 
@@ -170,6 +172,8 @@ private:
     uint32_t bits_;
     uint32_t nonce_;
 };
+
+double bits_to_difficulty (const uint32_t & bits);
 
 } // namespace chain
 } // namespace libbitcoin
