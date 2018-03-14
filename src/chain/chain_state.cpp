@@ -443,7 +443,7 @@ uint32_t chain_state::cash_difficulty_adjustment(data const& values) {
 
     uint256_t work = 0;
     for (size_t i = last_block.first + 1; i <= first_block.first; ++i) {
-        work += block::proof(values.bits.ordered[i]);
+        work += header::proof(values.bits.ordered[i]);
     }
 
     work *= target_spacing_seconds; //10 * 60

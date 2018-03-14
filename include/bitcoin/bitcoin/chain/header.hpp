@@ -102,6 +102,8 @@ public:
 
     // Properties (size, accessors, cache).
     //-----------------------------------------------------------------------------
+    static uint256_t proof(uint32_t bits);
+    uint256_t proof() const;
 
     static size_t satoshi_fixed_size();
     size_t serialized_size(bool wire=true) const;

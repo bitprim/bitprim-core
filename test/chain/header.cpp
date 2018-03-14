@@ -385,6 +385,12 @@ BOOST_AUTO_TEST_CASE(header__is_valid_timestamp__timestamp_greater_than_2_hours_
     BOOST_REQUIRE(!instance.is_valid_timestamp());
 }
 
+
+BOOST_AUTO_TEST_CASE(header__proof1__genesis_mainnet__expected)
+{
+    BOOST_REQUIRE_EQUAL(chain::header::proof(0x1d00ffff), 0x0000000100010001);
+}
+
 BOOST_AUTO_TEST_CASE(header__is_valid_proof_of_work__bits_exceeds_maximum__returns_false)
 {
     chain::header instance;
