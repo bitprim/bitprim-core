@@ -114,35 +114,41 @@ transaction::transaction(const transaction& other)
 
 transaction::transaction(transaction&& other, hash_digest&& hash)
   : transaction(other.version_, other.locktime_, std::move(other.inputs_),
-        std::move(other.outputs_))
+        std::move(other.outputs_), other.cached_sigops_, other.cached_fees_, other.cached_is_standard_)
 {
     hash_ = std::make_shared<hash_digest>(std::move(hash));
     validation = std::move(other.validation);
 }
 
 transaction::transaction(const transaction& other, const hash_digest& hash)
-  : transaction(other.version_, other.locktime_, other.inputs_, other.outputs_)
+  : transaction(other.version_, other.locktime_, other.inputs_, other.outputs_, other.cached_sigops_, other.cached_fees_, other.cached_is_standard_)
 {
     hash_ = std::make_shared<hash_digest>(hash);
     validation = other.validation;
 }
 
 transaction::transaction(uint32_t version, uint32_t locktime,
-    const input::list& inputs, const output::list& outputs)
+    const input::list& inputs, const output::list& outputs, uint32_t cached_sigops, uint64_t fees, bool is_standard)
   : version_(version),
     locktime_(locktime),
     inputs_(inputs),
     outputs_(outputs),
+    cached_fees_(fees),
+    cached_sigops_(cached_sigops),
+    cached_is_standard_(is_standard),
     validation{}
 {
 }
 
 transaction::transaction(uint32_t version, uint32_t locktime,
-    input::list&& inputs, output::list&& outputs)
+    input::list&& inputs, output::list&& outputs, uint32_t cached_sigops, uint64_t fees, bool is_standard)
   : version_(version),
     locktime_(locktime),
     inputs_(std::move(inputs)),
     outputs_(std::move(outputs)),
+    cached_fees_(fees),
+    cached_sigops_(cached_sigops),
+    cached_is_standard_(is_standard),
     validation{}
 {
 }
@@ -212,19 +218,19 @@ transaction transaction::factory_from_data(reader& source, bool wire)
     return instance;
 }
 
-bool transaction::from_data(const data_chunk& data, bool wire)
+bool transaction::from_data(const data_chunk& data, bool wire, bool unconfirmed)
 {
     data_source istream(data);
-    return from_data(istream, wire);
+    return from_data(istream, wire, unconfirmed);
 }
 
-bool transaction::from_data(std::istream& stream, bool wire)
+bool transaction::from_data(std::istream& stream, bool wire, bool unconfirmed)
 {
     istream_reader source(stream);
-    return from_data(source, wire);
+    return from_data(source, wire, unconfirmed);
 }
 
-bool transaction::from_data(reader& source, bool wire)
+bool transaction::from_data(reader& source, bool wire, bool unconfirmed)
 {
     reset();
 
@@ -247,10 +253,23 @@ bool transaction::from_data(reader& source, bool wire)
 
         locktime_ = static_cast<uint32_t>(locktime);
         version_ = static_cast<uint32_t>(version);
+        if(unconfirmed)
+        {
+            const auto sigops = source.read_4_bytes_little_endian();
+            cached_sigops_ = static_cast<uint32_t>(sigops);
+            const auto fees = source.read_8_bytes_little_endian();
+            cached_fees_ = static_cast<uint64_t>(fees);
+            const auto is_standard = source.read_byte();
+            cached_is_standard_ = static_cast<bool>(is_standard);
+        }
+
     }
 
-    if (!source)
+
+
+    if (!source){
         reset();
+    }
 
     return source;
 }
@@ -278,29 +297,29 @@ bool transaction::is_valid() const
 // Serialization.
 //-----------------------------------------------------------------------------
 
-data_chunk transaction::to_data(bool wire) const
+data_chunk transaction::to_data(bool wire, bool unconfirmed) const
 {
     data_chunk data;
-    const auto size = serialized_size(wire);
+    const auto size = serialized_size(wire, unconfirmed);
 
     // Reserve an extra byte to prevent full reallocation in the case of
     // generate_signature_hash extension by addition of the sighash_type.
     data.reserve(size + sizeof(uint8_t));
 
     data_sink ostream(data);
-    to_data(ostream, wire);
+    to_data(ostream, wire, unconfirmed);
     ostream.flush();
     BITCOIN_ASSERT(data.size() == size);
     return data;
 }
 
-void transaction::to_data(std::ostream& stream, bool wire) const
+void transaction::to_data(std::ostream& stream, bool wire, bool unconfirmed) const
 {
     ostream_writer sink(stream);
-    to_data(sink, wire);
+    to_data(sink, wire, unconfirmed);
 }
 
-void transaction::to_data(writer& sink, bool wire) const
+void transaction::to_data(writer& sink, bool wire, bool unconfirmed) const
 {
     if (wire)
     {
@@ -317,13 +336,22 @@ void transaction::to_data(writer& sink, bool wire) const
         write(sink, inputs_, wire);
         sink.write_variable_little_endian(locktime_);
         sink.write_variable_little_endian(version_);
+        if(unconfirmed)
+        {
+            sink.write_4_bytes_little_endian(signature_operations());
+            sink.write_8_bytes_little_endian(fees());
+            sink.write_byte(is_standard());
+        }
     }
+
+
+
 }
 
 // Size.
 //-----------------------------------------------------------------------------
 
-size_t transaction::serialized_size(bool wire) const
+size_t transaction::serialized_size(bool wire, bool unconfirmed) const
 {
     const auto ins = [wire](size_t size, const input& input)
     {
@@ -340,7 +368,8 @@ size_t transaction::serialized_size(bool wire) const
         + message::variable_uint_size(inputs_.size())
         + message::variable_uint_size(outputs_.size())
         + std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, ins)
-        + std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, outs);
+        + std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, outs)
+        + ((!wire && unconfirmed) ? sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint8_t)  : 0);
 }
 
 // Accessors.
@@ -414,6 +443,21 @@ void transaction::set_outputs(output::list&& value)
     outputs_ = std::move(value);
     invalidate_cache();
     total_output_value_ = boost::none;
+}
+
+uint64_t transaction::cached_fees() const
+{
+    return cached_fees_;
+}
+
+uint32_t transaction::cached_sigops() const
+{
+    return cached_sigops_;
+}
+
+bool transaction::cached_is_standard() const
+{
+    return cached_is_standard_;
 }
 
 // Cache.
@@ -885,6 +929,23 @@ code transaction::connect(const chain_state& state) const
             return ec;
 
     return error::success;
+}
+
+bool transaction::is_standard() const
+{
+    for (auto const& in : inputs()) {
+        if ( in.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
+            return false;
+        }
+    }
+
+    for (auto const& out : outputs()) {
+        if ( out.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace chain
