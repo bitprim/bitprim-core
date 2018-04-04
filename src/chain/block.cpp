@@ -790,7 +790,7 @@ code block::accept(chain_state const& state, bool transactions) const
         return ec;
 
     //In Bitcoin Cash, block size check is now dependent on the Blockchain state.
-#if ! defined(BITPRIM_CURRENCY_BCH)
+#if defined(BITPRIM_CURRENCY_BCH)
     else if ( ! state.is_monolith_enabled() && serialized_size() > max_block_size_old)
         return error::block_size_limit;
 #endif
