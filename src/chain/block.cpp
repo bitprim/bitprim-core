@@ -729,7 +729,7 @@ code block::check() const
 
     code ec;
 
-    if ((ec = header_.check()))
+    if ((ec = header_.check())) 
         return ec;
 
     else if (serialized_size() > get_max_block_size())
@@ -773,7 +773,7 @@ code block::accept(bool transactions) const
 }
 
 // These checks assume that prevout caching is completed on all tx.inputs.
-code block::accept(const chain_state& state, bool transactions) const
+code block::accept(chain_state const& state, bool transactions) const
 {
     validation.start_accept = asio::steady_clock::now();
 
@@ -788,6 +788,12 @@ code block::accept(const chain_state& state, bool transactions) const
 
     if ((ec = header_.accept(state)))
         return ec;
+
+    //In Bitcoin Cash, block size check is now dependent on the Blockchain state.
+#if ! defined(BITPRIM_CURRENCY_BCH)
+    else if ( ! state.is_monolith_enabled() && serialized_size() > max_block_size_old)
+        return error::block_size_limit;
+#endif
 
     else if (state.is_under_checkpoint())
         return error::success;

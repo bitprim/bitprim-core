@@ -89,11 +89,11 @@ BC_CONSTEXPR size_t bitcoin_cash_retarget_blocks = 6;
 BC_CONSTEXPR size_t new_bitcoin_cash_retarget_algorithm = 147;
 BC_CONSTEXPR size_t chain_state_timestamp_count = new_bitcoin_cash_retarget_algorithm;
 
-BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11;
+BC_CONSTEXPR size_t bitcoin_cash_offset_tip = new_bitcoin_cash_retarget_algorithm - 11; // 147 - 11 = 136
 BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 6;
 
-// BC_CONSTEXPR size_t max_block_size_cash = 8000000;
-BC_CONSTEXPR size_t max_block_size = 8000000; //eight million bytes
+BC_CONSTEXPR size_t max_block_size_old = 8000000; //eight million bytes
+BC_CONSTEXPR size_t max_block_size_new = 32000000; //thirty two million bytes
 
 #else
 
@@ -120,22 +120,32 @@ BC_CONSTEXPR uint32_t proof_of_work_limit = 0x1d00ffff;
 // Derived.
 BC_CONSTEXPR size_t max_sigops_factor = 50;
 
-// #ifdef BITPRIM_CURRENCY_BCH
-// BC_CONSTEXPR size_t max_block_sigops_cash = max_block_size_cash / max_sigops_factor;
-// #else
-// BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
-// #endif //BITPRIM_CURRENCY_BCH
 
-BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor;
+// BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor;
+#ifdef BITPRIM_CURRENCY_BCH
+BC_CONSTEXPR size_t max_block_sigops_old = max_block_size_old / max_sigops_factor;
+BC_CONSTEXPR size_t max_block_sigops_new = max_block_size_new / max_sigops_factor;
+#else
+BC_CONSTEXPR size_t max_block_sigops = max_block_size / max_sigops_factor; 
+#endif //BITPRIM_CURRENCY_BCH
+
 
 constexpr inline
 size_t get_max_block_size() {
+#ifdef BITPRIM_CURRENCY_BCH
+    return max_block_size_new; 
+#else
     return max_block_size;
+#endif //BITPRIM_CURRENCY_BCH
 }
 
 constexpr inline
 size_t get_max_block_sigops() {
+#ifdef BITPRIM_CURRENCY_BCH
+    return max_block_sigops_new;
+#else
     return max_block_sigops;
+#endif //BITPRIM_CURRENCY_BCH
 }
 
 // BC_CONSTEXPR size_t one_million_bytes_block = 1000000;
@@ -197,8 +207,17 @@ BC_CONSTEXPR uint32_t bip9_version_bit0 = 0x00000001;
 BC_CONSTEXPR uint32_t bip9_version_base = 0x20000000;
 
 #ifdef BITPRIM_CURRENCY_BCH
-BC_CONSTEXPR size_t bitcoin_cash_activation_height = 478558;            //2017-August-01
-BC_CONSTEXPR uint32_t bitcoin_cash_daa_activation_time = 1510600000;    //2017-November-13
+// BC_CONSTEXPR size_t   bch_activation_height = 478559 //478558;                       //2017-August-01 hard fork
+// BC_CONSTEXPR uint32_t bch_daa_activation_time = 1510600000;                 //2017-November-13 hard fork
+BC_CONSTEXPR uint32_t bch_monolith_activation_time = 1526400000;            //2018-May hard fork
+BC_CONSTEXPR uint32_t bch_magnetic_anomaly_activation_time = 1542300000;    //2018-November hard fork
+
+// inline constexpr
+// bool is_uahf_enabled(const Config &config, int nHeight) {
+//     return nHeight >= config.GetChainParams().GetConsensus().uahfHeight;
+// }
+
+
 #endif //BITPRIM_CURRENCY_BCH
 
 
@@ -312,6 +331,28 @@ static const config::checkpoint mainnet_bip9_bit0_active_checkpoint {
 static const config::checkpoint testnet_bip9_bit0_active_checkpoint {
     "00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb", 770112
 };
+
+
+#ifdef BITPRIM_CURRENCY_BCH
+
+static const config::checkpoint mainnet_uahf_active_checkpoint {
+    "000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec", 478559
+};
+
+static const config::checkpoint testnet_uahf_active_checkpoint {
+    "00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5", 1155876
+};
+
+static const config::checkpoint mainnet_daa_active_checkpoint {
+    "0000000000000000011ebf65b60d0a3de80b8175be709d653b4c1a1beeb6ab9c", 504031
+};
+
+static const config::checkpoint testnet_daa_active_checkpoint {
+    "0000000000170ed0918077bde7b4d36cc4c91be69fa09211f748240dabe047fb", 1188697
+};
+
+#endif
+
 
 // Network protocol constants.
 //-----------------------------------------------------------------------------

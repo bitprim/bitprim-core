@@ -123,12 +123,12 @@ inline bool bip65(size_t height, bool frozen, bool testnet)
         (!testnet && height >= mainnet_bip65_freeze));
 }
 
-inline uint32_t timestamp_high(const chain_state::data& values)
+inline uint32_t timestamp_high(chain_state::data const& values)
 {
     return values.timestamp.ordered.back();
 }
 
-inline uint32_t bits_high(const chain_state::data& values)
+inline uint32_t bits_high(chain_state::data const& values)
 {
     return values.bits.ordered.back();
 }
@@ -138,8 +138,25 @@ uint256_t chain_state::difficulty_adjustment_cash(uint256_t target) {
     return target + (target >> 2);
 }
 
-bool is_cash_hf_enabled(const uint32_t median_time_past) {
-    return (median_time_past > bitcoin_cash_daa_activation_time);
+// inline constexpr
+// bool is_bch_daa_enabled(uint32_t median_time_past) {
+//     return (median_time_past >= bch_daa_activation_time);
+// }
+
+//static
+inline
+bool chain_state::is_mtp_activated(uint32_t median_time_past, uint32_t activation_time) {
+    return (median_time_past >= activation_time);
+}
+
+inline
+bool chain_state::is_monolith_enabled() const {
+    return  is_mtp_activated(median_time_past(), monolith_activation_time());
+}
+
+inline
+bool chain_state::is_replay_protection_enabled() const {
+    return  is_mtp_activated(median_time_past(), magnetic_anomaly_activation_time());
 }
 #endif //BITPRIM_CURRENCY_BCH
 
@@ -148,38 +165,39 @@ bool is_cash_hf_enabled(const uint32_t median_time_past) {
 // activation
 //-----------------------------------------------------------------------------
 
-chain_state::activations chain_state::activation(const data& values,
-    uint32_t forks)
-{
-    const auto height = values.height;
-    const auto version = values.version.self;
-    const auto& history = values.version.ordered;
-    const auto frozen = script::is_enabled(forks, rule_fork::bip90_rule);
-    const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+chain_state::activations chain_state::activation(data const& values, uint32_t forks
+#ifdef BITPRIM_CURRENCY_BCH
+                                                , uint64_t monolith_activation_time, uint64_t magnetic_anomaly_activation_time
+#endif //BITPRIM_CURRENCY_BCH
+) {
+    auto const height = values.height;
+    auto const version = values.version.self;
+    auto const& history = values.version.ordered;
+    auto const frozen = script::is_enabled(forks, rule_fork::bip90_rule);
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
 
     //*************************************************************************
     // CONSENSUS: Though unspecified in bip34, the satoshi implementation
     // performed this comparison using the signed integer version value.
     //*************************************************************************
-    const auto ge = [](uint32_t value, size_t version)
-    {
+    auto const ge = [](uint32_t value, size_t version) {
         return static_cast<int32_t>(value) >= version;
     };
 
     // Declare bip34-based version predicates.
-    const auto ge_2 = [=](uint32_t value) { return ge(value, bip34_version); };
-    const auto ge_3 = [=](uint32_t value) { return ge(value, bip66_version); };
-    const auto ge_4 = [=](uint32_t value) { return ge(value, bip65_version); };
+    auto const ge_2 = [=](uint32_t value) { return ge(value, bip34_version); };
+    auto const ge_3 = [=](uint32_t value) { return ge(value, bip66_version); };
+    auto const ge_4 = [=](uint32_t value) { return ge(value, bip65_version); };
 
     // Compute bip34-based activation version summaries.
-    const auto count_2 = std::count_if(history.begin(), history.end(), ge_2);
-    const auto count_3 = std::count_if(history.begin(), history.end(), ge_3);
-    const auto count_4 = std::count_if(history.begin(), history.end(), ge_4);
+    auto const count_2 = std::count_if(history.begin(), history.end(), ge_2);
+    auto const count_3 = std::count_if(history.begin(), history.end(), ge_3);
+    auto const count_4 = std::count_if(history.begin(), history.end(), ge_4);
 
     // Frozen activations (require version and enforce above freeze height).
-    const auto bip34_ice = bip34(height, frozen, testnet);
-    const auto bip66_ice = bip66(height, frozen, testnet);
-    const auto bip65_ice = bip65(height, frozen, testnet);
+    auto const bip34_ice = bip34(height, frozen, testnet);
+    auto const bip66_ice = bip66(height, frozen, testnet);
+    auto const bip65_ice = bip65(height, frozen, testnet);
 
     // Initialize activation results with genesis values.
     activations result{ rule_fork::no_rules, first_version };
@@ -192,89 +210,86 @@ chain_state::activations chain_state::activation(const data& values,
 
     // bip16 is activated with a one-time test on mainnet/testnet (~55% rule).
     // There was one invalid p2sh tx mined after that time (code shipped late).
-    if (values.timestamp.self >= bip16_activation_time &&
-        !is_bip16_exception({ values.hash, height }, testnet))
-    {
+    if (values.timestamp.self >= bip16_activation_time && ! is_bip16_exception({ values.hash, height }, testnet)) {
         result.forks |= (rule_fork::bip16_rule & forks);
     }
 
     // bip30 is active for all but two mainnet blocks that violate the rule.
     // These two blocks each have a coinbase transaction that exctly duplicates
     // another that is not spent by the arrival of the corresponding duplicate.
-    if (!is_bip30_exception({ values.hash, height }, testnet))
-    {
+    if ( ! is_bip30_exception({ values.hash, height }, testnet)) {
         result.forks |= (rule_fork::bip30_rule & forks);
     }
 
 
 #ifdef BITPRIM_CURRENCY_LTC
-    if (bip34_ice)
-    {
+    if (bip34_ice) {
         result.forks |= (rule_fork::bip34_rule & forks);
     }
 #else
     // bip34 is activated based on 75% of preceding 1000 mainnet blocks.
-    if (bip34_ice || (is_active(count_2, testnet) && version >= bip34_version))
-    {
+    if (bip34_ice || (is_active(count_2, testnet) && version >= bip34_version)) {
         result.forks |= (rule_fork::bip34_rule & forks);
     }
 #endif
 
     // bip66 is activated based on 75% of preceding 1000 mainnet blocks.
-    if (bip66_ice || (is_active(count_3, testnet) && version >= bip66_version))
-    {
+    if (bip66_ice || (is_active(count_3, testnet) && version >= bip66_version)) {
         result.forks |= (rule_fork::bip66_rule & forks);
     }
 
     // bip65 is activated based on 75% of preceding 1000 mainnet blocks.
-    if (bip65_ice || (is_active(count_4, testnet) && version >= bip65_version))
-    {
+    if (bip65_ice || (is_active(count_4, testnet) && version >= bip65_version)) {
         result.forks |= (rule_fork::bip65_rule & forks);
     }
 
     // allow_collisions is active above the bip34 checkpoint only.
-    if (allow_collisions(values.allow_collisions_hash, testnet))
-    {
+    if (allow_collisions(values.allow_collisions_hash, testnet)) {
         result.forks |= (rule_fork::allow_collisions & forks);
     }
 
     // bip9_bit0 forks are enforced above the bip9_bit0 checkpoint.
-    if (bip9_bit0_active(values.bip9_bit0_hash, testnet))
-    {
+    if (bip9_bit0_active(values.bip9_bit0_hash, testnet)) {
         result.forks |= (rule_fork::bip9_bit0_group & forks);
     }
 
     // version 4/3/2 enforced based on 95% of preceding 1000 mainnet blocks.
-    if (bip65_ice || is_enforced(count_4, testnet))
-    {
+    if (bip65_ice || is_enforced(count_4, testnet)) {
         result.minimum_version = bip65_version;
-    }
-    else if (bip66_ice || is_enforced(count_3, testnet))
-    {
+    } else if (bip66_ice || is_enforced(count_3, testnet)) {
         result.minimum_version = bip66_version;
-    }
-    else if (bip34_ice || is_enforced(count_2, testnet))
-    {
+    } else if (bip34_ice || is_enforced(count_2, testnet)) {
         result.minimum_version = bip34_version;
-    }
-    else
-    {
+    } else {
         result.minimum_version = first_version;
     }
 
 #ifdef BITPRIM_CURRENCY_BCH
-    if (is_cash_hf_enabled(median_time_past(values, 0))) {
+    // if (is_bch_daa_enabled(median_time_past(values, 0))) {
+    //     result.forks |= (rule_fork::cash_low_s_rule & forks);
+    // }
+
+    if (is_daa_enabled(values.height, forks)) {
         result.forks |= (rule_fork::cash_low_s_rule & forks);
     }
+
+    auto mtp = median_time_past(values, 0);
+    if (is_mtp_activated(mtp, monolith_activation_time)) {
+        result.forks |= (rule_fork::cash_monolith_opcodes & forks);
+    }
+
+    if (is_mtp_activated(mtp, magnetic_anomaly_activation_time)) {
+        result.forks |= (rule_fork::cash_replay_protection & forks);
+    }
+
 #endif //BITPRIM_CURRENCY_BCH
 
     return result;
 }
 
-size_t chain_state::bits_count(size_t height, uint32_t forks)
-{
-    const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
-    const auto easy_work = testnet && !is_retarget_height(height);
+size_t chain_state::bits_count(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+    auto const easy_work = testnet && !is_retarget_height(height);
 
 #ifdef BITPRIM_CURRENCY_BCH
     return easy_work ? std::min(height, retargeting_interval) : std::min(height, chain_state_timestamp_count);
@@ -283,20 +298,16 @@ size_t chain_state::bits_count(size_t height, uint32_t forks)
 #endif //BITPRIM_CURRENCY_BCH
 }
 
-size_t chain_state::version_count(size_t height, uint32_t forks)
-{
-    if (script::is_enabled(forks, rule_fork::bip90_rule) ||
-        !script::is_enabled(forks, rule_fork::bip34_activations))
-    {
+size_t chain_state::version_count(size_t height, uint32_t forks) {
+    if (script::is_enabled(forks, rule_fork::bip90_rule) || ! script::is_enabled(forks, rule_fork::bip34_activations)) {
         return 0;
     }
 
-    const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
     return std::min(height, version_sample_size(testnet));
 }
 
-size_t chain_state::timestamp_count(size_t height, uint32_t)
-{
+size_t chain_state::timestamp_count(size_t height, uint32_t) {
 
 #ifdef BITPRIM_CURRENCY_BCH
     return std::min(height, chain_state_timestamp_count); //TODO(bitprim): check what happens with Bitcoin Legacy...?
@@ -305,19 +316,17 @@ size_t chain_state::timestamp_count(size_t height, uint32_t)
 #endif //BITPRIM_CURRENCY_BCH
 }
 
-size_t chain_state::retarget_height(size_t height, uint32_t)
-{
+size_t chain_state::retarget_height(size_t height, uint32_t) {
     // Height must be a positive multiple of interval, so underflow safe.
     // If not retarget height get most recent so that it may be promoted.
     return height - (is_retarget_height(height) ? retargeting_interval :
         retarget_distance(height));
 }
 
-size_t chain_state::collision_height(size_t height, uint32_t forks)
-{
-    const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+size_t chain_state::collision_height(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
 
-    const auto bip34_height = testnet ?
+    auto const bip34_height = testnet ?
         testnet_bip34_active_checkpoint.height() :
         mainnet_bip34_active_checkpoint.height();
 
@@ -325,11 +334,10 @@ size_t chain_state::collision_height(size_t height, uint32_t forks)
     return height > bip34_height ? bip34_height : map::unrequested;
 }
 
-size_t chain_state::bip9_bit0_height(size_t height, uint32_t forks)
-{
-    const auto testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+size_t chain_state::bip9_bit0_height(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
 
-    const auto activation_height = testnet ?
+    auto const activation_height = testnet ?
         testnet_bip9_bit0_active_checkpoint.height() :
         mainnet_bip9_bit0_active_checkpoint.height();
 
@@ -337,16 +345,64 @@ size_t chain_state::bip9_bit0_height(size_t height, uint32_t forks)
     return height > activation_height ? activation_height : map::unrequested;
 }
 
+
+#ifdef BITPRIM_CURRENCY_BCH
+
+inline 
+size_t chain_state::uahf_height(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+
+    auto const activation_height = testnet ? testnet_uahf_active_checkpoint.height() : mainnet_uahf_active_checkpoint.height();
+
+    //TODO(fernando): > or >= ??
+    return height > activation_height ? activation_height : map::unrequested;
+}
+
+inline 
+size_t chain_state::daa_height(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+
+    auto const activation_height = testnet ? testnet_daa_active_checkpoint.height() : mainnet_daa_active_checkpoint.height();
+
+    //TODO(fernando): > or >= ??
+    return height > activation_height ? activation_height : map::unrequested;
+}
+
+inline 
+bool chain_state::is_uahf_enabled(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+
+    auto const activation_height = testnet ? testnet_uahf_active_checkpoint.height() : mainnet_uahf_active_checkpoint.height();
+
+    //TODO(fernando): > or >= ??
+    return height > activation_height;
+}
+
+inline 
+bool chain_state::is_daa_enabled(size_t height, uint32_t forks) {
+    auto const testnet = script::is_enabled(forks, rule_fork::easy_blocks);
+
+    auto const activation_height = testnet ? testnet_daa_active_checkpoint.height() : mainnet_daa_active_checkpoint.height();
+
+    //TODO(fernando): > or >= ??
+    return height > activation_height;
+}
+
+#endif
+
+
 typename chain_state::timestamps::const_iterator 
 timestamps_position(chain_state::timestamps const& times, bool tip) {
 
 #ifdef BITPRIM_CURRENCY_BCH
     if (tip) {
-        if (times.size() >= bitcoin_cash_offset_tip)
+        if (times.size() >= bitcoin_cash_offset_tip) {
             return times.begin() + bitcoin_cash_offset_tip;
+        }
     } else {
-        if (times.size() >= bitcoin_cash_offset_tip_minus_6)
+        if (times.size() >= bitcoin_cash_offset_tip_minus_6) {
             return times.begin() + bitcoin_cash_offset_tip_minus_6;
+        }
     }
 #endif //BITPRIM_CURRENCY_BCH
 
@@ -420,7 +476,7 @@ auto select_1_3(T&& a, U&& b, V&& c, R r) FN(
 
 #ifdef BITPRIM_CURRENCY_BCH
 
-// New algorithm
+// DAA, New algorithm: 2017-Nov-13 Hard fork
 uint32_t chain_state::cash_difficulty_adjustment(data const& values) {
     // precondition: values.timestamp.size() >= 147
 
@@ -471,7 +527,7 @@ uint32_t chain_state::cash_difficulty_adjustment(data const& values) {
 // work_required
 //-----------------------------------------------------------------------------
 
-uint32_t chain_state::work_required(const data& values, uint32_t forks) {
+uint32_t chain_state::work_required(data const& values, uint32_t forks) {
     // Invalid parameter via public interface, test is_valid for results.
     if (values.height == 0) {
         return{};
@@ -480,9 +536,10 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
     auto last_time_span = median_time_past(values, 0, true);
 
 #ifdef BITPRIM_CURRENCY_BCH
-    bool daa_active = last_time_span >= bitcoin_cash_daa_activation_time;
+    // bool const daa_active = is_bch_daa_enabled(last_time_span);
+    bool const daa_active = is_daa_enabled(values.height, forks);
 #else
-    bool daa_active = false;
+    bool const daa_active = false;
 #endif //BITPRIM_CURRENCY_BCH
 
     if (is_retarget_height(values.height) && !(daa_active)) {
@@ -493,26 +550,44 @@ uint32_t chain_state::work_required(const data& values, uint32_t forks) {
         return easy_work_required(values, daa_active);
     }
 
+    
+
+// #ifdef BITPRIM_CURRENCY_BCH
+//     if (values.height >= bch_activation_height) {
+//         if ( ! daa_active) {
+//             auto six_time_span = median_time_past(values, 0, false);
+//             // precondition: last_time_span >= six_time_span
+//             if ((last_time_span - six_time_span) > (12 * 3600)) {
+//                 return work_required_adjust_cash(values);
+//             }
+//         } else {
+//             return cash_difficulty_adjustment(values);
+// 	    }
+//     }
+// #endif //BITPRIM_CURRENCY_BCH
+
 #ifdef BITPRIM_CURRENCY_BCH
-    if (values.height > bitcoin_cash_activation_height) {
-        if ( ! daa_active) {
+    if (is_uahf_enabled(values.height, forks)) {
+        if (is_daa_enabled(values.height, forks)) {
+            return cash_difficulty_adjustment(values);
+        } else {
             auto six_time_span = median_time_past(values, 0, false);
             // precondition: last_time_span >= six_time_span
+            //TODO(fernando): resolve hardcoded values
             if ((last_time_span - six_time_span) > (12 * 3600)) {
                 return work_required_adjust_cash(values);
             }
-        } else {
-            return cash_difficulty_adjustment(values);
 	    }
     }
 #endif //BITPRIM_CURRENCY_BCH
+
 
     return bits_high(values);
 }
 
 
 #ifdef BITPRIM_CURRENCY_BCH
-uint32_t chain_state::work_required_adjust_cash(const data& values) {
+uint32_t chain_state::work_required_adjust_cash(data const& values) {
     const compact bits(bits_high(values));
     uint256_t target(bits);
     target = difficulty_adjustment_cash(target); //target += (target >> 2);
@@ -523,8 +598,7 @@ uint32_t chain_state::work_required_adjust_cash(const data& values) {
 
 
 // [CalculateNextWorkRequired]
-uint32_t chain_state::work_required_retarget(const data& values)
-{
+uint32_t chain_state::work_required_retarget(data const& values) {
     const compact bits(bits_high(values));
     
 #ifdef BITPRIM_CURRENCY_LTC
@@ -571,20 +645,19 @@ uint32_t chain_state::work_required_retarget(const data& values)
 }
 
 // Get the bounded total time spanning the highest 2016 blocks.
-uint32_t chain_state::retarget_timespan(const data& values)
-{
-    const auto high = timestamp_high(values);
-    const auto retarget = values.timestamp.retarget;
+uint32_t chain_state::retarget_timespan(data const& values) {
+    auto const high = timestamp_high(values);
+    auto const retarget = values.timestamp.retarget;
 
     //*************************************************************************
     // CONSENSUS: subtract unsigned 32 bit numbers in signed 64 bit space in
     // order to prevent underflow before applying the range constraint.
     //*************************************************************************
-    const auto timespan = cast_subtract<int64_t>(high, retarget);
+    auto const timespan = cast_subtract<int64_t>(high, retarget);
     return range_constrain(timespan, min_timespan, max_timespan);
 }
 
-uint32_t chain_state::easy_work_required(const data& values, bool daa_active) {
+uint32_t chain_state::easy_work_required(data const& values, bool daa_active) {
     BITCOIN_ASSERT(values.height != 0);
 
     // If the time limit has passed allow a minimum difficulty block.
@@ -615,8 +688,7 @@ uint32_t chain_state::easy_work_required(const data& values, bool daa_active) {
     return proof_of_work_limit;
 }
 
-uint32_t chain_state::easy_time_limit(const chain_state::data& values)
-{
+uint32_t chain_state::easy_time_limit(chain_state::data const& values) {
     const int64_t high = timestamp_high(values);
     const int64_t spacing = easy_spacing_seconds;
 
@@ -628,8 +700,7 @@ uint32_t chain_state::easy_time_limit(const chain_state::data& values)
 }
 
 // A retarget height, or a block that does not have proof_of_work_limit bits.
-bool chain_state::is_retarget_or_non_limit(size_t height, uint32_t bits)
-{
+bool chain_state::is_retarget_or_non_limit(size_t height, uint32_t bits) {
     // Zero is a retarget height, ensuring termination before height underflow.
     // This is guaranteed, just asserting here to document the safeguard.
     BITCOIN_ASSERT_MSG(is_retarget_height(0), "loop overflow potential");
@@ -638,14 +709,12 @@ bool chain_state::is_retarget_or_non_limit(size_t height, uint32_t bits)
 }
 
 // Determine if height is a multiple of retargeting_interval.
-bool chain_state::is_retarget_height(size_t height)
-{
+bool chain_state::is_retarget_height(size_t height) {
     return retarget_distance(height) == 0;
 }
 
 // Determine the number of blocks back to the closest retarget height.
-size_t chain_state::retarget_distance(size_t height)
-{
+size_t chain_state::retarget_distance(size_t height) {
     return height % retargeting_interval;
 }
 
@@ -653,9 +722,7 @@ size_t chain_state::retarget_distance(size_t height)
 //-----------------------------------------------------------------------------
 
 // static
-chain_state::map chain_state::get_map(size_t height,
-    const checkpoints& checkpoints, uint32_t forks)
-{
+chain_state::map chain_state::get_map(size_t height, checkpoints const& checkpoints, uint32_t forks) {
     if (height == 0)
         return{};
 
@@ -689,8 +756,7 @@ chain_state::map chain_state::get_map(size_t height,
 }
 
 // static
-uint32_t chain_state::signal_version(uint32_t forks)
-{
+uint32_t chain_state::signal_version(uint32_t forks) {
     if (script::is_enabled(forks, rule_fork::bip65_rule))
         return bip65_version;
 
@@ -708,16 +774,15 @@ uint32_t chain_state::signal_version(uint32_t forks)
 }
 
 // This is promotion from a preceding height to the next.
-chain_state::data chain_state::to_pool(const chain_state& top)
-{
+chain_state::data chain_state::to_pool(chain_state const& top) {
     // Copy data from presumed previous-height block state.
     auto data = top.data_;
 
     // Alias configured forks, these don't change.
-    const auto forks = top.forks_;
+    auto const forks = top.forks_;
 
     // If this overflows height is zero and result is handled as invalid.
-    const auto height = data.height + 1u;
+    auto const height = data.height + 1u;
 
     // Enqueue previous block values to collections.
     data.bits.ordered.push_back(data.bits.self);
@@ -754,19 +819,24 @@ chain_state::data chain_state::to_pool(const chain_state& top)
 
 // Constructor (top to pool).
 // This generates a state for the pool above the presumed top block state.
-chain_state::chain_state(const chain_state& top)
-  : data_(to_pool(top)),
-    forks_(top.forks_),
-    checkpoints_(top.checkpoints_),
-    active_(activation(data_, forks_)),
-    work_required_(work_required(data_, forks_)),
-    median_time_past_(median_time_past(data_, forks_))
-{
-}
+chain_state::chain_state(chain_state const& top)
+    : data_(to_pool(top))
+    , forks_(top.forks_)
+    , checkpoints_(top.checkpoints_)
+    , active_(activation(data_, forks_
+#ifdef BITPRIM_CURRENCY_BCH
+        , top.monolith_activation_time_ , top.magnetic_anomaly_activation_time_
+#endif //BITPRIM_CURRENCY_BCH
+    ))
+    , median_time_past_(median_time_past(data_, forks_))
+    , work_required_(work_required(data_, forks_))
+#ifdef BITPRIM_CURRENCY_BCH
+    , monolith_activation_time_(top.monolith_activation_time_)
+    , magnetic_anomaly_activation_time_(top.magnetic_anomaly_activation_time_)
+#endif //BITPRIM_CURRENCY_BCH
+{}
 
-chain_state::data chain_state::to_block(const chain_state& pool,
-    const block& block)
-{
+chain_state::data chain_state::to_block(chain_state const& pool, const block& block) {
     auto testnet = script::is_enabled(pool.forks_, rule_fork::easy_blocks);
 
     // Copy data from presumed same-height pool state.
@@ -774,7 +844,7 @@ chain_state::data chain_state::to_block(const chain_state& pool,
 
     // Replace pool chain state with block state at same (next) height.
     // Preserve data.timestamp.retarget promotion.
-    const auto& header = block.header();
+    auto const& header = block.header();
     data.hash = header.hash();
     data.bits.self = header.bits();
     data.version.self = header.version();
@@ -793,19 +863,24 @@ chain_state::data chain_state::to_block(const chain_state& pool,
 
 // Constructor (tx pool to block).
 // This assumes that the pool state is the same height as the block.
-chain_state::chain_state(const chain_state& pool, const block& block)
-  : data_(to_block(pool, block)),
-    forks_(pool.forks_),
-    checkpoints_(pool.checkpoints_),
-    active_(activation(data_, forks_)),
-    work_required_(work_required(data_, forks_)),
-    median_time_past_(median_time_past(data_, forks_))
-{
-}
+chain_state::chain_state(chain_state const& pool, const block& block)
+    : data_(to_block(pool, block))
+    , forks_(pool.forks_)
+    , checkpoints_(pool.checkpoints_)
+    , active_(activation(data_, forks_
+#ifdef BITPRIM_CURRENCY_BCH
+        , pool.monolith_activation_time_ , pool.magnetic_anomaly_activation_time_
+#endif //BITPRIM_CURRENCY_BCH
+    ))
+    , median_time_past_(median_time_past(data_, forks_))
+    , work_required_(work_required(data_, forks_))
+#ifdef BITPRIM_CURRENCY_BCH
+    , monolith_activation_time_(pool.monolith_activation_time_)
+    , magnetic_anomaly_activation_time_(pool.magnetic_anomaly_activation_time_)
+#endif //BITPRIM_CURRENCY_BCH
+{}
 
-chain_state::data chain_state::to_header(const chain_state& parent,
-    const header& header)
-{
+chain_state::data chain_state::to_header(chain_state const& parent, header const& header) {
     auto testnet = script::is_enabled(parent.forks_, rule_fork::easy_blocks);
 
     // Copy and promote data from presumed parent-height header/block state.
@@ -831,80 +906,99 @@ chain_state::data chain_state::to_header(const chain_state& parent,
 
 // Constructor (parent to header).
 // This assumes that parent is the state of the header's previous block.
-chain_state::chain_state(const chain_state& parent, const header& header)
-  : data_(to_header(parent, header)),
-    forks_(parent.forks_),
-    checkpoints_(parent.checkpoints_),
-    active_(activation(data_, forks_)),
-    work_required_(work_required(data_, forks_)),
-    median_time_past_(median_time_past(data_, forks_))
-{
-}
+chain_state::chain_state(chain_state const& parent, header const& header)
+    : data_(to_header(parent, header))
+    , forks_(parent.forks_)
+    , checkpoints_(parent.checkpoints_)
+    , active_(activation(data_, forks_
+#ifdef BITPRIM_CURRENCY_BCH
+        , parent.monolith_activation_time_ , parent.magnetic_anomaly_activation_time_
+#endif //BITPRIM_CURRENCY_BCH
+        ))
+    , median_time_past_(median_time_past(data_, forks_))
+    , work_required_(work_required(data_, forks_))
+#ifdef BITPRIM_CURRENCY_BCH
+    , monolith_activation_time_(parent.monolith_activation_time_)
+    , magnetic_anomaly_activation_time_(parent.magnetic_anomaly_activation_time_)
+#endif //BITPRIM_CURRENCY_BCH
+{}
 
 // Constructor (from raw data).
 // The allow_collisions hard fork is always activated (not configurable).
-chain_state::chain_state(data&& values, const checkpoints& checkpoints,
-    uint32_t forks)
-  : data_(std::move(values)),
-    forks_(forks | rule_fork::allow_collisions),
-    checkpoints_(checkpoints),
-    active_(activation(data_, forks_)),
-    work_required_(work_required(data_, forks_)),
-    median_time_past_(median_time_past(data_, forks_))
-{
-}
+chain_state::chain_state(data&& values, checkpoints const& checkpoints, uint32_t forks
+#ifdef BITPRIM_CURRENCY_BCH
+, uint64_t monolith_activation_time
+, uint64_t magnetic_anomaly_activation_time
+#endif //BITPRIM_CURRENCY_BCH
+)
+    : data_(std::move(values))
+    , forks_(forks | rule_fork::allow_collisions)
+    , checkpoints_(checkpoints)
+    , active_(activation(data_, forks_
+#ifdef BITPRIM_CURRENCY_BCH
+        , monolith_activation_time, magnetic_anomaly_activation_time
+#endif //BITPRIM_CURRENCY_BCH
+    ))
+    , median_time_past_(median_time_past(data_, forks_))
+    , work_required_(work_required(data_, forks_))
+#ifdef BITPRIM_CURRENCY_BCH
+    , monolith_activation_time_(monolith_activation_time)
+    , magnetic_anomaly_activation_time_(magnetic_anomaly_activation_time)
+#endif //BITPRIM_CURRENCY_BCH
+{}
 
 // Semantic invalidity can also arise from too many/few values in the arrays.
 // The same computations used to specify the ranges could detect such errors.
 // These are the conditions that would cause exception during execution.
-bool chain_state::is_valid() const
-{
+bool chain_state::is_valid() const {
     return data_.height != 0;
 }
 
 // Properties.
 //-----------------------------------------------------------------------------
 
-size_t chain_state::height() const
-{
+size_t chain_state::height() const {
     return data_.height;
 }
 
-uint32_t chain_state::enabled_forks() const
-{
+uint32_t chain_state::enabled_forks() const {
     return active_.forks;
 }
 
-uint32_t chain_state::minimum_version() const
-{
+uint32_t chain_state::minimum_version() const {
     return active_.minimum_version;
 }
 
-uint32_t chain_state::median_time_past() const
-{
+uint32_t chain_state::median_time_past() const {
     return median_time_past_;
 }
 
-uint32_t chain_state::work_required() const
-{
+uint32_t chain_state::work_required() const {
     return work_required_;
 }
+
+#ifdef BITPRIM_CURRENCY_BCH
+uint64_t chain_state::monolith_activation_time() const {
+    return monolith_activation_time_;
+}
+
+uint64_t chain_state::magnetic_anomaly_activation_time() const {
+    return magnetic_anomaly_activation_time_;
+}
+#endif //BITPRIM_CURRENCY_BCH
 
 // Forks.
 //-----------------------------------------------------------------------------
 
-bool chain_state::is_enabled(rule_fork fork) const
-{
+bool chain_state::is_enabled(rule_fork fork) const {
     return script::is_enabled(active_.forks, fork);
 }
 
-bool chain_state::is_checkpoint_conflict(const hash_digest& hash) const
-{
+bool chain_state::is_checkpoint_conflict(const hash_digest& hash) const {
     return !checkpoint::validate(hash, data_.height, checkpoints_);
 }
 
-bool chain_state::is_under_checkpoint() const
-{
+bool chain_state::is_under_checkpoint() const {
     // This assumes that the checkpoints are sorted.
     return checkpoint::covered(data_.height, checkpoints_);
 }
@@ -912,12 +1006,10 @@ bool chain_state::is_under_checkpoint() const
 // Mining.
 //-----------------------------------------------------------------------------
 
-uint32_t chain_state::get_next_work_required(uint32_t time_now)
-{
+uint32_t chain_state::get_next_work_required(uint32_t time_now) {
     auto values = this->data_;
     values.timestamp.self = time_now;
     return work_required(values, this->enabled_forks());
 }
 
-} // namespace chain
-} // namespace libbitcoin
+}} // namespace libbitcoin::chain

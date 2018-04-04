@@ -24,8 +24,7 @@
 namespace libbitcoin {
 namespace machine {
 
-enum rule_fork : uint32_t
-{
+enum rule_fork : uint32_t {
     no_rules = 0,
 
     /// Allow minimum difficulty blocks (hard fork, testnet).
@@ -63,6 +62,8 @@ enum rule_fork : uint32_t
 
 #ifdef BITPRIM_CURRENCY_BCH
     cash_low_s_rule = 1u << 15,
+    cash_monolith_opcodes = 1u << 16,
+    cash_replay_protection = 1u << 17,
 #endif //BITPRIM_CURRENCY_BCH
 
 

@@ -139,8 +139,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Determine if the fork is enabled in the active forks set.
-    static bool is_enabled(uint32_t active_forks, machine::rule_fork fork)
-    {
+    static bool is_enabled(uint32_t active_forks, machine::rule_fork fork) {
         return (fork & active_forks) != 0;
     }
 
