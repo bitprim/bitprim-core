@@ -149,14 +149,12 @@ bool chain_state::is_mtp_activated(uint32_t median_time_past, uint32_t activatio
     return (median_time_past >= activation_time);
 }
 
-inline
 bool chain_state::is_monolith_enabled() const {
-    return  is_mtp_activated(median_time_past(), monolith_activation_time());
+    return is_mtp_activated(median_time_past(), monolith_activation_time());
 }
 
-inline
 bool chain_state::is_replay_protection_enabled() const {
-    return  is_mtp_activated(median_time_past(), magnetic_anomaly_activation_time());
+    return is_mtp_activated(median_time_past(), magnetic_anomaly_activation_time());
 }
 #endif //BITPRIM_CURRENCY_BCH
 

@@ -178,7 +178,6 @@ public:
     bool is_monolith_enabled() const;
 
     bool is_replay_protection_enabled() const;
-
 #endif //BITPRIM_CURRENCY_BCH
 
 protected:
