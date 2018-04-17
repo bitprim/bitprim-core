@@ -24,7 +24,10 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+
 #include <bitcoin/bitcoin/chain/script.hpp>
+#include <bitcoin/bitcoin/chainv2/script.hpp>
+
 #include <bitcoin/bitcoin/compat.hpp>
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/math/checksum.hpp>
@@ -41,8 +44,7 @@ static BC_CONSTEXPR size_t payment_size = 1u + short_hash_size + checksum_size; 
 typedef byte_array<payment_size> payment;
 
 /// A class for working with non-stealth payment addresses.
-class BC_API payment_address
-{
+class BC_API payment_address {
 public:
     static const uint8_t mainnet_p2kh;
     static const uint8_t mainnet_p2sh;
@@ -55,8 +57,11 @@ public:
     /// Extract a payment address from an input or output script.
     /// The address will be invalid if and only if the script type is not
     /// supported or the script is itself invalid.
-    static payment_address extract(const chain::script& script,
-        uint8_t p2kh_version=mainnet_p2kh, uint8_t p2sh_version=mainnet_p2sh);
+    static 
+    payment_address extract(chain::script const& script, uint8_t p2kh_version=mainnet_p2kh, uint8_t p2sh_version=mainnet_p2sh);
+    
+    static 
+    payment_address extract(chainv2::script const& script, uint8_t p2kh_version=mainnet_p2kh, uint8_t p2sh_version=mainnet_p2sh);
 
     /// Constructors.
     payment_address();

@@ -16,27 +16,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/bitcoin/machine/program.hpp>
+#include <bitcoin/bitcoin/machine/programv2.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <utility>
-#include <bitcoin/bitcoin/chain/script.hpp>
-#include <bitcoin/bitcoin/chain/transaction.hpp>
+#include <bitcoin/bitcoin/chainv2/script.hpp>
+#include <bitcoin/bitcoin/chainv2/transaction.hpp>
 #include <bitcoin/bitcoin/machine/interpreter.hpp>
 
 namespace libbitcoin { namespace machine {
 
-using namespace bc::chain;
+using namespace bc::chainv2;
 
 // Fixed tuning parameters, max_stack_size ensures no reallocation.
 static constexpr size_t stack_capactity = max_stack_size;
 static constexpr size_t condition_capactity = max_counted_ops;
-static const chain::transaction default_tx_;
-static const chain::script default_script_;
+static const chainv2::transaction default_tx_;
+static const chainv2::script default_script_;
 
-void program::reserve_stacks()
-{
+void programv2::reserve_stacks() {
     primary_.reserve(stack_capactity);
     alternate_.reserve(stack_capactity);
     condition_.reserve(condition_capactity);
@@ -45,7 +44,7 @@ void program::reserve_stacks()
 // Constructors.
 //-----------------------------------------------------------------------------
 
-program::program()
+programv2::programv2()
   : script_(default_script_),
     transaction_(default_tx_),
     forks_(0),
@@ -57,7 +56,7 @@ program::program()
     reserve_stacks();
 }
 
-program::program(const script& script)
+programv2::programv2(const script& script)
   : script_(script),
     transaction_(default_tx_),
     forks_(0),
@@ -69,7 +68,7 @@ program::program(const script& script)
     reserve_stacks();
 }
 
-program::program(const script& script, const chain::transaction& transaction,
+programv2::programv2(const script& script, const chainv2::transaction& transaction,
     uint32_t input_index, uint32_t forks)
   : script_(script),
     transaction_(transaction),
@@ -83,7 +82,7 @@ program::program(const script& script, const chain::transaction& transaction,
 }
 
 // Condition, alternate, jump and operation_count are not copied.
-program::program(const script& script, const program& other)
+programv2::programv2(const script& script, const programv2& other)
   : script_(script),
     transaction_(other.transaction_),
     forks_(other.forks_),
@@ -97,7 +96,7 @@ program::program(const script& script, const program& other)
 }
 
 // Condition, alternate, jump and operation_count are not moved.
-program::program(const script& script, program&& other, bool)
+programv2::programv2(const script& script, programv2&& other, bool)
   : script_(script),
     transaction_(other.transaction_),
     forks_(other.forks_),
@@ -113,12 +112,12 @@ program::program(const script& script, program&& other, bool)
 // Instructions.
 //-----------------------------------------------------------------------------
 
-code program::evaluate() {
-    return interpreter<program>::run(*this);
+code programv2::evaluate() {
+    return interpreter<programv2>::run(*this);
 }
 
-code program::evaluate(const operation& op) {
-    return interpreter<program>::run(op, *this);
+code programv2::evaluate(const operation& op) {
+    return interpreter<programv2>::run(op, *this);
 }
 
 }} // namespace libbitcoin::machine

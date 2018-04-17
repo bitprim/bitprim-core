@@ -23,18 +23,16 @@
 #include <bitcoin/bitcoin/machine/operation.hpp>
 #include <bitcoin/bitcoin/machine/program.hpp>
 
-namespace libbitcoin {
-namespace machine {
+namespace libbitcoin { namespace machine {
 
-code interpreter::run(program& program)
-{
+template <typename Program>
+code interpreter<Program>::run(Program& program) {
     code ec;
 
     if (!program.is_valid())
         return error::invalid_script;
 
-    for (const auto& op: program)
-    {
+    for (const auto& op: program) {
         if (op.is_oversized())
             return error::invalid_push_data_size;
 
@@ -44,8 +42,7 @@ code interpreter::run(program& program)
         if (!program.increment_operation_count(op))
             return error::invalid_operation_count;
 
-        if (program.if_(op))
-        {
+        if (program.if_(op)) {
             if ((ec = run_op(op, program)))
                 return ec;
 
@@ -57,10 +54,9 @@ code interpreter::run(program& program)
     return program.closed() ? error::success : error::invalid_stack_scope;
 }
 
-code interpreter::run(const operation& op, program& program)
-{
+template <typename Program>
+code interpreter<Program>::run(const operation& op, Program& program) {
     return run_op(op, program);
 }
 
-} // namespace machine
-} // namespace libbitcoin
+}} // namespace libbitcoin::machine
