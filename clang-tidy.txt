@@ -1,0 +1,11 @@
+Intentos
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+../run-clang-tidy.py -checks='*' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+
+
+
+Fixes
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+../run-clang-tidy.py -checks='-*,modernize-use-using' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+
