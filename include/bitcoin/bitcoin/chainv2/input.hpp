@@ -47,17 +47,17 @@ public:
 
     input();
 
-    input(input&& other);
-    input(const input& other);
+    input(input&& other) noexcept;
+    input(input const& other);
 
     input(output_point&& previous_output, chainv2::script&& script, uint32_t sequence);
-    input(const output_point& previous_output, const chainv2::script& script, uint32_t sequence);
+    input(output_point const& previous_output, chainv2::script const& script, uint32_t sequence);
 
     // Operators.
     //-----------------------------------------------------------------------------
 
     /// This class is move assignable and copy assignable.
-    input& operator=(input&& other);
+    input& operator=(input&& other) noexcept;
     input& operator=(const input& other);
 
     bool operator==(const input& other) const;

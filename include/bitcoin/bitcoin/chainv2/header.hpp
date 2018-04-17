@@ -55,7 +55,7 @@ public:
 
     header();
 
-    header(header&& other);
+    header(header&& other) noexcept;
     header(const header& other);
 
     header(header&& other, hash_digest&& hash);
@@ -71,7 +71,7 @@ public:
     //-----------------------------------------------------------------------------
 
     /// This class is move and copy assignable.
-    header& operator=(header&& other);
+    header& operator=(header&& other) noexcept;
     header& operator=(const header& other);
 
     bool operator==(const header& other) const;

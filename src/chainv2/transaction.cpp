@@ -94,7 +94,7 @@ transaction::transaction()
     : version_(0), locktime_(0), validation{}
 {}
 
-transaction::transaction(transaction&& other)
+transaction::transaction(transaction&& other) noexcept
     : transaction(other.version_, other.locktime_, std::move(other.inputs_)
     , std::move(other.outputs_))
 {
@@ -143,7 +143,7 @@ transaction::transaction(uint32_t version, uint32_t locktime, input::list&& inpu
 // Operators.
 //-----------------------------------------------------------------------------
 
-transaction& transaction::operator=(transaction&& other) {
+transaction& transaction::operator=(transaction&& other) noexcept {
     // TODO: implement safe private accessor for conditional cache transfer.
     version_ = other.version_;
     locktime_ = other.locktime_;

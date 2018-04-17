@@ -72,21 +72,21 @@ public:
 
     block();
 
-    block(block&& other);
-    block(const block& other);
+    block(block&& other) noexcept;
+    block(block const& other);
 
     block(chainv2::header&& header, transaction::list&& transactions);
-    block(const chainv2::header& header, const transaction::list& transactions);
+    block(chainv2::header const& header, transaction::list const& transactions);
 
     // Operators.
     //-------------------------------------------------------------------------
 
     /// This class is move assignable but NOT copy assignable.
-    block& operator=(block&& other);
-    block& operator=(const block& other) = delete;
+    block& operator=(block&& other) noexcept;
+    block& operator=(block const& other) = delete;
 
-    bool operator==(const block& other) const;
-    bool operator!=(const block& other) const;
+    bool operator==(block const& other) const;
+    bool operator!=(block const& other) const;
 
     // Deserialization.
     //-------------------------------------------------------------------------

@@ -57,7 +57,7 @@ public:
 
     output();
 
-    output(output&& other);
+    output(output&& other) noexcept;
     output(const output& other);
 
     output(uint64_t value, chainv2::script&& script);
@@ -67,7 +67,7 @@ public:
     //-----------------------------------------------------------------------------
 
     /// This class is move assignable and copy assignable.
-    output& operator=(output&& other);
+    output& operator=(output&& other) noexcept;
     output& operator=(const output& other);
 
     bool operator==(const output& other) const;

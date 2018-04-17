@@ -37,7 +37,7 @@ public:
     explicit compact(const uint256_t& big);
 
     /// Move constructor.
-    compact(compact&& other);
+    compact(compact&& other) noexcept;
 
     /// Copy constructor.
     compact(const compact& other);

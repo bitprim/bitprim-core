@@ -76,7 +76,7 @@ public:
 
     transaction();
 
-    transaction(transaction&& other);
+    transaction(transaction&& other) noexcept;
     transaction(transaction const& other);
 
     transaction(transaction&& other, hash_digest&& hash);
@@ -89,7 +89,7 @@ public:
     //-----------------------------------------------------------------------------
 
     /// This class is move assignable and copy assignable [TODO: remove copy].
-    transaction& operator=(transaction&& other);
+    transaction& operator=(transaction&& other) noexcept;
     transaction& operator=(transaction const& other);
 
     bool operator==(transaction const& other) const;

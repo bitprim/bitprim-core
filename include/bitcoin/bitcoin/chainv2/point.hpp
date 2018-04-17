@@ -47,7 +47,7 @@ public:
 
     point();
 
-    point(point&& other);
+    point(point&& other) noexcept;
     point(const point& other);
 
     point(hash_digest&& hash, uint32_t index);
@@ -57,7 +57,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// This class is move assignable and copy assignable.
-    point& operator=(point&& other);
+    point& operator=(point&& other) noexcept;
     point& operator=(const point& other);
 
     bool operator<(const point& other) const;
