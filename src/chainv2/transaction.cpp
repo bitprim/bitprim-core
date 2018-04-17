@@ -62,10 +62,11 @@ bool read(Source& source, std::vector<Put>& puts, bool wire) {
     const auto count = source.read_size_little_endian();
 
     // Guard against potential for arbitary memory allocation.
-    if (count > get_max_block_size())
+    if (count > get_max_block_size()) {
         source.invalidate();
-    else
+    } else {
         puts.resize(count);
+    }
 
     const auto deserialize = [&result, &source, wire](Put& put) {
         result = result && put.from_data(source, wire);
@@ -239,8 +240,9 @@ bool transaction::from_data(reader& source, bool wire) {
         const auto locktime = source.read_variable_little_endian();
         const auto version = source.read_variable_little_endian();
 
-        if (locktime > max_uint32 || version > max_uint32)
+        if (locktime > max_uint32 || version > max_uint32) {
             source.invalidate();
+        }
 
         locktime_ = static_cast<uint32_t>(locktime);
         version_ = static_cast<uint32_t>(version);
@@ -452,8 +454,9 @@ bool transaction::is_coinbase() const {
 
 // True if coinbase and has invalid input[0] script size.
 bool transaction::is_oversized_coinbase() const {
-    if (!is_coinbase())
+    if (!is_coinbase()) {
         return false;
+    }
 
     const auto script_size = inputs_.front().script().serialized_size(false);
     return script_size < min_coinbase_size || script_size > max_coinbase_size;
@@ -461,8 +464,9 @@ bool transaction::is_oversized_coinbase() const {
 
 // True if not coinbase but has null previous_output(s).
 bool transaction::is_null_non_coinbase() const{
-    if (is_coinbase())
+    if (is_coinbase()) {
         return false;
+    }
 
     const auto invalid = [](const input& input) {
         return input.previous_output().is_null();
@@ -490,8 +494,9 @@ bool transaction::is_final(size_t block_height, uint32_t block_time) const {
 }
 
 bool transaction::is_locked(size_t block_height, uint32_t median_time_past) const {
-    if (version_ < relative_locktime_min_version || is_coinbase())
+    if (version_ < relative_locktime_min_version || is_coinbase()) {
         return false;
+    }
 
     const auto locked = [block_height, median_time_past](const input& input) {
         return input.is_locked(block_height, median_time_past);
@@ -635,8 +640,9 @@ point::list transaction::missing_previous_outputs() const {
         const auto& prevout = input.previous_output();
         const auto missing = !prevout.validation.cache.is_valid();
 
-        if (missing && !prevout.is_null())
+        if (missing && !prevout.is_null()) {
             prevouts.push_back(prevout);
+        }
     }
 
     return prevouts;
@@ -685,17 +691,20 @@ bool transaction::is_mature(size_t height) const {
 
 // Coinbase transactions return success, to simplify iteration.
 code transaction::connect_input(chain::chain_state const& state, size_t input_index) const {
-    if (input_index >= inputs_.size())
+    if (input_index >= inputs_.size()) {
         return error::operation_failed;
+    }
 
-    if (is_coinbase())
+    if (is_coinbase()) {
         return error::success;
+    }
 
     const auto& prevout = inputs_[input_index].previous_output().validation;
 
     // Verify that the previous output cache has been populated.
-    if (!prevout.cache.is_valid())
+    if (!prevout.cache.is_valid()) {
         return error::missing_previous_output;
+    }
 
     const auto forks = state.enabled_forks();
     const auto index32 = static_cast<uint32_t>(input_index);
@@ -709,26 +718,33 @@ code transaction::connect_input(chain::chain_state const& state, size_t input_in
 
 // These checks are self-contained; blockchain (and so version) independent.
 code transaction::check(bool transaction_pool) const {
-    if (inputs_.empty() || outputs_.empty())
+    if (inputs_.empty() || outputs_.empty()) {
         return error::empty_transaction;
-
-    else if (is_null_non_coinbase())
+    } 
+    
+    if (is_null_non_coinbase()) {
         return error::previous_output_null;
-
-    else if (total_output_value() > max_money())
+    } 
+    
+    if (total_output_value() > max_money()) {
         return error::spend_overflow;
-
-    else if (!transaction_pool && is_oversized_coinbase())
+    } 
+    
+    if (!transaction_pool && is_oversized_coinbase()) {
         return error::invalid_coinbase_script_size;
-
-    else if (transaction_pool && is_coinbase())
+    } 
+    
+    if (transaction_pool && is_coinbase()) {
         return error::coinbase_transaction;
-
-    else if (transaction_pool && is_internal_double_spend())
+    } 
+    
+    if (transaction_pool && is_internal_double_spend()) {
         return error::transaction_internal_double_spend;
-
-    else if (transaction_pool && serialized_size(true) >= get_max_block_size())
+    } 
+    
+    if (transaction_pool && serialized_size(true) >= get_max_block_size()) {
         return error::transaction_size_limit;
+    }
 
     // We cannot know if bip16 is enabled at this point so we disable it.
     // This will not make a difference unless prevouts are populated, in which
@@ -738,8 +754,7 @@ code transaction::check(bool transaction_pool) const {
     ////else if (transaction_pool && signature_operations(false) > get_max_block_sigops()
     ////    return error::transaction_legacy_sigop_limit;
 
-    else
-        return error::success;
+    return error::success;
 }
 
 code transaction::accept(bool transaction_pool) const {
@@ -755,14 +770,15 @@ code transaction::accept(chain::chain_state const& state, bool transaction_pool)
 
     // We don't need to allow tx pool acceptance of an unspent duplicate
     // because tx pool inclusion cannot be required by consensus.
-    const auto duplicates = state.is_enabled(rule_fork::allow_collisions) &&
-        !transaction_pool;
+    const auto duplicates = state.is_enabled(rule_fork::allow_collisions) && !transaction_pool;
 
-    if (transaction_pool && state.is_under_checkpoint())
+    if (transaction_pool && state.is_under_checkpoint()) {
         return error::premature_validation;
+    }
 
-    if (transaction_pool && !is_final(state.height(), state.median_time_past()))
+    if (transaction_pool && !is_final(state.height(), state.median_time_past())) {
         return error::transaction_non_final;
+    } 
 
     //*************************************************************************
     // CONSENSUS:
@@ -771,32 +787,38 @@ code transaction::accept(chain::chain_state const& state, bool transaction_pool)
     // described by BIP30, but it is in the code referenced by BIP30. As such
     // the tx pool need only test against the chain, skipping the pool.
     //*************************************************************************
-    else if (!duplicates && bip30 && validation.duplicate)
+    if (!duplicates && bip30 && validation.duplicate) {
         return error::unspent_duplicate;
-
-    else if (is_missing_previous_outputs())
+    } 
+    
+    if (is_missing_previous_outputs()) {
         return error::missing_previous_output;
-
-    else if (is_double_spend(transaction_pool))
+    } 
+    
+    if (is_double_spend(transaction_pool)) {
         return error::double_spend;
-
+    } 
+    
     // This relates height to maturity of spent coinbase. Since reorg is the
     // only way to decrease height and reorg invalidates, this is cache safe.
-    else if (!is_mature(state.height()))
+    if (!is_mature(state.height())) {
         return error::coinbase_maturity;
-
-    else if (is_overspent())
+    } 
+    
+    if (is_overspent()) {
         return error::spend_exceeds_value;
-
-    else if (bip68 && is_locked(state.height(), state.median_time_past()))
+    } 
+    
+    if (bip68 && is_locked(state.height(), state.median_time_past())) {
         return error::sequence_locked;
-
+    } 
+    
     // This recomputes sigops to include p2sh from prevouts if bip16 is true.
-    else if (transaction_pool && signature_operations(bip16) > get_max_block_sigops())
+    if (transaction_pool && signature_operations(bip16) > get_max_block_sigops()) {
         return error::transaction_embedded_sigop_limit;
+    } 
 
-    else
-        return error::success;
+    return error::success;
 }
 
 code transaction::connect() const {
