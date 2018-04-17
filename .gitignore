@@ -43,6 +43,7 @@ libbitcoin_1.0.10-1_amd64.deb
 /examples/debug.log
 
 /build
+/build2
 test/miscellaneous_fernando_tests/sha256 stuff/sha256_tests/.vs/sha256_tests/v14/.suo
 test/miscellaneous_fernando_tests/sha256 stuff/sha256_tests/sha256_tests/sha256_tests.filters
 test/miscellaneous_fernando_tests/sha256 stuff/sha256_tests/sha256_tests/x64/Debug/main.obj
