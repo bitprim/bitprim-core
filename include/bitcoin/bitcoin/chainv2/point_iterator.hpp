@@ -58,8 +58,8 @@ public:
     point_iterator operator++(int);
     point_iterator& operator--();
     point_iterator operator--(int);
-    point_iterator operator+(const int value) const;
-    point_iterator operator-(const int value) const;
+    point_iterator operator+(int value) const;
+    point_iterator operator-(int value) const;
     bool operator==(const point_iterator& other) const;
     bool operator!=(const point_iterator& other) const;
 

@@ -2,11 +2,27 @@ Intentos
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 ../run-clang-tidy.py -checks='*' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
 ../run-clang-tidy.py -checks='*,-llvm-header-guard' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard,-google-runtime-references' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard,-google-runtime-references,-google-readability-namespace-comments' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard,-google-runtime-references,-google-readability-namespace-comments,-llvm-namespace-comment' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard,-google-runtime-references,-google-readability-namespace-comments,-llvm-namespace-comment,-llvm-include-order' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='*,-llvm-header-guard,-google-runtime-references,-google-readability-namespace-comments,-llvm-namespace-comment,-llvm-include-order,-hicpp-special-member-functions,-cppcoreguidelines-special-member-functions' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
 
+
+hicpp-explicit-conversions
+
+Volver a chequear
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+../run-clang-tidy.py -checks='-*,hicpp-special-member-functions' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+../run-clang-tidy.py -checks='-*,cppcoreguidelines-special-member-functions' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
 
 
 Fixes
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 ../run-clang-tidy.py -checks='-*,modernize-use-using' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
 ../run-clang-tidy.py -checks='-*,hicpp-noexcept-move' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+
+
+../run-clang-tidy.py -checks='-*,google-readability-braces-around-statements' -header-filter=/home/fernando/dev/bitprim/bitprim-core/include/bitcoin/bitcoin/chainv2
+
 
