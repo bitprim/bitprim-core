@@ -82,8 +82,8 @@ public:
     transaction(transaction&& other, hash_digest&& hash);
     transaction(transaction const& other, const hash_digest& hash);
 
-    transaction(uint32_t version, uint32_t locktime, ins&& inputs, outs&& outputs,  uint32_t cached_sigops=0, uint64_t cached_fees=0, bool cached_is_standard=false);
-    transaction(uint32_t version, uint32_t locktime, ins const& inputs, outs const& outputs, uint32_t cached_sigops=0, uint64_t cached_fees=0, bool cached_is_standard=false);
+    transaction(uint32_t version, uint32_t locktime, ins&& inputs, outs&& outputs);
+    transaction(uint32_t version, uint32_t locktime, ins const& inputs, outs const& outputs);
 
     // Operators.
     //-----------------------------------------------------------------------------
@@ -143,10 +143,6 @@ public:
     void set_outputs(outs const& value);
     void set_outputs(outs&& value);
 
-    uint64_t cached_fees() const;
-    uint32_t cached_sigops() const;
-    bool cached_is_standard() const;
-
     hash_digest hash() const;
     hash_digest hash(uint32_t sighash_type) const;
 
@@ -199,16 +195,6 @@ private:
     uint32_t locktime_;
     input::list inputs_;
     output::list outputs_;
-
-    // TODO: (refactor to transaction_result)
-    // this 3 variables should be stored in transaction_unconfired database when the store
-    // function is called. This values will be in the transaction_result object before
-    // creating the transaction object
-
-    //Only accesible for unconfirmed txs
-    uint64_t cached_fees_;
-    uint32_t cached_sigops_;
-    bool cached_is_standard_;
 
     // These share a mutex as they are not expected to conflict.
     mutable boost::optional<uint64_t> total_input_value_;

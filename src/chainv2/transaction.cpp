@@ -111,38 +111,32 @@ transaction::transaction(const transaction& other)
 
 transaction::transaction(transaction&& other, hash_digest&& hash)
     : transaction(other.version_, other.locktime_, std::move(other.inputs_)
-    , std::move(other.outputs_), other.cached_sigops_, other.cached_fees_, other.cached_is_standard_)
+    , std::move(other.outputs_))
 {
     hash_ = std::make_shared<hash_digest>(std::move(hash));
     validation = std::move(other.validation);
 }
 
 transaction::transaction(const transaction& other, const hash_digest& hash)
-  : transaction(other.version_, other.locktime_, other.inputs_, other.outputs_, other.cached_sigops_, other.cached_fees_, other.cached_is_standard_)
+  : transaction(other.version_, other.locktime_, other.inputs_, other.outputs_)
 {
     hash_ = std::make_shared<hash_digest>(hash);
     validation = other.validation;
 }
 
-transaction::transaction(uint32_t version, uint32_t locktime, const input::list& inputs, const output::list& outputs, uint32_t cached_sigops, uint64_t fees, bool is_standard)
+transaction::transaction(uint32_t version, uint32_t locktime, const input::list& inputs, const output::list& outputs)
     : version_(version)
     , locktime_(locktime)
     , inputs_(inputs)
     , outputs_(outputs)
-    , cached_fees_(fees)
-    , cached_sigops_(cached_sigops)
-    , cached_is_standard_(is_standard)
     , validation{}
 {}
 
-transaction::transaction(uint32_t version, uint32_t locktime, input::list&& inputs, output::list&& outputs, uint32_t cached_sigops, uint64_t fees, bool is_standard)
+transaction::transaction(uint32_t version, uint32_t locktime, input::list&& inputs, output::list&& outputs)
     : version_(version)
     , locktime_(locktime)
     , inputs_(std::move(inputs))
     , outputs_(std::move(outputs))
-    , cached_fees_(fees)
-    , cached_sigops_(cached_sigops)
-    , cached_is_standard_(is_standard)
     , validation{}
 {}
 
@@ -250,14 +244,6 @@ bool transaction::from_data(reader& source, bool wire) {
 
         locktime_ = static_cast<uint32_t>(locktime);
         version_ = static_cast<uint32_t>(version);
-
-        const auto sigops = source.read_4_bytes_little_endian();
-        cached_sigops_ = static_cast<uint32_t>(sigops);
-        const auto fees = source.read_8_bytes_little_endian();
-        cached_fees_ = static_cast<uint64_t>(fees);
-        const auto is_standard = source.read_byte();
-        cached_is_standard_ = static_cast<bool>(is_standard);
-
     }
 
     if (!source) {
@@ -341,7 +327,7 @@ size_t transaction::serialized_size(bool wire) const {
         + message::variable_uint_size(outputs_.size())
         + std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, ins)
         + std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, outs)
-        + ((!wire) ? sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint8_t)  : 0);
+        ;
 }
 
 // Accessors.
@@ -403,18 +389,6 @@ void transaction::set_outputs(output::list&& value) {
     outputs_ = std::move(value);
     invalidate_cache();
     total_output_value_ = boost::none;
-}
-
-uint64_t transaction::cached_fees() const {
-    return cached_fees_;
-}
-
-uint32_t transaction::cached_sigops() const {
-    return cached_sigops_;
-}
-
-bool transaction::cached_is_standard() const {
-    return cached_is_standard_;
 }
 
 // Cache.

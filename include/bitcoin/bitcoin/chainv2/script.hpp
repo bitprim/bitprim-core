@@ -44,7 +44,7 @@ class transaction;
 
 class BC_API script {
 public:
-    typedef machine::operation operation;
+    using operation = machine::operation;
 
     // Constructors.
     //-------------------------------------------------------------------------

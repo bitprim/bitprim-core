@@ -40,7 +40,7 @@ namespace libbitcoin { namespace chainv2 {
 
 class BC_API input {
 public:
-    typedef std::vector<input> list;
+    using list = std::vector<input>;
 
     // Constructors.
     //-----------------------------------------------------------------------------

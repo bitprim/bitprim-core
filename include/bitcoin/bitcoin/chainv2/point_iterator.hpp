@@ -33,14 +33,14 @@ class point;
 class BC_API point_iterator
 {
 public:
-    typedef uint8_t pointer;
-    typedef uint8_t reference;
-    typedef uint8_t value_type;
-    typedef ptrdiff_t difference_type;
-    typedef std::bidirectional_iterator_tag iterator_category;
+    using pointer = uint8_t;
+    using reference = uint8_t;
+    using value_type = uint8_t;
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::bidirectional_iterator_tag;
 
-    typedef point_iterator iterator;
-    typedef point_iterator const_iterator;
+    using iterator = point_iterator;
+    using const_iterator = point_iterator;
 
     // Constructors.
     //-------------------------------------------------------------------------
