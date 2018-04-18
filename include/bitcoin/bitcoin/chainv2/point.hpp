@@ -46,32 +46,49 @@ public:
     //-------------------------------------------------------------------------
 
     point();
-
-    point(point&& other) noexcept;
-    point(const point& other);
-
-    point(hash_digest&& hash, uint32_t index);
     point(hash_digest const& hash, uint32_t index);
+
+    // point(point&& other) noexcept;
+    // point(point const& other);
 
     // Operators.
     //-------------------------------------------------------------------------
 
     /// This class is move assignable and copy assignable.
-    point& operator=(point&& other) noexcept;
-    point& operator=(const point& other);
+    // point& operator=(point&& other) noexcept;
+    // point& operator=(point const& other);
 
-    bool operator<(const point& other) const;
-    bool operator==(const point& other) const;
-    bool operator!=(const point& other) const;
+    friend
+    bool operator==(point const& a, point const& b);
+    
+    friend
+    bool operator!=(point const& a, point const& b);
+
+    friend
+    bool operator<(point const& a, point const& b);
+
+    friend
+    bool operator>(point const& a, point const& b);
+
+    friend
+    bool operator<=(point const& a, point const& b);
+
+    friend
+    bool operator>=(point const& a, point const& b);
 
     // Deserialization.
     //-------------------------------------------------------------------------
 
-    static point factory_from_data(const data_chunk& data, bool wire=true);
-    static point factory_from_data(std::istream& stream, bool wire=true);
-    static point factory_from_data(reader& source, bool wire=true);
+    static 
+    point factory_from_data(data_chunk const& data, bool wire=true);
 
-    bool from_data(const data_chunk& data, bool wire=true);
+    static 
+    point factory_from_data(std::istream& stream, bool wire=true);
+    
+    static 
+    point factory_from_data(reader& source, bool wire=true);
+
+    bool from_data(data_chunk const& data, bool wire=true);
     bool from_data(std::istream& stream, bool wire=true);
     bool from_data(reader& source, bool wire=true);
 
@@ -98,9 +115,7 @@ public:
 
     // deprecated (unsafe)
     hash_digest& hash();
-
     hash_digest const& hash() const;
-    void set_hash(hash_digest&& value);
     void set_hash(hash_digest const& value);
 
     uint32_t index() const;
@@ -118,14 +133,11 @@ public:
     bool is_null() const;
 
 protected:
-    point(hash_digest&& hash, uint32_t index, bool valid);
-    point(hash_digest const& hash, uint32_t index, bool valid);
     void reset();
 
 private:
     hash_digest hash_;
     uint32_t index_;
-    bool valid_;
 };
 
 }} // namespace libbitcoin::chainv2
@@ -150,10 +162,10 @@ struct hash<bc::chainv2::point> {
 
 // Extend std namespace with the non-wire size of point (database key size).
 template <>
-struct tuple_size<bc::chainv2::point>
-{
+struct tuple_size<bc::chainv2::point> {
     static const auto value = std::tuple_size<bc::hash_digest>::value + sizeof(uint16_t);
 
+    explicit
     operator std::size_t() const {
         return value;
     }

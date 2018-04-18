@@ -74,7 +74,7 @@ script::script()
 {}
 
 // TODO: implement safe private accessor for conditional cache transfer.
-script::script(script&& other)
+script::script(script&& other) noexcept
     : bytes_(std::move(other.bytes_)), valid_(other.valid_), cached_(false)
 {}
 
@@ -111,7 +111,7 @@ script::script(data_chunk const& encoded, bool prefix) {
 //-----------------------------------------------------------------------------
 
 // Concurrent read/write is not supported, so no critical section.
-script& script::operator=(script&& other) {
+script& script::operator=(script&& other) noexcept {
     // TODO: implement safe private accessor for conditional cache transfer.
     reset();
     bytes_ = std::move(other.bytes_);

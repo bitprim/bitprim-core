@@ -64,40 +64,58 @@ public:
     // Constructors.
     //-------------------------------------------------------------------------
 
-    output_point();
+    output_point() = default;
 
-    output_point(point&& other);
-    output_point(const point& value);
+    explicit
+    output_point(point const& value);
 
-    output_point(output_point&& other) noexcept;
-    output_point(const output_point& other);
+    output_point(hash_digest const& hash, uint32_t index);
 
-    output_point(hash_digest&& hash, uint32_t index);
-    output_point(const hash_digest& hash, uint32_t index);
+    // output_point(output_point&& other) noexcept;
+    // output_point(output_point&& other) = default;
+    // output_point(output_point const& other) = default;
+
 
     // Operators.
     //-------------------------------------------------------------------------
     // This class is move assignable and copy assignable.
 
-    output_point& operator=(point&& other);
-    output_point& operator=(const point&);
-    output_point& operator=(output_point&& other) noexcept;
-    output_point& operator=(const output_point&);
+    // output_point& operator=(output_point&& other) noexcept;
+    // output_point& operator=(output_point const& other) = default;
 
-    bool operator==(const point& other) const;
-    bool operator!=(const point& other) const;
-    bool operator==(const output_point& other) const;
-    bool operator!=(const output_point& other) const;
+    output_point& operator=(point const& other);
 
-    // explicit
-    // operator chain::output_point() const;
+
+    friend
+    bool operator==(output_point const& a, output_point const& b);
+
+    friend
+    bool operator!=(output_point const& a, output_point const& b);
+
+    friend
+    bool operator==(output_point const& a, point const& b);
+
+    friend
+    bool operator!=(output_point const& a, point const& b);
+
+    friend
+    bool operator==(point const& a, output_point const& b);
+
+    friend
+    bool operator!=(point const& a, output_point const& b);
+
 
     // Deserialization.
     //-------------------------------------------------------------------------
 
-    static output_point factory_from_data(const data_chunk& data, bool wire=true);
-    static output_point factory_from_data(std::istream& stream, bool wire=true);
-    static output_point factory_from_data(reader& source, bool wire=true);
+    static 
+    output_point factory_from_data(data_chunk const& data, bool wire=true);
+    
+    static 
+    output_point factory_from_data(std::istream& stream, bool wire=true);
+
+    static 
+    output_point factory_from_data(reader& source, bool wire=true);
 
     // Validation.
     //-------------------------------------------------------------------------

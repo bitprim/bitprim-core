@@ -26,83 +26,75 @@
 
 namespace libbitcoin { namespace chainv2 {
 
+static_assert(std::is_move_constructible<output_point>::value, "std::is_move_constructible<output_point>::value");
+static_assert(std::is_nothrow_move_constructible<output_point>::value, "std::is_nothrow_move_constructible<output_point>::value");
+static_assert(std::is_move_assignable<output_point>::value, "std::is_move_assignable<output_point>::value");
+static_assert(std::is_nothrow_move_assignable<output_point>::value, "std::is_nothrow_move_assignable<output_point>::value");
+static_assert(std::is_copy_constructible<output_point>::value, "std::is_copy_constructible<output_point>::value");
+static_assert(std::is_copy_assignable<output_point>::value, "std::is_copy_assignable<output_point>::value");
+
+
 // Constructors.
 //-----------------------------------------------------------------------------
 
-output_point::output_point()
-    : point{}, validation{}
+output_point::output_point(point const& value)
+    : point(value)
 {}
 
-output_point::output_point(point&& value)
-    : point(std::move(value)), validation{}
+output_point::output_point(hash_digest const& hash, uint32_t index)
+    : point(hash, index)
 {}
 
-output_point::output_point(const point& value)
-    : point(value), validation{}
-{}
+// output_point::output_point(output_point&& other) noexcept
+//     : point(other), validation(std::move(other.validation))
+// {}
 
-output_point::output_point(const output_point& other)
-    : point(other), validation(other.validation)
-{}
-
-output_point::output_point(output_point&& other)
-    : point(std::move(other)), validation(std::move(other.validation))
-{}
-
-output_point::output_point(hash_digest&& hash, uint32_t index)
-    : point({ std::move(hash), index }), validation{}
-{}
-
-output_point::output_point(const hash_digest& hash, uint32_t index)
-    : point(hash, index), validation{}
-{}
 
 // Operators.
 //-----------------------------------------------------------------------------
 
-output_point& output_point::operator=(point&& other) {
-    reset();
-    point::operator=(std::move(other));
-    return *this;
-}
-
-output_point& output_point::operator=(const point& other) {
-    reset();
+output_point& output_point::operator=(point const& other) {
     point::operator=(other);
     return *this;
 }
 
-output_point& output_point::operator=(output_point&& other) {
-    point::operator=(std::move(other));
-    validation = std::move(other.validation);
-    return *this;
-}
-
-output_point& output_point::operator=(const output_point& other) {
-    point::operator=(other);
-    validation = other.validation;
-    return *this;
-}
-
-bool output_point::operator==(const point& other) const {
-    return point::operator==(other);
-}
-
-bool output_point::operator!=(const point& other) const {
-    return point::operator!=(other);
-}
-
-bool output_point::operator==(const output_point& other) const {
-    return point::operator==(other);
-}
-
-bool output_point::operator!=(const output_point& other) const {
-    return !(*this == other);
-}
-
-// output_point::operator chain::output_point() const {
-//     return chain::output_point(hash_, index_);
+// output_point& output_point::operator=(output_point&& other) noexcept {
+//     point::operator=(other);
+//     validation = std::move(other.validation);
+//     return *this;
 // }
+
+
+// friend
+bool operator==(output_point const& a, output_point const& b) {
+    return static_cast<point const&>(a) == static_cast<point const&>(b);
+}
+
+// friend
+bool operator!=(output_point const& a, output_point const& b) {
+    return !(a == b);
+}
+
+// friend
+bool operator==(output_point const& a, point const& b) {
+    return static_cast<point const&>(a) == b;
+}
+
+// friend
+bool operator!=(output_point const& a, point const& b) {
+    return !(a == b);
+}
+
+// friend
+bool operator==(point const& a, output_point const& b) {
+    return a == static_cast<point const&>(b);
+}
+
+// friend
+bool operator!=(point const& a, output_point const& b) {
+    return !(a == b);
+}
+
 
 // Deserialization.
 //-----------------------------------------------------------------------------
@@ -131,8 +123,9 @@ output_point output_point::factory_from_data(reader& source, bool wire) {
 // For tx pool validation height is that of the candidate block.
 bool output_point::is_mature(size_t height) const {
     // Coinbase (null) inputs and those with non-coinbase prevouts are mature.
-    if (!validation.coinbase || is_null())
+    if (!validation.coinbase || is_null()) {
         return true;
+    }
 
     // The (non-coinbase) input refers to a coinbase output, so validate depth.
     return floor_subtract(height, validation.height) >= coinbase_maturity;

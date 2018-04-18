@@ -29,70 +29,51 @@
 
 namespace libbitcoin { namespace chainv2 {
 
-using namespace bc::wallet;
+static_assert(std::is_move_constructible<output>::value, "std::is_move_constructible<output>::value");
+static_assert(std::is_nothrow_move_constructible<output>::value, "std::is_nothrow_move_constructible<output>::value");
+static_assert(std::is_move_assignable<output>::value, "std::is_move_assignable<output>::value");
+static_assert(std::is_nothrow_move_assignable<output>::value, "std::is_nothrow_move_assignable<output>::value");
+static_assert(std::is_copy_constructible<output>::value, "std::is_copy_constructible<output>::value");
+static_assert(std::is_copy_assignable<output>::value, "std::is_copy_assignable<output>::value");
+
+
+// using namespace bc::wallet;
+using bc::wallet::payment_address;
 
 // This is a consensus critical value that must be set on reset.
-const uint64_t output::not_found = sighash_null_value;
+uint64_t const output::not_found = sighash_null_value;
 
 // This is a non-consensus sentinel used to indicate an output is unspent.
-const uint32_t output::validation::not_spent = max_uint32;
+uint32_t const output::validation::not_spent = max_uint32;
 
 // Constructors.
 //-----------------------------------------------------------------------------
 
 output::output()
-    : value_(not_found), validation{}
+    : value_(not_found)
 {}
 
-output::output(output&& other)
-    : output(other.value_, std::move(other.script_))
-{
-    validation = std::move(other.validation);
-}
-
-output::output(const output& other)
-    : output(other.value_, other.script_)
-{
-    validation = other.validation;
-}
-
 output::output(uint64_t value, chainv2::script&& script)
-    : value_(value), script_(std::move(script)), validation{}
+    : value_(value), script_(std::move(script))
 {}
 
 output::output(uint64_t value, chainv2::script const& script)
-    : value_(value), script_(script), validation{}
+    : value_(value), script_(script)
 {}
 
 // Operators.
 //-----------------------------------------------------------------------------
 
-output& output::operator=(output&& other) {
-    value_ = other.value_;
-    script_ = std::move(other.script_);
-    validation = std::move(other.validation);
-    return *this;
+// friend
+bool operator==(output const& a, output const& b) {
+    return (a.value_ == b.value_) && (a.script_ == b.script_);
 }
 
-output& output::operator=(const output& other) {
-    value_ = other.value_;
-    script_ = other.script_;
-    validation = other.validation;
-    return *this;
+
+// friend
+bool operator!=(output const& a, output const& b) {
+    return !(a == b);
 }
-
-bool output::operator==(const output& other) const {
-    return (value_ == other.value_) && (script_ == other.script_);
-}
-
-bool output::operator!=(const output& other) const {
-    return !(*this == other);
-}
-
-// output::operator chain::output() const {
-//     return chain::output(value_, script_);
-// }
-
 
 // Deserialization.
 //-----------------------------------------------------------------------------
@@ -128,14 +109,16 @@ bool output::from_data(std::istream& stream, bool wire) {
 bool output::from_data(reader& source, bool wire) {
     reset();
 
-    if (!wire)
+    if (!wire) {
         validation.spender_height = source.read_4_bytes_little_endian();
+    }
 
     value_ = source.read_8_bytes_little_endian();
     script_.from_data(source, true);
 
-    if (!source)
+    if (!source) {
         reset();
+    }
 
     return source;
 }
@@ -209,64 +192,44 @@ chainv2::script const& output::script() const {
 
 void output::set_script(chainv2::script const& value) {
     script_ = value;
-    invalidate_cache();
+    // invalidate_cache();
 }
 
 void output::set_script(chainv2::script&& value) {
     script_ = std::move(value);
-    invalidate_cache();
+    // invalidate_cache();
 }
 
-bool output::is_dust(uint64_t minimum_value) const {
+bool output::is_dust(uint64_t minimum_output_value) const {
     // If provably unspendable it does not expand the unspent output set.
-    return value_ < minimum_value && !script_.is_unspendable();
+    return value_ < minimum_output_value && !script_.is_unspendable();
 }
 
-// protected
-void output::invalidate_cache() const {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    mutex_.lock_upgrade();
+// // protected
+// void output::invalidate_cache() const {
+//     ///////////////////////////////////////////////////////////////////////////
+//     // Critical Section
+//     mutex_.lock_upgrade();
 
-    if (address_) {
-        mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        address_.reset();
-        //---------------------------------------------------------------------
-        mutex_.unlock_and_lock_upgrade();
-    }
+//     if (address_) {
+//         mutex_.unlock_upgrade_and_lock();
+//         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//         address_.reset();
+//         //---------------------------------------------------------------------
+//         mutex_.unlock_and_lock_upgrade();
+//     }
 
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-}
+//     mutex_.unlock_upgrade();
+//     ///////////////////////////////////////////////////////////////////////////
+// }
 
 payment_address output::address(bool testnet /* = false */) const {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    mutex_.lock_upgrade();
+    // TODO(libbitcoin): limit this to output patterns.
+    if (! testnet) {
+        return payment_address::extract(script_);
+    } 
 
-    if (!address_) {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        mutex_.unlock_upgrade_and_lock();
-
-        // TODO: limit this to output patterns.
-        if (testnet){
-            address_ = std::make_shared<payment_address>(
-                    payment_address::extract(script_, payment_address::testnet_p2kh, payment_address::testnet_p2sh));
-        } else {
-            address_ = std::make_shared<payment_address>(
-                    payment_address::extract(script_));
-        }
-
-        mutex_.unlock_and_lock_upgrade();
-        //---------------------------------------------------------------------
-    }
-
-    const auto address = *address_;
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    return address;
+    return payment_address::extract(script_, payment_address::testnet_p2kh, payment_address::testnet_p2sh);
 }
 
 // Validation helpers.

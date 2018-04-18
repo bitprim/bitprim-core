@@ -52,58 +52,58 @@ public:
     using outs = output::list;
     using list = std::vector<transaction>;
 
-    // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
-    struct validation {
-        uint64_t originator = 0;
-        code error = error::not_found;
-        chain::chain_state::ptr state = nullptr;
+    // // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
+    // struct validation {
+    //     uint64_t originator = 0;
+    //     code error = error::not_found;
+    //     chain::chain_state::ptr state = nullptr;
 
-        // The transaction is an unspent duplicate.
-        bool duplicate = false;
+    //     // The transaction is an unspent duplicate.
+    //     bool duplicate = false;
 
-        // The unconfirmed tx exists in the store.
-        bool pooled = false;
+    //     // The unconfirmed tx exists in the store.
+    //     bool pooled = false;
 
-        // The unconfirmed tx is validated at the block's current fork state.
-        bool current = false;
+    //     // The unconfirmed tx is validated at the block's current fork state.
+    //     bool current = false;
 
-        // Similate organization and instead just validate the transaction.
-        bool simulate = false;
-    };
+    //     // Similate organization and instead just validate the transaction.
+    //     bool simulate = false;
+    // };
 
     // Constructors.
     //-----------------------------------------------------------------------------
 
     transaction();
 
-    transaction(transaction&& other) noexcept;
-    transaction(transaction const& other);
-
-    transaction(transaction&& other, hash_digest&& hash);
-    transaction(transaction const& other, const hash_digest& hash);
-
     transaction(uint32_t version, uint32_t locktime, ins&& inputs, outs&& outputs);
     transaction(uint32_t version, uint32_t locktime, ins const& inputs, outs const& outputs);
+
+    /// This class is move assignable and copy assignable [TODO: remove copy].
+    // transaction(transaction&& other) = default;
+    // transaction(transaction const& other) = default;
 
     // Operators.
     //-----------------------------------------------------------------------------
 
-    /// This class is move assignable and copy assignable [TODO: remove copy].
-    transaction& operator=(transaction&& other) noexcept;
-    transaction& operator=(transaction const& other);
+    friend
+    bool operator==(transaction const& a, transaction const& b);
+    
+    friend
+    bool operator!=(transaction const& a, transaction const& b);
 
-    bool operator==(transaction const& other) const;
-    bool operator!=(transaction const& other) const;
-
-    // explicit
-    // operator chain::transaction() const;
 
     // Deserialization.
     //-----------------------------------------------------------------------------
 
-    static transaction factory_from_data(data_chunk const& data, bool wire=true);
-    static transaction factory_from_data(std::istream& stream, bool wire=true);
-    static transaction factory_from_data(reader& source, bool wire=true);
+    static 
+    transaction factory_from_data(data_chunk const& data, bool wire=true);
+    
+    static 
+    transaction factory_from_data(std::istream& stream, bool wire=true);
+    
+    static 
+    transaction factory_from_data(reader& source, bool wire=true);
 
     bool from_data(data_chunk const& data, bool wire=true);
     bool from_data(std::istream& stream, bool wire=true);
@@ -146,7 +146,7 @@ public:
     hash_digest hash() const;
     hash_digest hash(uint32_t sighash_type) const;
 
-    void recompute_hash();
+    // void recompute_hash();
 
     // Validation.
     //-----------------------------------------------------------------------------
@@ -157,7 +157,7 @@ public:
     hash_list missing_previous_transactions() const;
     uint64_t total_input_value() const;
     uint64_t total_output_value() const;
-    size_t signature_operations() const;
+    // size_t signature_operations() const;
     size_t signature_operations(bool bip16_active) const;
 
     bool is_coinbase() const;
@@ -174,20 +174,22 @@ public:
     bool is_locktime_conflict() const;
 
     code check(bool transaction_pool=true) const;
-    code accept(bool transaction_pool=true) const;
-    code accept(chain::chain_state const& state, bool transaction_pool=true) const;
-    code connect() const;
+    // code accept(bool transaction_pool=true) const;
+    // code accept(chain::chain_state const& state) const;
+    code accept(chain::chain_state const& state, bool tx_duplicate, bool transaction_pool /*= true*/) const;
+
+    // code connect() const;
     code connect(chain::chain_state const& state) const;
     code connect_input(chain::chain_state const& state, size_t input_index) const;
 
-    // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
-    mutable validation validation;
+    // // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
+    // mutable validation validation;
 
     bool is_standard() const;
 
 protected:
     void reset();
-    void invalidate_cache() const;
+    // void invalidate_cache() const;
     bool all_inputs_final() const;
 
 private:
@@ -196,11 +198,11 @@ private:
     input::list inputs_;
     output::list outputs_;
 
-    // These share a mutex as they are not expected to conflict.
-    mutable boost::optional<uint64_t> total_input_value_;
-    mutable boost::optional<uint64_t> total_output_value_;
-    mutable std::shared_ptr<hash_digest> hash_;
-    mutable upgrade_mutex mutex_;
+    // // These share a mutex as they are not expected to conflict.
+    // mutable boost::optional<uint64_t> total_input_value_;
+    // mutable boost::optional<uint64_t> total_output_value_;
+    // mutable std::shared_ptr<hash_digest> hash_;
+    // mutable upgrade_mutex mutex_;
 };
 
 }} // namespace libbitcoin::chainv2

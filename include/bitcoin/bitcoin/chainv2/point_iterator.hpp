@@ -16,22 +16,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_CHAINV2_POINT_ITERATOR_HPP
-#define LIBBITCOIN_CHAINV2_POINT_ITERATOR_HPP
+#ifndef LIBBITCOIN_CHAINV2_POINT_ITERATOR_HPP_
+#define LIBBITCOIN_CHAINV2_POINT_ITERATOR_HPP_
 
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <bitcoin/bitcoin/define.hpp>
 
-namespace libbitcoin {
-namespace chainv2 {
+namespace libbitcoin { namespace chainv2 {
 
 class point;
 
 /// A point iterator for store serialization (does not support wire).
-class BC_API point_iterator
-{
+class BC_API point_iterator {
 public:
     using pointer = uint8_t;
     using reference = uint8_t;
@@ -45,8 +43,10 @@ public:
     // Constructors.
     //-------------------------------------------------------------------------
 
-    point_iterator(const point_iterator& other);
-    point_iterator(const point& value, unsigned index=0);
+    point_iterator(point_iterator const& other);
+
+    explicit
+    point_iterator(point const& value, unsigned int index = 0);
 
     // Operators.
     //-------------------------------------------------------------------------
@@ -60,11 +60,11 @@ public:
     point_iterator operator--(int);
     point_iterator operator+(int value) const;
     point_iterator operator-(int value) const;
-    bool operator==(const point_iterator& other) const;
-    bool operator!=(const point_iterator& other) const;
+    bool operator==(point_iterator const& other) const;
+    bool operator!=(point_iterator const& other) const;
 
     /// The iterator may only be assigned to another of the same point.
-    point_iterator& operator=(const point_iterator& other);
+    point_iterator& operator=(point_iterator const& other);
 
 protected:
     void increment();
@@ -75,11 +75,10 @@ protected:
 private:
     uint8_t current() const;
 
-    const point& point_;
-    unsigned current_;
+    point const& point_;
+    unsigned int current_;
 };
 
-} // namespace chain
-} // namespace libbitcoin
+}} // namespace libbitcoin::chainv2
 
-#endif
+#endif // LIBBITCOIN_CHAINV2_POINT_ITERATOR_HPP_

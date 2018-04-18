@@ -37,7 +37,7 @@ input::input()
     : previous_output_{}, sequence_(0)
 {}
 
-input::input(input&& other)
+input::input(input&& other) noexcept
     : input(std::move(other.previous_output_), std::move(other.script_), other.sequence_)
 {}
 
@@ -56,7 +56,7 @@ input::input(output_point const& previous_output, chainv2::script const& script,
 // Operators.
 //-----------------------------------------------------------------------------
 
-input& input::operator=(input&& other) {
+input& input::operator=(input&& other) noexcept {
     previous_output_ = std::move(other.previous_output_);
     script_ = std::move(other.script_);
     sequence_ = other.sequence_;

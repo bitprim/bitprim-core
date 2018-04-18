@@ -56,33 +56,31 @@ public:
     //-----------------------------------------------------------------------------
 
     output();
-
-    output(output&& other) noexcept;
-    output(const output& other);
-
     output(uint64_t value, chainv2::script&& script);
     output(uint64_t value, chainv2::script const& script);
 
+    /// This class is move assignable and copy assignable.
+
     // Operators.
     //-----------------------------------------------------------------------------
+    friend
+    bool operator==(output const& a, output const& b);
 
-    /// This class is move assignable and copy assignable.
-    output& operator=(output&& other) noexcept;
-    output& operator=(const output& other);
-
-    bool operator==(const output& other) const;
-    bool operator!=(const output& other) const;
-
-    // explicit
-    // operator chain::output() const;
+    friend
+    bool operator!=(output const& a, output const& b);
 
 
     // Deserialization.
     //-----------------------------------------------------------------------------
 
-    static output factory_from_data(const data_chunk& data, bool wire=true);
-    static output factory_from_data(std::istream& stream, bool wire=true);
-    static output factory_from_data(reader& source, bool wire=true);
+    static 
+    output factory_from_data(const data_chunk& data, bool wire=true);
+    
+    static 
+    output factory_from_data(std::istream& stream, bool wire=true);
+    
+    static 
+    output factory_from_data(reader& source, bool wire=true);
 
     bool from_data(const data_chunk& data, bool wire=true);
     bool from_data(std::istream& stream, bool wire=true);
@@ -126,12 +124,9 @@ public:
 
 protected:
     void reset();
-    void invalidate_cache() const;
+    // void invalidate_cache() const;
 
 private:
-    mutable upgrade_mutex mutex_;
-    mutable wallet::payment_address::ptr address_;
-
     uint64_t value_;
     chainv2::script script_;
 };

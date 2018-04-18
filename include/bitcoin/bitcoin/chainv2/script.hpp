@@ -54,7 +54,10 @@ public:
     script(script&& other) noexcept;
     script(script const& other);
 
+    explicit
     script(operation::list&& ops);
+
+    explicit
     script(operation::list const& ops);
 
     script(data_chunk&& encoded, bool prefix);
