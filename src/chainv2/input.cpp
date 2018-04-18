@@ -28,62 +28,75 @@
 
 namespace libbitcoin { namespace chainv2 {
 
-using namespace bc::wallet;
+static_assert(std::is_move_constructible<input>::value, "std::is_move_constructible<input>::value");
+static_assert(std::is_nothrow_move_constructible<input>::value, "std::is_nothrow_move_constructible<input>::value");
+static_assert(std::is_move_assignable<input>::value, "std::is_move_assignable<input>::value");
+static_assert(std::is_nothrow_move_assignable<input>::value, "std::is_nothrow_move_assignable<input>::value");
+static_assert(std::is_copy_constructible<input>::value, "std::is_copy_constructible<input>::value");
+static_assert(std::is_copy_assignable<input>::value, "std::is_copy_assignable<input>::value");
+
+// using namespace bc::wallet;
+using bc::wallet::payment_address;
 
 // Constructors.
 //-----------------------------------------------------------------------------
 
 input::input()
-    : previous_output_{}, sequence_(0)
-{}
-
-input::input(input&& other) noexcept
-    : input(std::move(other.previous_output_), std::move(other.script_), other.sequence_)
-{}
-
-input::input(const input& other)
-    : input(other.previous_output_, other.script_, other.sequence_)
+    : sequence_(0)
 {}
 
 input::input(output_point&& previous_output, chainv2::script&& script, uint32_t sequence)
-  : previous_output_(std::move(previous_output)), script_(std::move(script)), sequence_(sequence)
+    : previous_output_(std::move(previous_output))
+    , script_(std::move(script))
+    , sequence_(sequence)
 {}
 
 input::input(output_point const& previous_output, chainv2::script const& script, uint32_t sequence)
-  : previous_output_(previous_output), script_(script), sequence_(sequence) 
+    : previous_output_(previous_output)
+    , script_(script)
+    , sequence_(sequence) 
 {}
+
+// input::input(input&& other) noexcept
+//     : previous_output_(std::move(other.previous_output_))
+//     , script_(std::move(other.script_))
+//     , sequence_(other.sequence_)
+// {}
+
+// input::input(input const& other)
+//     : previous_output_(other.previous_output_)
+//     , script_(other.script_)
+//     , sequence_(other.sequence_)
+// {}
 
 // Operators.
 //-----------------------------------------------------------------------------
 
-input& input::operator=(input&& other) noexcept {
-    previous_output_ = std::move(other.previous_output_);
-    script_ = std::move(other.script_);
-    sequence_ = other.sequence_;
-    return *this;
-}
-
-input& input::operator=(const input& other) {
-    previous_output_ = other.previous_output_;
-    script_ = other.script_;
-    sequence_ = other.sequence_;
-    return *this;
-}
-
-bool input::operator==(const input& other) const {
-    return (sequence_ == other.sequence_)
-        && (previous_output_ == other.previous_output_)
-        && (script_ == other.script_);
-}
-
-bool input::operator!=(const input& other) const {
-    return !(*this == other);
-}
-
-// input::operator chain::input() const {
-//     return chain::input(static_cast<chain::output_point>(previous_output_), script_, sequence_);
+// input& input::operator=(input&& other) noexcept {
+//     previous_output_ = std::move(other.previous_output_);
+//     script_ = std::move(other.script_);
+//     sequence_ = other.sequence_;
+//     return *this;
 // }
 
+// input& input::operator=(input const& other) {
+//     previous_output_ = other.previous_output_;
+//     script_ = other.script_;
+//     sequence_ = other.sequence_;
+//     return *this;
+// }
+
+// friend
+bool operator==(input const& a, input const& b) {
+    return (a.sequence_ == b.sequence_)
+        && (a.previous_output_ == b.previous_output_)
+        && (a.script_ == b.script_);
+}
+
+// friend
+bool operator!=(input const& a, input const& b) {
+    return !(a == b);
+}
 
 // Deserialization.
 //-----------------------------------------------------------------------------
@@ -119,14 +132,16 @@ bool input::from_data(std::istream& stream, bool wire) {
 bool input::from_data(reader& source, bool wire) {
     reset();
 
-    if (!previous_output_.from_data(source, wire))
+    if (!previous_output_.from_data(source, wire)) {
         return false;
+    }
 
     script_.from_data(source, true);
     sequence_ = source.read_4_bytes_little_endian();
 
-    if (!source)
+    if (!source) {
         reset();
+    }
 
     return source;
 }
@@ -203,12 +218,12 @@ chainv2::script const& input::script() const {
 
 void input::set_script(chainv2::script const& value) {
     script_ = value;
-    invalidate_cache();
+    // invalidate_cache();
 }
 
 void input::set_script(chainv2::script&& value) {
     script_ = std::move(value);
-    invalidate_cache();
+    // invalidate_cache();
 }
 
 uint32_t input::sequence() const {
@@ -219,44 +234,49 @@ void input::set_sequence(uint32_t value) {
     sequence_ = value;
 }
 
-// protected
-void input::invalidate_cache() const {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    mutex_.lock_upgrade();
+// // protected
+// void input::invalidate_cache() const {
+//     ///////////////////////////////////////////////////////////////////////////
+//     // Critical Section
+//     mutex_.lock_upgrade();
 
-    if (address_) {
-        mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        address_.reset();
-        //---------------------------------------------------------------------
-        mutex_.unlock_and_lock_upgrade();
-    }
+//     if (address_) {
+//         mutex_.unlock_upgrade_and_lock();
+//         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//         address_.reset();
+//         //---------------------------------------------------------------------
+//         mutex_.unlock_and_lock_upgrade();
+//     }
 
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-}
+//     mutex_.unlock_upgrade();
+//     ///////////////////////////////////////////////////////////////////////////
+// }
+
+// payment_address input::address() const {
+//     ///////////////////////////////////////////////////////////////////////////
+//     // Critical Section
+//     mutex_.lock_upgrade();
+
+//     if (!address_) {
+//         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//         mutex_.unlock_upgrade_and_lock();
+
+//         // TODO(libbitcoin): limit this to input patterns.
+//         address_ = std::make_shared<payment_address>(payment_address::extract(script_));
+//         mutex_.unlock_and_lock_upgrade();
+//         //---------------------------------------------------------------------
+//     }
+
+//     auto const address = *address_;
+//     mutex_.unlock_upgrade();
+//     ///////////////////////////////////////////////////////////////////////////
+
+//     return address;
+// }
 
 payment_address input::address() const {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    mutex_.lock_upgrade();
-
-    if (!address_) {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        mutex_.unlock_upgrade_and_lock();
-
-        // TODO: limit this to input patterns.
-        address_ = std::make_shared<payment_address>(payment_address::extract(script_));
-        mutex_.unlock_and_lock_upgrade();
-        //---------------------------------------------------------------------
-    }
-
-    auto const address = *address_;
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    return address;
+    // TODO(libbitcoin): limit this to input patterns.
+    return payment_address::extract(script_);
 }
 
 // Validation helpers.
@@ -267,8 +287,9 @@ bool input::is_final() const {
 }
 
 bool input::is_locked(size_t block_height, uint32_t median_time_past) const {
-    if ((sequence_ & relative_locktime_disabled) != 0)
+    if ((sequence_ & relative_locktime_disabled) != 0) {
         return false;
+    }
 
     // bip68: a minimum block-height constraint over the input's age.
     auto const minimum = (sequence_ & relative_locktime_mask);

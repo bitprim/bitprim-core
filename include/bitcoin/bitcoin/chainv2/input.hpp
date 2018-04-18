@@ -46,22 +46,24 @@ public:
     //-----------------------------------------------------------------------------
 
     input();
-
-    input(input&& other) noexcept;
-    input(input const& other);
-
     input(output_point&& previous_output, chainv2::script&& script, uint32_t sequence);
     input(output_point const& previous_output, chainv2::script const& script, uint32_t sequence);
+
+    /// This class is move assignable and copy assignable.
+    // input(input&& other) noexcept;
+    // input(input const& other);
 
     // Operators.
     //-----------------------------------------------------------------------------
 
-    /// This class is move assignable and copy assignable.
-    input& operator=(input&& other) noexcept;
-    input& operator=(const input& other);
+    // input& operator=(input&& other) noexcept;
+    // input& operator=(input const& other);
 
-    bool operator==(const input& other) const;
-    bool operator!=(const input& other) const;
+    friend
+    bool operator==(input const& a, input const& b);
+
+    friend
+    bool operator!=(input const& a, input const& b);
 
     // explicit
     // operator chain::input() const;
@@ -69,9 +71,14 @@ public:
     // Deserialization.
     //-----------------------------------------------------------------------------
 
-    static input factory_from_data(const data_chunk& data, bool wire=true);
-    static input factory_from_data(std::istream& stream, bool wire=true);
-    static input factory_from_data(reader& source, bool wire=true);
+    static 
+    input factory_from_data(const data_chunk& data, bool wire=true);
+    
+    static 
+    input factory_from_data(std::istream& stream, bool wire=true);
+    
+    static 
+    input factory_from_data(reader& source, bool wire=true);
 
     bool from_data(const data_chunk& data, bool wire=true);
     bool from_data(std::istream& stream, bool wire=true);
@@ -120,11 +127,11 @@ public:
 
 protected:
     void reset();
-    void invalidate_cache() const;
+    // void invalidate_cache() const;
 
 private:
-    mutable upgrade_mutex mutex_;
-    mutable wallet::payment_address::ptr address_;
+    // mutable upgrade_mutex mutex_;
+    // mutable wallet::payment_address::ptr address_;
 
     output_point previous_output_;
     chainv2::script script_;
