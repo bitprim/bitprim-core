@@ -731,7 +731,7 @@ code transaction::check(bool transaction_pool) const {
 // }
 
 // These checks assume that prevout caching is completed on all tx.inputs.
-code transaction::accept(chain::chain_state const& state, bool transaction_pool, bool tx_duplicate) const {
+code transaction::accept(chain::chain_state const& state, bool tx_duplicate, bool transaction_pool) const {
     auto const bip16 = state.is_enabled(rule_fork::bip16_rule);
     auto const bip30 = state.is_enabled(rule_fork::bip30_rule);
     auto const bip68 = state.is_enabled(rule_fork::bip68_rule);
@@ -761,8 +761,7 @@ code transaction::accept(chain::chain_state const& state, bool transaction_pool,
 
     if (!duplicates && bip30 && tx_duplicate) {
         return error::unspent_duplicate;
-    } 
-
+    }
 
     if (is_missing_previous_outputs()) {
         return error::missing_previous_output;
