@@ -43,40 +43,42 @@ public:
     // Constructors.
     //-------------------------------------------------------------------------
 
-    point_iterator(point_iterator const& other);
-
     explicit
-    point_iterator(point const& value, unsigned int index = 0);
+    point_iterator(point const& value, size_t index = 0);
+
+
+    /// The iterator may only be assigned to another of the same point.
+    // point_iterator(point_iterator const& other);
+    // point_iterator& operator=(point_iterator const& other);
 
     // Operators.
     //-------------------------------------------------------------------------
 
-    operator bool() const;
+    // operator bool() const;
     pointer operator->() const;
     reference operator*() const;
     point_iterator& operator++();
     point_iterator operator++(int);
     point_iterator& operator--();
     point_iterator operator--(int);
-    point_iterator operator+(int value) const;
-    point_iterator operator-(int value) const;
+    point_iterator operator+(difference_type n) const;
+    point_iterator operator-(difference_type n) const;
+
     bool operator==(point_iterator const& other) const;
     bool operator!=(point_iterator const& other) const;
 
-    /// The iterator may only be assigned to another of the same point.
-    point_iterator& operator=(point_iterator const& other);
 
 protected:
     void increment();
     void decrement();
-    point_iterator increase(unsigned value) const;
-    point_iterator decrease(unsigned value) const;
+    point_iterator increase(size_t n) const;
+    point_iterator decrease(size_t n) const;
 
 private:
     uint8_t current() const;
 
     point const& point_;
-    unsigned int current_;
+    size_t current_;
 };
 
 }} // namespace libbitcoin::chainv2

@@ -22,80 +22,60 @@
 #include <bitcoin/bitcoin/chainv2/point.hpp>
 #include <bitcoin/bitcoin/chainv2/point_value.hpp>
 
-namespace libbitcoin {
-namespace chainv2 {
+namespace libbitcoin { namespace chainv2 {
+
+static_assert(std::is_move_constructible<point_value>::value, "std::is_move_constructible<point_value>::value");
+static_assert(std::is_nothrow_move_constructible<point_value>::value, "std::is_nothrow_move_constructible<point_value>::value");
+static_assert(std::is_move_assignable<point_value>::value, "std::is_move_assignable<point_value>::value");
+static_assert(std::is_nothrow_move_assignable<point_value>::value, "std::is_nothrow_move_assignable<point_value>::value");
+static_assert(std::is_copy_constructible<point_value>::value, "std::is_copy_constructible<point_value>::value");
+static_assert(std::is_copy_assignable<point_value>::value, "std::is_copy_assignable<point_value>::value");
+static_assert(std::is_swappable<point_value>::value, "std::is_swappable<point_value>::value");
+static_assert(std::is_nothrow_swappable<point_value>::value, "std::is_nothrow_swappable<point_value>::value");
 
 // Constructors.
 //-------------------------------------------------------------------------
 
 point_value::point_value()
-  : point(), value_(0)
-{
-}
-
-point_value::point_value(point_value&& other)
-  : value_(other.value_), point(std::move(other))
-{
-}
-
-point_value::point_value(const point_value& other)
-  : point(other), value_(other.value_)
-{
-}
+    : value_(0)
+{}
 
 point_value::point_value(point&& instance, uint64_t value)
-  : point(std::move(instance)), value_(value)
-{
-}
+    : point(instance), value_(value)
+{}
 
 point_value::point_value(const point& instance, uint64_t value)
-  : point(instance), value_(value)
-{
-}
+    : point(instance), value_(value)
+{}
 
 // Operators.
 //-------------------------------------------------------------------------
-
-// Copy and swap idiom, see: stackoverflow.com/a/3279550/1172329
-point_value& point_value::operator=(point_value other)
-{
-    swap(*this, other);
-    return *this;
+// friend
+bool operator==(point_value const& a, point_value const& b) {
+    return static_cast<point const&>(a) == static_cast<point const&>(b) && (a.value_ == b.value_);
 }
 
-bool point_value::operator==(const point_value& other) const
-{
-    return static_cast<point>(*this) == static_cast<point>(other) &&
-        (value_ == other.value_);
+// friend
+bool operator!=(point_value const& a, point_value const& b) {
+    return !(a == b);
 }
 
-bool point_value::operator!=(const point_value& other) const
-{
-    return !(*this == other);
-}
-
-// friend function, see: stackoverflow.com/a/5695855/1172329
-void swap(point_value& left, point_value& right)
-{
-    using std::swap;
-
-    // Must be unqualified (no std namespace).
-    swap(static_cast<point&>(left), static_cast<point&>(right));
-    swap(left.value_, right.value_);
-}
+// // friend
+// void swap(point_value& a, point_value& b) {
+//     using std::swap;
+//     swap(static_cast<point&>(a), static_cast<point&>(b));
+//     swap(a.value_, b.value_);
+// }
 
 // Properties (accessors).
 //-------------------------------------------------------------------------
 
-uint64_t point_value::value() const
-{
+uint64_t point_value::value() const {
     return value_;
 }
 
-void point_value::set_value(uint64_t value)
-{
+void point_value::set_value(uint64_t value) {
     value_ = value;
 }
 
-} // namespace chain
-} // namespace libbitcoin
+}} // namespace libbitcoin::chainv2

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_CHAINV2_POINTS_VALUE_HPP
-#define LIBBITCOIN_CHAINV2_POINTS_VALUE_HPP
+#ifndef LIBBITCOIN_CHAINV2_POINTS_VALUE_HPP_
+#define LIBBITCOIN_CHAINV2_POINTS_VALUE_HPP_
 
 #include <numeric>
 #include <cstdint>
@@ -25,11 +25,9 @@
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/math/limits.hpp>
 
-namespace libbitcoin {
-namespace chainv2 {
+namespace libbitcoin { namespace chainv2 {
 
-class BC_API points_value
-{
+class BC_API points_value {
 public:
     /// A set of valued points.
     point_value::list points;
@@ -38,7 +36,6 @@ public:
     uint64_t value() const;
 };
 
-} // namespace chain
-} // namespace libbitcoin
+}} // namespace libbitcoin::chainv2
 
-#endif
+#endif // LIBBITCOIN_CHAINV2_POINTS_VALUE_HPP_
