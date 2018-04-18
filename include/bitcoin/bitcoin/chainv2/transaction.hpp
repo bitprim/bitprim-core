@@ -48,6 +48,8 @@ namespace libbitcoin { namespace chainv2 {
 
 class BC_API transaction {
 public:
+    using ptr = std::shared_ptr<transaction>;
+    using const_ptr = std::shared_ptr<const transaction>;
     using ins = input::list;
     using outs = output::list;
     using list = std::vector<transaction>;
@@ -176,7 +178,7 @@ public:
     code check(bool transaction_pool=true) const;
     // code accept(bool transaction_pool=true) const;
     // code accept(chain::chain_state const& state) const;
-    code accept(chain::chain_state const& state, bool tx_duplicate, bool transaction_pool /*= true*/) const;
+    code accept(chain::chain_state const& state, bool tx_duplicate, bool transaction_pool = true) const;
 
     // code connect() const;
     code connect(chain::chain_state const& state) const;
