@@ -51,8 +51,10 @@ public:
 
     script();
 
-    script(script&& other) noexcept;
-    script(script const& other);
+    /// This class is move assignable and copy assignable.
+    // script(script&& other) noexcept;
+    // script(script&& other) = default;
+    // script(script const& other) = default;
 
     explicit
     script(operation::list&& ops);
@@ -66,15 +68,14 @@ public:
     // Operators.
     //-------------------------------------------------------------------------
 
-    /// This class is move assignable and copy assignable.
-    script& operator=(script&& other) noexcept;
-    script& operator=(script const& other);
+    // script& operator=(script&& other) noexcept;
+    // script& operator=(script const& other);
 
-    bool operator==(script const& other) const;
-    bool operator!=(script const& other) const;
+    friend
+    bool operator==(script const& a, script const& b);
 
-    // explicit 
-    // operator chain::script() const;
+    friend
+    bool operator!=(script const& a, script const& b);
 
     // Deserialization.
     //-------------------------------------------------------------------------
@@ -83,11 +84,14 @@ public:
     static script factory_from_data(std::istream& stream, bool prefix);
     static script factory_from_data(reader& source, bool prefix);
 
+private:
     /// Deserialization invalidates the iterator.
     bool from_data(data_chunk const& encoded, bool prefix);
     bool from_data(std::istream& stream, bool prefix);
     bool from_data(reader& source, bool prefix);
 
+
+public:
     /// Deserialization invalidates the iterator.
     void from_operations(operation::list&& ops);
     void from_operations(operation::list const& ops);
@@ -125,22 +129,15 @@ public:
 
     size_t satoshi_content_size() const;
     size_t serialized_size(bool prefix) const;
+    
     operation::list const& operations() const;
 
     // Signing.
     //-------------------------------------------------------------------------
 
-    static hash_digest generate_signature_hash(const transaction& tx,
-        uint32_t input_index, script const& script_code, uint8_t sighash_type);
-
-    static bool check_signature(const ec_signature& signature,
-        uint8_t sighash_type, data_chunk const& public_key,
-        script const& script_code, const transaction& tx,
-        uint32_t input_index);
-
-    static bool create_endorsement(endorsement& out, const ec_secret& secret,
-        script const& prevout_script, const transaction& tx,
-        uint32_t input_index, uint8_t sighash_type);
+    static hash_digest generate_signature_hash(const transaction& tx, uint32_t input_index, script const& script_code, uint8_t sighash_type);
+    static bool check_signature(const ec_signature& signature, uint8_t sighash_type, data_chunk const& public_key, script const& script_code, const transaction& tx, uint32_t input_index);
+    static bool create_endorsement(endorsement& out, const ec_secret& secret, script const& prevout_script, const transaction& tx, uint32_t input_index, uint8_t sighash_type); 
 
     // Utilities (static).
     //-------------------------------------------------------------------------
@@ -173,10 +170,8 @@ public:
     static operation::list to_pay_public_key_pattern(data_slice point);
     static operation::list to_pay_key_hash_pattern(const short_hash& hash);
     static operation::list to_pay_script_hash_pattern(const short_hash& hash);
-    static operation::list to_pay_multisig_pattern(uint8_t signatures,
-        const point_list& points);
-    static operation::list to_pay_multisig_pattern(uint8_t signatures,
-        const data_stack& points);
+    static operation::list to_pay_multisig_pattern(uint8_t signatures, const point_list& points);
+    static operation::list to_pay_multisig_pattern(uint8_t signatures, const data_stack& points);
 
     // Utilities (non-static).
     //-------------------------------------------------------------------------
@@ -193,36 +188,31 @@ public:
     // Validation.
     //-------------------------------------------------------------------------
 
-    static code verify(const transaction& tx, uint32_t input, uint32_t forks);
+    static 
+    code verify(const transaction& tx, uint32_t input, uint32_t forks);
 
-    // TOD: move back to private.
-    static code verify(const transaction& tx, uint32_t input_index,
-        uint32_t forks, script const& input_script,
-        script const& prevout_script);
+    // TODO(libbitcoin): move back to private.
+    static 
+    code verify(const transaction& tx, uint32_t input_index, uint32_t forks, script const& input_script, script const& prevout_script);
 
 protected:
     // So that input and output may call reset from their own.
     friend class input;
     friend class output;
 
+    void regenerate_operations_from_bytes();
     void reset();
     bool is_pay_to_script_hash(uint32_t forks) const;
-    void find_and_delete_(data_chunk const& endorsement);
+    bool find_and_delete_(data_chunk const& endorsement);
 
 private:
     static size_t serialized_size(operation::list const& ops);
     static data_chunk operations_to_data(operation::list const& ops);
-    ////static code verify(const transaction& tx, uint32_t input_index,
-    ////    uint32_t forks, script const& input_script,
-    ////    script const& prevout_script);
+    //static code verify(const transaction& tx, uint32_t input_index, uint32_t forks, script const& input_script, script const& prevout_script);
 
     data_chunk bytes_;
+    operation::list operations_;
     bool valid_;
-
-    // These are protected by mutex.
-    mutable bool cached_;
-    mutable operation::list operations_;
-    mutable upgrade_mutex mutex_;
 };
 
 }} // namespace libbitcoin::chainv2
