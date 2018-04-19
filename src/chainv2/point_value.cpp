@@ -32,8 +32,9 @@ static_assert(std::is_move_assignable<point_value>::value, "std::is_move_assigna
 static_assert(std::is_nothrow_move_assignable<point_value>::value, "std::is_nothrow_move_assignable<point_value>::value");
 static_assert(std::is_copy_constructible<point_value>::value, "std::is_copy_constructible<point_value>::value");
 static_assert(std::is_copy_assignable<point_value>::value, "std::is_copy_assignable<point_value>::value");
-static_assert(std::is_swappable<point_value>::value, "std::is_swappable<point_value>::value");
-static_assert(std::is_nothrow_swappable<point_value>::value, "std::is_nothrow_swappable<point_value>::value");
+//C++17
+// static_assert(std::is_swappable<point_value>::value, "std::is_swappable<point_value>::value");
+// static_assert(std::is_nothrow_swappable<point_value>::value, "std::is_nothrow_swappable<point_value>::value");
 
 // Constructors.
 //-------------------------------------------------------------------------

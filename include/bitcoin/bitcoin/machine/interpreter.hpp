@@ -25,15 +25,36 @@
 #include <bitcoin/bitcoin/machine/opcode.hpp>
 #include <bitcoin/bitcoin/machine/operation.hpp>
 #include <bitcoin/bitcoin/machine/program.hpp>
+#include <bitcoin/bitcoin/machine/programv2.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
+
+#include <bitcoin/bitcoin/chain/transaction.hpp>
+#include <bitcoin/bitcoin/chain/script.hpp>
+#include <bitcoin/bitcoin/chainv2/transaction.hpp>
+#include <bitcoin/bitcoin/chainv2/script.hpp>
 
 namespace libbitcoin {
 namespace machine {
 
+template <typename Program> 
+struct chain_selector;
+
+template <> 
+struct chain_selector<program> { 
+    using script_t = chain::script;
+};
+
+template <> 
+struct chain_selector<programv2> {
+    using script_t = chainv2::script;
+};
+
+
 template <typename Program>
 class BC_API interpreter {
 public:
-    typedef error::error_code_t result;
+    using result = error::error_code_t;
+    using script_t = typename chain_selector<Program>::script_t;
 
     // Operations (shared).
     //-----------------------------------------------------------------------------
@@ -111,12 +132,41 @@ public:
     static result op_check_sequence_verify(Program& program);
 
     /// Run program script.
-    static code run(Program& program);
+    static 
+    code run(Program& program) {
+        code ec;
+
+        if (!program.is_valid())
+            return error::invalid_script;
+
+        for (const auto& op: program) {
+            if (op.is_oversized())
+                return error::invalid_push_data_size;
+
+            if (op.is_disabled())
+                return error::op_disabled;
+
+            if (!program.increment_operation_count(op))
+                return error::invalid_operation_count;
+
+            if (program.if_(op)) {
+                if ((ec = run_op(op, program)))
+                    return ec;
+
+                if (program.is_stack_overflow())
+                    return error::invalid_stack_size;
+            }
+        }
+
+        return program.closed() ? error::success : error::invalid_stack_scope;
+    }
 
     /// Run individual operations (idependent of the script).
     /// For best performance use script runner for a sequence of operations.
-    static code run(const operation& op, Program& program);
-
+    static 
+    code run(const operation& op, Program& program) {
+        return run_op(op, program);
+    }
 private:
     static result run_op(const operation& op, Program& program);
 };

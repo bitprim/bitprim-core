@@ -25,38 +25,38 @@
 
 namespace libbitcoin { namespace machine {
 
-template <typename Program>
-code interpreter<Program>::run(Program& program) {
-    code ec;
+// template <typename Program>
+// code interpreter<Program>::run(Program& program) {
+//     code ec;
 
-    if (!program.is_valid())
-        return error::invalid_script;
+//     if (!program.is_valid())
+//         return error::invalid_script;
 
-    for (const auto& op: program) {
-        if (op.is_oversized())
-            return error::invalid_push_data_size;
+//     for (const auto& op: program) {
+//         if (op.is_oversized())
+//             return error::invalid_push_data_size;
 
-        if (op.is_disabled())
-            return error::op_disabled;
+//         if (op.is_disabled())
+//             return error::op_disabled;
 
-        if (!program.increment_operation_count(op))
-            return error::invalid_operation_count;
+//         if (!program.increment_operation_count(op))
+//             return error::invalid_operation_count;
 
-        if (program.if_(op)) {
-            if ((ec = run_op(op, program)))
-                return ec;
+//         if (program.if_(op)) {
+//             if ((ec = run_op(op, program)))
+//                 return ec;
 
-            if (program.is_stack_overflow())
-                return error::invalid_stack_size;
-        }
-    }
+//             if (program.is_stack_overflow())
+//                 return error::invalid_stack_size;
+//         }
+//     }
 
-    return program.closed() ? error::success : error::invalid_stack_scope;
-}
+//     return program.closed() ? error::success : error::invalid_stack_scope;
+// }
 
-template <typename Program>
-code interpreter<Program>::run(const operation& op, Program& program) {
-    return run_op(op, program);
-}
+// template <typename Program>
+// code interpreter<Program>::run(const operation& op, Program& program) {
+//     return run_op(op, program);
+// }
 
 }} // namespace libbitcoin::machine

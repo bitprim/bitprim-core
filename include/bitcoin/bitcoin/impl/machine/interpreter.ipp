@@ -21,8 +21,10 @@
 
 #include <cstdint>
 #include <utility>
-#include <bitcoin/bitcoin/chain/transaction.hpp>
-#include <bitcoin/bitcoin/chain/script.hpp>
+// #include <bitcoin/bitcoin/chain/transaction.hpp>
+// #include <bitcoin/bitcoin/chain/script.hpp>
+// #include <bitcoin/bitcoin/chainv2/transaction.hpp>
+// #include <bitcoin/bitcoin/chainv2/script.hpp>
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/error.hpp>
 #include <bitcoin/bitcoin/math/elliptic_curve.hpp>
@@ -773,14 +775,13 @@ typename interpreter<Program>::result interpreter<Program>::op_check_sig_verify(
     uint8_t sighash;
     ec_signature signature;
     der_signature distinguished;
-    const auto strict = chain::script::is_enabled(program.forks(),
-        rule_fork::bip66_rule);
+    const auto strict = script_t::is_enabled(program.forks(), rule_fork::bip66_rule);
 
     const auto public_key = program.pop();
     auto endorsement = program.pop();
 
     // Create a subscript with endorsements stripped (sort of).
-    chain::script script_code(program.subscript());
+    script_t script_code(program.subscript());
     script_code.find_and_delete({ endorsement });
 
     // BIP62: An empty endorsement is not considered lax encoding.
@@ -792,7 +793,7 @@ typename interpreter<Program>::result interpreter<Program>::op_check_sig_verify(
         return strict ? error::invalid_signature_lax_encoding :
             error::invalid_signature_encoding;
 
-    return chain::script::check_signature(signature, sighash, public_key,
+    return script_t::check_signature(signature, sighash, public_key,
         script_code, program.transaction(), program.input_index()) ?
             error::success : error::incorrect_signature;
 }
@@ -813,9 +814,7 @@ typename interpreter<Program>::result interpreter<Program>::op_check_sig(Program
 
 template <typename Program>
 inline 
-typename interpreter<Program>::result interpreter<Program>::op_check_multisig_verify(
-    Program& program)
-{
+typename interpreter<Program>::result interpreter<Program>::op_check_multisig_verify(Program& program) {
     int32_t key_count;
     if (!program.pop(key_count))
         return error::op_check_multisig_verify1;
@@ -850,11 +849,11 @@ typename interpreter<Program>::result interpreter<Program>::op_check_multisig_ve
     ec_signature signature;
     der_signature distinguished;
     auto public_key = public_keys.begin();
-    const auto strict = chain::script::is_enabled(program.forks(),
+    const auto strict = script_t::is_enabled(program.forks(),
         rule_fork::bip66_rule);
 
     // Before looping create subscript with endorsements stripped (sort of).
-    chain::script script_code(program.subscript());
+    script_t script_code(program.subscript());
     script_code.find_and_delete(endorsements);
 
     // The exact number of signatures are required and must be in order.
@@ -873,7 +872,7 @@ typename interpreter<Program>::result interpreter<Program>::op_check_multisig_ve
 
         while (true)
         {
-            if (chain::script::check_signature(signature, sighash, *public_key,
+            if (script_t::check_signature(signature, sighash, *public_key,
                 script_code, program.transaction(), program.input_index()))
                 break;
 
@@ -901,11 +900,9 @@ typename interpreter<Program>::result interpreter<Program>::op_check_multisig(Pr
 
 template <typename Program>
 inline 
-typename interpreter<Program>::result interpreter<Program>::op_check_locktime_verify(
-    Program& program)
-{
+typename interpreter<Program>::result interpreter<Program>::op_check_locktime_verify(Program& program) {
     // BIP65: nop2 subsumed by checklocktimeverify when bip65 fork is active.
-    if (!chain::script::is_enabled(program.forks(), rule_fork::bip65_rule))
+    if (!script_t::is_enabled(program.forks(), rule_fork::bip65_rule))
         return op_nop(opcode::nop2);
 
     const auto& tx = program.transaction();
@@ -947,7 +944,7 @@ typename interpreter<Program>::result interpreter<Program>::op_check_sequence_ve
     Program& program)
 {
     // BIP112: nop3 subsumed by checksequenceverify when bip112 fork is active.
-    if (!chain::script::is_enabled(program.forks(), rule_fork::bip112_rule))
+    if (!script_t::is_enabled(program.forks(), rule_fork::bip112_rule))
         return op_nop(opcode::nop3);
 
     const auto& tx = program.transaction();
