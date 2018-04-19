@@ -184,11 +184,12 @@ config::checkpoint::list parser::default_checkpoints(uint32_t identifier) {
 
         checkpoints.emplace_back("000000000000000005e14d3f9fdfb70745308706615cfa9edca4f4558332b201", 500000);
 
+        //TODO(fernando): temporary disable checkpoints to testing validation purposes
         //2017-Nov Hardfork - DAA - (1510600000)
-        checkpoints.emplace_back("0000000000000000008088d63f48da98b7352ad7c4c85f3d90b657cf50ff1ede", 504030);  //time: 1510603980 - Nov 13, 2017 07:13:00 PM
-        checkpoints.emplace_back("0000000000000000011ebf65b60d0a3de80b8175be709d653b4c1a1beeb6ab9c", 504031);  //time: 1510606688 - Nov 13, 2017 07:58:08 PM
+        // checkpoints.emplace_back("0000000000000000008088d63f48da98b7352ad7c4c85f3d90b657cf50ff1ede", 504030);  //time: 1510603980 - Nov 13, 2017 07:13:00 PM
+        // checkpoints.emplace_back("0000000000000000011ebf65b60d0a3de80b8175be709d653b4c1a1beeb6ab9c", 504031);  //time: 1510606688 - Nov 13, 2017 07:58:08 PM
 
-        checkpoints.emplace_back("0000000000000000001b09302aa6a8dc65b7542dd195866907dd4e4ccba30d58", 515000);
+        // checkpoints.emplace_back("0000000000000000001b09302aa6a8dc65b7542dd195866907dd4e4ccba30d58", 515000);
 
         //2018-May Hardfork - (1526400000)
         //2018-Nov Hardfork - (1542300000)
