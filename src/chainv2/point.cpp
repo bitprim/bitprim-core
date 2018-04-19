@@ -20,7 +20,9 @@
 
 #include <cstdint>
 #include <sstream>
+#include <type_traits>
 #include <utility>
+
 #include <bitcoin/bitcoin/constants.hpp>
 #include <bitcoin/bitcoin/formats/base_16.hpp>
 #include <bitcoin/bitcoin/message/messages.hpp>

@@ -20,7 +20,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
+
 #include <bitcoin/bitcoin/constants.hpp>
 #include <bitcoin/bitcoin/chainv2/point.hpp>
 

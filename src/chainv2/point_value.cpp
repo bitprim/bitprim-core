@@ -17,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 #include <vector>
+
 #include <bitcoin/bitcoin/chainv2/point.hpp>
 #include <bitcoin/bitcoin/chainv2/point_value.hpp>
 

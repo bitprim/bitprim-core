@@ -19,6 +19,8 @@
 #include <bitcoin/bitcoin/chainv2/input.hpp>
 
 #include <sstream>
+#include <type_traits>
+
 #include <bitcoin/bitcoin/constants.hpp>
 #include <bitcoin/bitcoin/utility/container_sink.hpp>
 #include <bitcoin/bitcoin/utility/container_source.hpp>
