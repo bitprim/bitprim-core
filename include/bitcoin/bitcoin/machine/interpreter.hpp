@@ -44,10 +44,10 @@ struct chain_selector<program> {
     using script_t = chain::script;
 };
 
-template <> 
-struct chain_selector<programv2> {
-    using script_t = chainv2::script;
-};
+// template <> 
+// struct chain_selector<programv2> {
+//     using script_t = chainv2::script;
+// };
 
 
 template <typename Program>

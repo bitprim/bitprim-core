@@ -46,12 +46,32 @@
 
 namespace libbitcoin { namespace chainv2 {
 
+struct BC_API outputs_info {
+    size_t count;
+    uint64_t total_output_value;
+    size_t signature_operations;
+    bool any_is_dusty;
+
+    // bool output::is_dust(uint64_t minimum_output_value) const {
+    //     // If provably unspendable it does not expand the unspent output set.
+    //     return value_ < minimum_output_value && !script_.is_unspendable();
+    // }
+    
+    friend
+    bool operator==(outputs_info const& a, outputs_info const& b) {
+        return (a.count == b.count)
+            && (a.total_output_value == b.total_output_value)
+            && (a.signature_operations == b.signature_operations)
+            && (a.any_is_dusty == b.any_is_dusty);
+    }    
+};
+
 class BC_API transaction {
 public:
     using ptr = std::shared_ptr<transaction>;
     using const_ptr = std::shared_ptr<const transaction>;
     using ins = input::list;
-    using outs = output::list;
+    // using outs = output::list;
     using list = std::vector<transaction>;
 
     // // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
@@ -78,12 +98,10 @@ public:
 
     transaction();
 
-    transaction(uint32_t version, uint32_t locktime, ins&& inputs, outs&& outputs);
-    transaction(uint32_t version, uint32_t locktime, ins const& inputs, outs const& outputs);
+    // transaction(uint32_t version, uint32_t locktime, ins&& inputs);         //, outs&& outputs);
+    // transaction(uint32_t version, uint32_t locktime, ins const& inputs);    //, outs const& outputs);
 
     /// This class is move assignable and copy assignable [TODO: remove copy].
-    // transaction(transaction&& other) = default;
-    // transaction(transaction const& other) = default;
 
     // Operators.
     //-----------------------------------------------------------------------------
@@ -99,31 +117,35 @@ public:
     //-----------------------------------------------------------------------------
 
     static 
-    transaction factory_from_data(data_chunk const& data, bool wire=true);
+    transaction factory_from_data(data_chunk const& data, uint64_t minimum_output_satoshis);
     
-    static 
-    transaction factory_from_data(std::istream& stream, bool wire=true);
-    
-    static 
-    transaction factory_from_data(reader& source, bool wire=true);
+    bool from_data(data_chunk const& data, uint64_t minimum_output_satoshis);
 
-    bool from_data(data_chunk const& data, bool wire=true);
-    bool from_data(std::istream& stream, bool wire=true);
-    bool from_data(reader& source, bool wire=true);
+    static 
+    transaction factory_from_data(data_chunk&& data, uint64_t minimum_output_satoshis);
+    
+    bool from_data(data_chunk&& data, uint64_t minimum_output_satoshis);
+
 
     bool is_valid() const;
+
+    data_chunk const& data() const;
+
 
     // Serialization.
     //-----------------------------------------------------------------------------
 
-    data_chunk to_data(bool wire=true) const;
-    void to_data(std::ostream& stream, bool wire=true) const;
-    void to_data(writer& sink, bool wire=true) const;
+
+
+    // data_chunk to_data(bool wire=true) const;
+    // void to_data(std::ostream& stream, bool wire=true) const;
+    // void to_data(writer& sink, bool wire=true) const;
 
     // Properties (size, accessors, cache).
     //-----------------------------------------------------------------------------
 
-    size_t serialized_size(bool wire=true) const;
+    // size_t serialized_size(bool wire=true) const;
+    size_t serialized_size_wired() const;
 
     uint32_t version() const;
     void set_version(uint32_t value);
@@ -133,20 +155,18 @@ public:
 
     // Deprecated (unsafe).
     ins& inputs();
-
     ins const& inputs() const;
     void set_inputs(ins const& value);
     void set_inputs(ins&& value);
 
-    // Deprecated (unsafe).
-    outs& outputs();
-
-    outs const& outputs() const;
-    void set_outputs(outs const& value);
-    void set_outputs(outs&& value);
+    // // Deprecated (unsafe).
+    // outs& outputs();
+    // outs const& outputs() const;
+    // void set_outputs(outs const& value);
+    // void set_outputs(outs&& value);
 
     hash_digest hash() const;
-    hash_digest hash(uint32_t sighash_type) const;
+    // hash_digest hash(uint32_t sighash_type) const;
 
     // void recompute_hash();
 
@@ -181,13 +201,13 @@ public:
     code accept(chain::chain_state const& state, bool tx_duplicate, bool transaction_pool = true) const;
 
     // code connect() const;
-    code connect(chain::chain_state const& state) const;
-    code connect_input(chain::chain_state const& state, size_t input_index) const;
+    // code connect(chain::chain_state const& state) const;
+    // code connect_input(chain::chain_state const& state, size_t input_index) const;
 
     // // THIS IS FOR LIBRARY USE ONLY, DO NOT CREATE A DEPENDENCY ON IT.
     // mutable validation validation;
 
-    bool is_standard() const;
+    // bool is_standard() const;
 
 protected:
     void reset();
@@ -195,10 +215,25 @@ protected:
     bool all_inputs_final() const;
 
 private:
+    static 
+    transaction factory_from_data(std::istream& stream, uint64_t minimum_output_satoshis);
+    
+    static 
+    transaction factory_from_data(reader& source, uint64_t minimum_output_satoshis);
+    
+    // bool read_output_info(reader& source /*, bool wire*/);
+    bool read_outputs_info(reader& source, uint64_t minimum_output_satoshis);
+    bool from_data(std::istream& stream, uint64_t minimum_output_satoshis);
+    bool from_data(reader& source, uint64_t minimum_output_satoshis);
+
+
     uint32_t version_;
     uint32_t locktime_;
     input::list inputs_;
-    output::list outputs_;
+    // output::list outputs_;
+    outputs_info outputs_info_;
+    size_t serialized_size_wired_;
+    data_chunk data_;
 
     // // These share a mutex as they are not expected to conflict.
     // mutable boost::optional<uint64_t> total_input_value_;

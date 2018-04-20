@@ -135,9 +135,9 @@ public:
     // Signing.
     //-------------------------------------------------------------------------
 
-    static hash_digest generate_signature_hash(const transaction& tx, uint32_t input_index, script const& script_code, uint8_t sighash_type);
-    static bool check_signature(const ec_signature& signature, uint8_t sighash_type, data_chunk const& public_key, script const& script_code, const transaction& tx, uint32_t input_index);
-    static bool create_endorsement(endorsement& out, const ec_secret& secret, script const& prevout_script, const transaction& tx, uint32_t input_index, uint8_t sighash_type); 
+    // static hash_digest generate_signature_hash(const transaction& tx, uint32_t input_index, script const& script_code, uint8_t sighash_type);
+    // static bool check_signature(const ec_signature& signature, uint8_t sighash_type, data_chunk const& public_key, script const& script_code, const transaction& tx, uint32_t input_index);
+    // static bool create_endorsement(endorsement& out, const ec_secret& secret, script const& prevout_script, const transaction& tx, uint32_t input_index, uint8_t sighash_type); 
 
     // Utilities (static).
     //-------------------------------------------------------------------------
@@ -188,12 +188,12 @@ public:
     // Validation.
     //-------------------------------------------------------------------------
 
-    static 
-    code verify(const transaction& tx, uint32_t input, uint32_t forks);
+    // static 
+    // code verify(const transaction& tx, uint32_t input, uint32_t forks);
 
-    // TODO(libbitcoin): move back to private.
-    static 
-    code verify(const transaction& tx, uint32_t input_index, uint32_t forks, script const& input_script, script const& prevout_script);
+    // // TODO(libbitcoin): move back to private.
+    // static 
+    // code verify(const transaction& tx, uint32_t input_index, uint32_t forks, script const& input_script, script const& prevout_script);
 
 protected:
     // So that input and output may call reset from their own.

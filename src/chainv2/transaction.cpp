@@ -67,7 +67,7 @@ using bc::machine::rule_fork;
 
 // Read a length-prefixed collection of inputs or outputs from the source.
 template<class Source, class Put>
-bool read(Source& source, std::vector<Put>& puts, bool wire) {
+bool read_input(Source& source, std::vector<Put>& puts) {
     auto result = true;
     auto const count = source.read_size_little_endian();
 
@@ -78,8 +78,8 @@ bool read(Source& source, std::vector<Put>& puts, bool wire) {
         puts.resize(count);
     }
 
-    auto const deserialize = [&result, &source, wire](Put& put) {
-        result = result && put.from_data(source, wire);
+    auto const deserialize = [&result, &source](Put& put) {
+        result = result && put.from_data(source, true);
     };
 
     std::for_each(puts.begin(), puts.end(), deserialize);
@@ -105,19 +105,19 @@ transaction::transaction()
     : version_(0), locktime_(0)
 {}
 
-transaction::transaction(uint32_t version, uint32_t locktime, input::list&& inputs, output::list&& outputs)
-    : version_(version)
-    , locktime_(locktime)
-    , inputs_(std::move(inputs))
-    , outputs_(std::move(outputs))
-{}
+// transaction::transaction(uint32_t version, uint32_t locktime, input::list&& inputs) //, output::list&& outputs)
+//     : version_(version)
+//     , locktime_(locktime)
+//     , inputs_(std::move(inputs))
+//     // , outputs_(std::move(outputs))
+// {}
 
-transaction::transaction(uint32_t version, uint32_t locktime, input::list const& inputs, output::list const& outputs)
-    : version_(version)
-    , locktime_(locktime)
-    , inputs_(inputs)
-    , outputs_(outputs)
-{}
+// transaction::transaction(uint32_t version, uint32_t locktime, input::list const& inputs) //, output::list const& outputs)
+//     : version_(version)
+//     , locktime_(locktime)
+//     , inputs_(inputs)
+//     // , outputs_(outputs)
+// {}
 
 // Operators.
 //-----------------------------------------------------------------------------
@@ -127,7 +127,8 @@ bool operator==(transaction const& a, transaction const& b) {
     return (a.version_ == b.version_)
         && (a.locktime_ == b.locktime_)
         && (a.inputs_ == b.inputs_)
-        && (a.outputs_ == b.outputs_);
+        // && (a.outputs_ == b.outputs_);
+        && (a.outputs_info_ == b.outputs_info_);
 }
 
 // friend
@@ -139,57 +140,185 @@ bool operator!=(transaction const& a, transaction const& b) {
 //-----------------------------------------------------------------------------
 
 // static
-transaction transaction::factory_from_data(data_chunk const& data, bool wire) {
+transaction transaction::factory_from_data(data_chunk&& data, uint64_t minimum_output_satoshis) {
     transaction instance;
-    instance.from_data(data, wire);
+    instance.from_data(std::move(data), minimum_output_satoshis);
+    return instance;
+}
+
+transaction transaction::factory_from_data(data_chunk const& data, uint64_t minimum_output_satoshis) {
+    transaction instance;
+    instance.from_data(data, minimum_output_satoshis);
     return instance;
 }
 
 // static
-transaction transaction::factory_from_data(std::istream& stream, bool wire) {
+transaction transaction::factory_from_data(std::istream& stream, uint64_t minimum_output_satoshis) {
     transaction instance;
-    instance.from_data(stream, wire);
+    instance.from_data(stream, minimum_output_satoshis);
     return instance;
 }
 
 // static
-transaction transaction::factory_from_data(reader& source, bool wire) {
+transaction transaction::factory_from_data(reader& source, uint64_t minimum_output_satoshis) {
     transaction instance;
-    instance.from_data(source, wire);
+    instance.from_data(source, minimum_output_satoshis);
     return instance;
 }
 
-bool transaction::from_data(data_chunk const& data, bool wire) {
-    data_source istream(data);
-    return from_data(istream, wire);
+bool transaction::from_data(data_chunk&& data, uint64_t minimum_output_satoshis) {
+    data_ = std::move(data);
+    data_source istream(data_);
+    return from_data(istream, minimum_output_satoshis);
 }
 
-bool transaction::from_data(std::istream& stream, bool wire) {
+bool transaction::from_data(data_chunk const& data, uint64_t minimum_output_satoshis) {
+    data_ = data;
+    data_source istream(data_);
+    return from_data(istream, minimum_output_satoshis);
+}
+
+
+
+bool transaction::from_data(std::istream& stream, uint64_t minimum_output_satoshis) {
     istream_reader source(stream);
-    return from_data(source, wire);
+    return from_data(source, minimum_output_satoshis);
 }
 
-bool transaction::from_data(reader& source, bool wire) {
-    reset();
 
-    if (wire) {
-        // Wire (satoshi protocol) deserialization.
-        version_ = source.read_4_bytes_little_endian();
-        read(source, inputs_, wire) && read(source, outputs_, wire);
-        locktime_ = source.read_4_bytes_little_endian();
-    } else {
-        // Database (outputs forward) serialization.
-        read(source, outputs_, wire) && read(source, inputs_, wire);
-        auto const locktime = source.read_variable_little_endian();
-        auto const version = source.read_variable_little_endian();
+inline
+size_t opcode_value(machine::opcode code) {
+    if (code == machine::opcode::checksig || code == machine::opcode::checksigverify) {
+        // ++total;
+        return 1;
+    } 
+    
+    if (code == machine::opcode::checkmultisig || code == machine::opcode::checkmultisigverify) {
+        // total += multisig_default_sigops; //ops(false, preceding);
+        return multisig_default_sigops;
+    }
 
-        if (locktime > max_uint32 || version > max_uint32) {
-            source.invalidate();
+    return 0;
+}
+
+
+
+// // Concurrent read/write is not supported, so no critical section.
+// bool script::from_data(reader& source, bool prefix) {
+//     reset();
+//     valid_ = true;
+
+//     if (prefix) {
+//         auto const size = source.read_size_little_endian();
+
+//         // The max_script_size constant limits evaluation, but not all scripts
+//         // evaluate, so use max_block_size to guard memory allocation here.
+//         if (size > get_max_block_size()) {
+//             source.invalidate();
+//         } else {
+//             bytes_ = source.read_bytes(size);
+//         }
+//     } else {
+//         bytes_ = source.read_bytes();
+//     }
+
+//     if (!source) {
+//         reset();
+//     }
+
+//     return source;
+// }
+
+
+// bool script::is_unspendable() const {
+//     // The first operations access must be method-based to guarantee the cache.
+//     return (!operations().empty() && operations_[0].code() == opcode::return_)
+//         || satoshi_content_size() > max_script_size;
+// }
+
+
+inline
+std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source) {
+    size_t total = 0;
+    bool is_unspendable = false;
+
+    auto const satoshi_content_size = source.read_size_little_endian();
+
+    if (satoshi_content_size > get_max_block_size()) {
+        source.invalidate();
+        return {total, is_unspendable, false};
+    }
+
+    if ( ! source.is_exhausted()) {
+        auto const op = machine::operation::factory_from_data(source);
+        machine::opcode const code = op.code();
+        total += opcode_value(code);
+
+        if (code == machine::opcode::return_) {
+            is_unspendable = true;
+        }
+    }
+
+    while ( ! source.is_exhausted()) {
+        auto const op = machine::operation::factory_from_data(source);
+        machine::opcode const code = op.code();
+        total += opcode_value(code);
+    }
+
+    is_unspendable = is_unspendable || satoshi_content_size > max_script_size;
+
+    return {total, is_unspendable, true};
+}
+
+// bool output::is_dust(uint64_t minimum_output_value) const {
+//     // If provably unspendable it does not expand the unspent output set.
+//     return value_ < minimum_output_value && !script_.is_unspendable();
+// }
+
+bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_satoshis) {
+    outputs_info_.total_output_value = 0;
+    outputs_info_.signature_operations = 0;
+    outputs_info_.any_is_dusty = false;
+    outputs_info_.count = source.read_size_little_endian();
+
+    // Guard against potential for arbitary memory allocation.
+    if (outputs_info_.count > get_max_block_size()) {
+        source.invalidate();
+        return false;
+    } 
+
+    size_t i = 0;
+    while (source && i < outputs_info_.count) {
+        auto const value = source.read_8_bytes_little_endian();
+        auto const res = count_output_sigops_is_unspendable(source);
+
+        if (! std::get<2>(res)) {
+            return false;
         }
 
-        locktime_ = static_cast<uint32_t>(locktime);
-        version_ = static_cast<uint32_t>(version);
+        outputs_info_.total_output_value += value;
+        outputs_info_.signature_operations += std::get<0>(res);
+        bool const script_is_unspendable = std::get<1>(res);
+
+        if ( ! outputs_info_.any_is_dusty && value < minimum_output_satoshis && !script_is_unspendable) {
+            outputs_info_.any_is_dusty = true;
+        }
+
+        ++i;
     }
+
+    return source;    
+}
+
+bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
+    reset();
+
+    // Wire (satoshi protocol) deserialization.
+    version_ = source.read_4_bytes_little_endian();
+    read_input(source, inputs_);
+    // && read_output(source, outputs_, wire); //TODO(fernando)
+    read_outputs_info(source, minimum_output_satoshis);
+    locktime_ = source.read_4_bytes_little_endian();
 
     if (!source) {
         reset();
@@ -204,75 +333,85 @@ void transaction::reset() {
     locktime_ = 0;
     inputs_.clear();
     inputs_.shrink_to_fit();
-    outputs_.clear();
-    outputs_.shrink_to_fit();
+    // outputs_.clear();
+    // outputs_.shrink_to_fit();
     // invalidate_cache();
     // total_input_value_ = boost::none;
     // total_output_value_ = boost::none;
 }
 
 bool transaction::is_valid() const {
-    return (version_ != 0) || (locktime_ != 0) || ! inputs_.empty() || ! outputs_.empty();
+    // return (version_ != 0) || (locktime_ != 0) || ! inputs_.empty() || ! outputs_.empty();
+    return (version_ != 0) || (locktime_ != 0) || ! inputs_.empty() || outputs_info_.count > 0;
+}
+
+
+data_chunk const& transaction::data() const {
+    return data_;
 }
 
 // Serialization.
 //-----------------------------------------------------------------------------
 
-data_chunk transaction::to_data(bool wire) const {
-    data_chunk data;
-    auto const size = serialized_size(wire);
+// data_chunk transaction::to_data(bool wire) const {
+//     data_chunk data;
+//     auto const size = serialized_size(wire);
 
-    // Reserve an extra byte to prevent full reallocation in the case of
-    // generate_signature_hash extension by addition of the sighash_type.
-    data.reserve(size + sizeof(uint8_t));
+//     // Reserve an extra byte to prevent full reallocation in the case of
+//     // generate_signature_hash extension by addition of the sighash_type.
+//     data.reserve(size + sizeof(uint8_t));
 
-    data_sink ostream(data);
-    to_data(ostream, wire);
-    ostream.flush();
-    BITCOIN_ASSERT(data.size() == size);
-    return data;
-}
+//     data_sink ostream(data);
+//     to_data(ostream, wire);
+//     ostream.flush();
+//     BITCOIN_ASSERT(data.size() == size);
+//     return data;
+// }
 
-void transaction::to_data(std::ostream& stream, bool wire) const {
-    ostream_writer sink(stream);
-    to_data(sink, wire);
-}
+// void transaction::to_data(std::ostream& stream, bool wire) const {
+//     ostream_writer sink(stream);
+//     to_data(sink, wire);
+// }
 
-void transaction::to_data(writer& sink, bool wire) const {
-    if (wire) {
-        // Wire (satoshi protocol) serialization.
-        sink.write_4_bytes_little_endian(version_);
-        write(sink, inputs_, wire);
-        write(sink, outputs_, wire);
-        sink.write_4_bytes_little_endian(locktime_);
-    } else {
-        // Database (outputs forward) serialization.
-        write(sink, outputs_, wire);
-        write(sink, inputs_, wire);
-        sink.write_variable_little_endian(locktime_);
-        sink.write_variable_little_endian(version_);
-    }
-}
+// void transaction::to_data(writer& sink, bool wire) const {
+//     if (wire) {
+//         // Wire (satoshi protocol) serialization.
+//         sink.write_4_bytes_little_endian(version_);
+//         write(sink, inputs_, wire);
+//         write(sink, outputs_, wire);
+//         sink.write_4_bytes_little_endian(locktime_);
+//     } else {
+//         // Database (outputs forward) serialization.
+//         write(sink, outputs_, wire);
+//         write(sink, inputs_, wire);
+//         sink.write_variable_little_endian(locktime_);
+//         sink.write_variable_little_endian(version_);
+//     }
+// }
 
 // Size.
 //-----------------------------------------------------------------------------
 
-size_t transaction::serialized_size(bool wire) const {
-    auto const ins = [wire](size_t size, input const& input) {
-        return size + input.serialized_size(wire);
-    };
+// size_t transaction::serialized_size(bool wire) const {
+//     auto const ins = [wire](size_t size, input const& input) {
+//         return size + input.serialized_size(wire);
+//     };
 
-    auto const outs = [wire](size_t size, const output& output) {
-        return size + output.serialized_size(wire);
-    };
+//     auto const outs = [wire](size_t size, output const& output) {
+//         return size + output.serialized_size(wire);
+//     };
 
-    return (wire ? sizeof(version_) : message::variable_uint_size(version_))
-        + (wire ? sizeof(locktime_) : message::variable_uint_size(locktime_))
-        + message::variable_uint_size(inputs_.size())
-        + message::variable_uint_size(outputs_.size())
-        + std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, ins)
-        + std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, outs)
-        ;
+//     return (wire ? sizeof(version_) : message::variable_uint_size(version_))
+//         + (wire ? sizeof(locktime_) : message::variable_uint_size(locktime_))
+//         + message::variable_uint_size(inputs_.size())
+//         + message::variable_uint_size(outputs_.size())
+//         + std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, ins)
+//         + std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, outs)
+//         ;
+// }
+
+size_t transaction::serialized_size_wired() const {
+    return serialized_size_wired_;
 }
 
 // Accessors.
@@ -316,25 +455,25 @@ void transaction::set_inputs(input::list&& value) {
     // total_input_value_ = boost::none;
 }
 
-output::list& transaction::outputs() {
-    return outputs_;
-}
+// output::list& transaction::outputs() {
+//     return outputs_;
+// }
 
-output::list const& transaction::outputs() const {
-    return outputs_;
-}
+// output::list const& transaction::outputs() const {
+//     return outputs_;
+// }
 
-void transaction::set_outputs(output::list const& value) {
-    outputs_ = value;
-    // invalidate_cache();
-    // total_output_value_ = boost::none;
-}
+// void transaction::set_outputs(output::list const& value) {
+//     outputs_ = value;
+//     // invalidate_cache();
+//     // total_output_value_ = boost::none;
+// }
 
-void transaction::set_outputs(output::list&& value) {
-    outputs_ = std::move(value);
-    // invalidate_cache();
-    // total_output_value_ = boost::none;
-}
+// void transaction::set_outputs(output::list&& value) {
+//     outputs_ = std::move(value);
+//     // invalidate_cache();
+//     // total_output_value_ = boost::none;
+// }
 
 // Cache.
 //-----------------------------------------------------------------------------
@@ -357,31 +496,35 @@ void transaction::set_outputs(output::list&& value) {
 // }
 
 hash_digest transaction::hash() const {
-    return bitcoin_hash(to_data(true));
-    // ///////////////////////////////////////////////////////////////////////////
-    // // Critical Section
-    // mutex_.lock_upgrade();
-
-    // if (!hash_) {
-    //     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //     mutex_.unlock_upgrade_and_lock();
-    //     hash_ = std::make_shared<hash_digest>(bitcoin_hash(to_data(true)));
-    //     mutex_.unlock_and_lock_upgrade();
-    //     //---------------------------------------------------------------------
-    // }
-
-    // auto const hash = *hash_;
-    // mutex_.unlock_upgrade();
-    // ///////////////////////////////////////////////////////////////////////////
-
-    // return hash;
+    return bitcoin_hash(data());
 }
 
-hash_digest transaction::hash(uint32_t sighash_type) const {
-    auto serialized = to_data(true);
-    extend_data(serialized, to_little_endian(sighash_type));
-    return bitcoin_hash(serialized);
-}
+// hash_digest transaction::hash() const {
+//     return bitcoin_hash(to_data(true));
+//     // ///////////////////////////////////////////////////////////////////////////
+//     // // Critical Section
+//     // mutex_.lock_upgrade();
+
+//     // if (!hash_) {
+//     //     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//     //     mutex_.unlock_upgrade_and_lock();
+//     //     hash_ = std::make_shared<hash_digest>(bitcoin_hash(to_data(true)));
+//     //     mutex_.unlock_and_lock_upgrade();
+//     //     //---------------------------------------------------------------------
+//     // }
+
+//     // auto const hash = *hash_;
+//     // mutex_.unlock_upgrade();
+//     // ///////////////////////////////////////////////////////////////////////////
+
+//     // return hash;
+// }
+
+// hash_digest transaction::hash(uint32_t sighash_type) const {
+//     auto serialized = to_data(true);
+//     extend_data(serialized, to_little_endian(sighash_type));
+//     return bitcoin_hash(serialized);
+// }
 
 // void transaction::recompute_hash() {
 //     hash_ = nullptr;
@@ -522,7 +665,7 @@ uint64_t transaction::total_input_value() const {
 //     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //     ////static_assert(max_money() < max_uint64, "overflow sentinel invalid");
-//     auto const sum = [](uint64_t total, const output& output) {
+//     auto const sum = [](uint64_t total, output const& output) {
 //         return ceiling_add(total, output.value());
 //     };
 
@@ -536,12 +679,14 @@ uint64_t transaction::total_input_value() const {
 
 // Returns max_uint64 in case of overflow.
 uint64_t transaction::total_output_value() const {
-    ////static_assert(max_money() < max_uint64, "overflow sentinel invalid");
-    auto const sum = [](uint64_t total, const output& output) {
-        return ceiling_add(total, output.value());
-    };
+    // ////static_assert(max_money() < max_uint64, "overflow sentinel invalid");
+    // auto const sum = [](uint64_t total, output const& output) {
+    //     return ceiling_add(total, output.value());
+    // };
 
-    return std::accumulate(outputs_.begin(), outputs_.end(), uint64_t(0), sum);
+    // return std::accumulate(outputs_.begin(), outputs_.end(), uint64_t(0), sum);
+
+    return outputs_info_.total_output_value;
 }
 
 uint64_t transaction::fees() const {
@@ -565,12 +710,16 @@ size_t transaction::signature_operations(bool bip16_active) const {
         return ceiling_add(total, input.signature_operations(bip16_active));
     };
 
-    auto const out = [](size_t total, const output& output) {
-        return ceiling_add(total, output.signature_operations());
-    };
+    // auto const out = [](size_t total, output const& output) {
+    //     return ceiling_add(total, output.signature_operations());
+    // };
+
+    // return std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, in) +
+    //     std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, out);
 
     return std::accumulate(inputs_.begin(), inputs_.end(), size_t{0}, in) +
-        std::accumulate(outputs_.begin(), outputs_.end(), size_t{0}, out);
+        outputs_info_.signature_operations;
+
 }
 
 bool transaction::is_missing_previous_outputs() const {
@@ -642,11 +791,13 @@ bool transaction::is_double_spend(bool include_unconfirmed) const {
 }
 
 bool transaction::is_dusty(uint64_t minimum_output_value) const {
-    auto const dust = [minimum_output_value](const output& output) {
-        return output.is_dust(minimum_output_value);
-    };
+    // auto const dust = [minimum_output_value](output const& output) {
+    //     return output.is_dust(minimum_output_value);
+    // };
 
-    return std::any_of(outputs_.begin(), outputs_.end(), dust);
+    // return std::any_of(outputs_.begin(), outputs_.end(), dust);
+
+    return outputs_info_.any_is_dusty;
 }
 
 bool transaction::is_mature(size_t height) const {
@@ -657,36 +808,37 @@ bool transaction::is_mature(size_t height) const {
     return std::all_of(inputs_.begin(), inputs_.end(), mature);
 }
 
-// Coinbase transactions return success, to simplify iteration.
-code transaction::connect_input(chain::chain_state const& state, size_t input_index) const {
-    if (input_index >= inputs_.size()) {
-        return error::operation_failed;
-    }
+// // Coinbase transactions return success, to simplify iteration.
+// code transaction::connect_input(chain::chain_state const& state, size_t input_index) const {
+//     if (input_index >= inputs_.size()) {
+//         return error::operation_failed;
+//     }
 
-    if (is_coinbase()) {
-        return error::success;
-    }
+//     if (is_coinbase()) {
+//         return error::success;
+//     }
 
-    auto const& prevout = inputs_[input_index].previous_output().validation;
+//     auto const& prevout = inputs_[input_index].previous_output().validation;
 
-    // Verify that the previous output cache has been populated.
-    if (!prevout.cache.is_valid()) {
-        return error::missing_previous_output;
-    }
+//     // Verify that the previous output cache has been populated.
+//     if (!prevout.cache.is_valid()) {
+//         return error::missing_previous_output;
+//     }
 
-    auto const forks = state.enabled_forks();
-    auto const index32 = static_cast<uint32_t>(input_index);
+//     auto const forks = state.enabled_forks();
+//     auto const index32 = static_cast<uint32_t>(input_index);
 
-    // Verify the transaction input script against the previous output.
-    return script::verify(*this, index32, forks);
-}
+//     // Verify the transaction input script against the previous output.
+//     return script::verify(*this, index32, forks);
+// }
 
 // Validation.
 //-----------------------------------------------------------------------------
 
 // These checks are self-contained; blockchain (and so version) independent.
 code transaction::check(bool transaction_pool) const {
-    if (inputs_.empty() || outputs_.empty()) {
+    // if (inputs_.empty() || outputs_.empty()) {
+    if (inputs_.empty() || outputs_info_.count == 0) {
         return error::empty_transaction;
     } 
     
@@ -710,7 +862,8 @@ code transaction::check(bool transaction_pool) const {
         return error::transaction_internal_double_spend;
     } 
     
-    if (transaction_pool && serialized_size(true) >= get_max_block_size()) {
+    // if (transaction_pool && serialized_size(true) >= get_max_block_size()) {
+    if (transaction_pool && serialized_size_wired() >= get_max_block_size()) {
         return error::transaction_size_limit;
     }
 
@@ -798,32 +951,33 @@ code transaction::accept(chain::chain_state const& state, bool tx_duplicate, boo
 //     return state ? connect(*state) : error::operation_failed;
 // }
 
-code transaction::connect(chain::chain_state const& state) const {
-    code ec;
+// code transaction::connect(chain::chain_state const& state) const {
+//     code ec;
 
-    for (size_t input = 0; input < inputs_.size(); ++input) {
-        if ((ec = connect_input(state, input))) {
-            return ec;
-        }
-    }
+//     for (size_t input = 0; input < inputs_.size(); ++input) {
+//         if ((ec = connect_input(state, input))) {
+//             return ec;
+//         }
+//     }
 
-    return error::success;
-}
+//     return error::success;
+// }
 
-bool transaction::is_standard() const {
-    for (auto const& in : inputs()) {
-        if ( in.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
-            return false;
-        }
-    }
+//Note(fernando): Not necessary for Tx validation
+// bool transaction::is_standard() const {
+//     for (auto const& in : inputs()) {
+//         if ( in.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
+//             return false;
+//         }
+//     }
 
-    for (auto const& out : outputs()) {
-        if ( out.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
-            return false;
-        }
-    }
-    return true;
-}
+//     for (auto const& out : outputs()) {
+//         if ( out.script().pattern() == libbitcoin::machine::script_pattern::non_standard){
+//             return false;
+//         }
+//     }
+//     return true;
+// }
 
 }} // namespace libbitcoin::chainv2
 
