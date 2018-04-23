@@ -246,7 +246,7 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 
     if (satoshi_content_size > get_max_block_size()) {
         source.invalidate();
-        return {total, is_unspendable, false};
+        return std::make_tuple(total, is_unspendable, false);
     }
 
     if ( ! source.is_exhausted()) {
@@ -267,7 +267,7 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 
     is_unspendable = is_unspendable || satoshi_content_size > max_script_size;
 
-    return {total, is_unspendable, true};
+    return std::make_tuple(total, is_unspendable, true);
 }
 
 // bool output::is_dust(uint64_t minimum_output_value) const {
