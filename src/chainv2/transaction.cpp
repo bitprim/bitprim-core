@@ -285,7 +285,7 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 
     size_t n = 1;
     // while ( ! source.is_exhausted() && n < satoshi_content_size) {
-    while ( source && n < satoshi_content_size) {
+    while ( bool(source) && n < satoshi_content_size) {
         std::cout << "transaction::count_output_sigops_is_unspendable - 8 - bool(source): " << bool(source) << std::endl;
         auto const op = machine::operation::factory_from_data(source);
         std::cout << "transaction::count_output_sigops_is_unspendable - 9 - bool(source): " << bool(source) << std::endl;
@@ -298,7 +298,7 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
     std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
 
     is_unspendable = is_unspendable || satoshi_content_size > max_script_size;
-    return std::make_tuple(total, is_unspendable, source);
+    return std::make_tuple(total, is_unspendable, bool(source));
 }
 
 // bool output::is_dust(uint64_t minimum_output_value) const {
