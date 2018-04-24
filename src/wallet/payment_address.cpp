@@ -51,8 +51,10 @@ const uint8_t payment_address::mainnet_p2sh = 0x05;
 const uint8_t payment_address::testnet_p2kh = 0x6f;
 const uint8_t payment_address::testnet_p2sh = 0xc4;
 
+#ifdef BITPRIM_CURRENCY_BCH
 const std::string payment_address::cashaddr_prefix_mainnet = "bitcoincash";
 const std::string payment_address::cashaddr_prefix_testnet = "bchtest";
+#endif
 
 payment_address::payment_address()
   : valid_(false), version_(0), hash_(null_short_hash)

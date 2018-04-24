@@ -50,8 +50,10 @@ public:
     static const uint8_t testnet_p2kh;
     static const uint8_t testnet_p2sh;
 
+#ifdef BITPRIM_CURRENCY_BCH
     static const std::string cashaddr_prefix_mainnet;
     static const std::string cashaddr_prefix_testnet;
+#endif
 
     typedef std::shared_ptr<payment_address> ptr;
 
