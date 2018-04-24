@@ -368,26 +368,26 @@ bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
     // Wire (satoshi protocol) deserialization.
     version_ = source.read_4_bytes_little_endian();
 
-    std::cout << "1 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    std::cout << "1 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
     read_inputs(source, inputs_);
-    std::cout << "2 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    std::cout << "2 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     // && read_output(source, outputs_, wire); //TODO(fernando)
     read_outputs_info(source, minimum_output_satoshis);
 
-    std::cout << "3 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    std::cout << "3 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     locktime_ = source.read_4_bytes_little_endian();
 
 
-    std::cout << "4 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    std::cout << "4 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     if (!source) {
-        std::cout << "5 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+        std::cout << "5 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
         reset();
     }
 
-    std::cout << "6 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    std::cout << "6 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
 
     return source;
