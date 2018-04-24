@@ -242,7 +242,75 @@ bool script::from_data(reader& source, bool prefix)
     return source;
 }
 
+
+
+
+
+// TODO: optimize for larger data by using a shared byte array.
+bool operation::from_data(reader& source)
+{
+    reset();
+
+    valid_ = true;
+    code_ = static_cast<opcode>(source.read_byte());
+    const auto size = read_data_size(code_, source);
+
+    // Guard against potential for arbitary memory allocation.
+    if (size > max_push_data_size)
+        source.invalidate();
+    else if (size != 0)
+        data_ = source.read_bytes(size);
+
+    if (!source)
+        reset();
+
+    return valid_;
+}
 */
+
+inline 
+uint32_t read_data_size(machine::opcode code, reader& source, size_t& readed_bytes) {
+    constexpr auto op_75 = static_cast<uint8_t>(machine::opcode::push_size_75);
+
+    switch (code) {
+        case machine::opcode::push_one_size:
+            ++readed_bytes;
+            return source.read_byte();
+        case machine::opcode::push_two_size:
+            readed_bytes += 2;
+            return source.read_2_bytes_little_endian();
+        case machine::opcode::push_four_size:
+            readed_bytes += 4;
+            return source.read_4_bytes_little_endian();
+        default:
+            const auto byte = static_cast<uint8_t>(code);
+            return byte <= op_75 ? byte : 0;
+    }
+}
+
+inline
+std::tuple<size_t, size_t, bool, machine::opcode> process_opcode(reader& source) {
+    size_t readed_bytes = 0;
+
+    machine::opcode code = static_cast<machine::opcode>(source.read_byte());
+    ++readed_bytes;
+
+    auto const size = read_data_size(code, source, readed_bytes);
+
+    // Guard against potential for arbitary memory allocation.
+    if (size > max_push_data_size) {
+        source.invalidate();
+        return std::make_tuple(0, 0, false, machine::opcode{});
+    }
+    
+    if (size != 0) {
+        // data_ = source.read_bytes(size);
+        source.skip(size);
+        readed_bytes += size;
+    }
+
+    return std::make_tuple(opcode_value(code), readed_bytes, true, code);
+}
 
 inline
 std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source) {
@@ -252,6 +320,8 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
     std::cout << "transaction::count_output_sigops_is_unspendable - 1 - bool(source): " << bool(source) << std::endl;
 
     auto const satoshi_content_size = source.read_size_little_endian();
+
+    std::cout << "transaction::count_output_sigops_is_unspendable - satoshi_content_size: " << satoshi_content_size << std::endl;
 
     std::cout << "transaction::count_output_sigops_is_unspendable - 2 - bool(source): " << bool(source) << std::endl;
 
@@ -263,36 +333,76 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
         return std::make_tuple(total, is_unspendable, false);
     }
 
+    size_t readed_bytes = 0;
+
     std::cout << "transaction::count_output_sigops_is_unspendable - 4 - bool(source): " << bool(source) << std::endl;
 
     // if ( ! source.is_exhausted() && satoshi_content_size > 0) {
     if ( source && satoshi_content_size > 0) {
-        std::cout << "transaction::count_output_sigops_is_unspendable - 5 - bool(source): " << bool(source) << std::endl;
+        // auto const op = machine::operation::factory_from_data(source);
+        // machine::opcode const code = op.code();
+        // total += opcode_value(code);
 
-        auto const op = machine::operation::factory_from_data(source);
-    
-        std::cout << "transaction::count_output_sigops_is_unspendable - 6 - bool(source): " << bool(source) << std::endl;
 
-        machine::opcode const code = op.code();
-        total += opcode_value(code);
+        // machine::opcode code = static_cast<machine::opcode>(source.read_byte());
+        // total += opcode_value(code);
+        // ++readed_bytes;
 
-        std::cout << "transaction::count_output_sigops_is_unspendable - 7 - bool(source): " << bool(source) << std::endl;
+        // auto const size = read_data_size(code_, source, readed_bytes);
 
-        if (code == machine::opcode::return_) {
+        // // Guard against potential for arbitary memory allocation.
+        // if (size > max_push_data_size) {
+        //     source.invalidate();
+        //     return std::make_tuple(total, is_unspendable, false);
+        // }
+        
+        // if (size != 0) {
+        //     // data_ = source.read_bytes(size);
+        //     source.skip(size);
+        //     readed_bytes += size;
+        // }
+
+        auto res = process_opcode(source);
+
+        if (! std::get<2>(res)) {
+            return std::make_tuple(total, is_unspendable, false);
+        }
+        
+        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        
+        total += std::get<0>(res);
+        readed_bytes += std::get<1>(res);
+
+        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+
+        if (std::get<3>(res) == machine::opcode::return_) {
             is_unspendable = true;
         }
     }
 
-    size_t n = 1;
     // while ( ! source.is_exhausted() && n < satoshi_content_size) {
-    while ( bool(source) && n < satoshi_content_size) {
-        std::cout << "transaction::count_output_sigops_is_unspendable - 8 - bool(source): " << bool(source) << std::endl;
-        auto const op = machine::operation::factory_from_data(source);
-        std::cout << "transaction::count_output_sigops_is_unspendable - 9 - bool(source): " << bool(source) << std::endl;
+    // while ( bool(source) && n < satoshi_content_size) {
+    while ( bool(source) && readed_bytes < satoshi_content_size) {
+        // auto const op = machine::operation::factory_from_data(source);
+        // machine::opcode const code = op.code();
+        // total += opcode_value(code);
 
-        machine::opcode const code = op.code();
-        total += opcode_value(code);
-        ++n;
+        auto res = process_opcode(source);
+
+        if (! std::get<2>(res)) {
+            return std::make_tuple(total, is_unspendable, false);
+        }
+        
+        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        
+        total += std::get<0>(res);
+        readed_bytes += std::get<1>(res);
+
+        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
     }
 
     std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
@@ -357,6 +467,7 @@ bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_sato
     outputs_info_.any_is_dusty = false;
     outputs_info_.count = source.read_size_little_endian();
 
+    std::cout << "transaction::read_outputs_info - outputs_info_.count: " << outputs_info_.count << std::endl;
 
     std::cout << "transaction::read_outputs_info - 2 - bool(source): " << bool(source) << std::endl;
 

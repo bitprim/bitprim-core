@@ -138,10 +138,12 @@ public:
     bool is_minimal_push() const;
     bool is_nominal_push() const;
 
+    static 
+    uint32_t read_data_size(opcode code, reader& source);
+
 protected:
     operation(opcode code, data_chunk&& data, bool valid);
     operation(opcode code, const data_chunk& data, bool valid);
-    static uint32_t read_data_size(opcode code, reader& source);
     opcode opcode_from_data(const data_chunk& data, bool minimal);
     void reset();
 
