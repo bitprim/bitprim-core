@@ -461,7 +461,7 @@ void transaction::set_inputs(input::list&& value) {
     // total_input_value_ = boost::none;
 }
 
-outputs_info const& transaction::outputs_info() const {
+chainv2::outputs_info const& transaction::outputs_info() const {
     return outputs_info_;
 }
 

@@ -154,7 +154,7 @@ public:
     void set_locktime(uint32_t value);
 
 
-    outputs_info const& outputs_info() const;
+    chainv2::outputs_info const& outputs_info() const;
 
     // Deprecated (unsafe).
     ins& inputs();
@@ -236,7 +236,7 @@ private:
     uint32_t locktime_;
     input::list inputs_;
     // output::list outputs_;
-    outputs_info outputs_info_;
+    chainv2::outputs_info outputs_info_;
     size_t serialized_size_wired_;
     data_chunk data_;
 
