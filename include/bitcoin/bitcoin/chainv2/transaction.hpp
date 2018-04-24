@@ -118,13 +118,13 @@ public:
 
     static 
     transaction factory_from_data(data_chunk const& data, uint64_t minimum_output_satoshis);
-    
-    bool from_data(data_chunk const& data, uint64_t minimum_output_satoshis);
 
     static 
     transaction factory_from_data(data_chunk&& data, uint64_t minimum_output_satoshis);
     
     bool from_data(data_chunk&& data, uint64_t minimum_output_satoshis);
+
+    bool from_data(data_chunk const& data, uint64_t minimum_output_satoshis);
 
 
     bool is_valid() const;
@@ -153,11 +153,16 @@ public:
     uint32_t locktime() const;
     void set_locktime(uint32_t value);
 
+
+    outputs_info const& outputs_info() const;
+
     // Deprecated (unsafe).
     ins& inputs();
     ins const& inputs() const;
     void set_inputs(ins const& value);
     void set_inputs(ins&& value);
+
+
 
     // // Deprecated (unsafe).
     // outs& outputs();

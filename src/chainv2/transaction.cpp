@@ -146,6 +146,7 @@ transaction transaction::factory_from_data(data_chunk&& data, uint64_t minimum_o
     return instance;
 }
 
+// static
 transaction transaction::factory_from_data(data_chunk const& data, uint64_t minimum_output_satoshis) {
     transaction instance;
     instance.from_data(data, minimum_output_satoshis);
@@ -153,6 +154,7 @@ transaction transaction::factory_from_data(data_chunk const& data, uint64_t mini
 }
 
 // static
+// protected
 transaction transaction::factory_from_data(std::istream& stream, uint64_t minimum_output_satoshis) {
     transaction instance;
     instance.from_data(stream, minimum_output_satoshis);
@@ -160,26 +162,28 @@ transaction transaction::factory_from_data(std::istream& stream, uint64_t minimu
 }
 
 // static
+// protected
 transaction transaction::factory_from_data(reader& source, uint64_t minimum_output_satoshis) {
     transaction instance;
     instance.from_data(source, minimum_output_satoshis);
     return instance;
 }
 
+// static
 bool transaction::from_data(data_chunk&& data, uint64_t minimum_output_satoshis) {
     data_ = std::move(data);
     data_source istream(data_);
     return from_data(istream, minimum_output_satoshis);
 }
 
+// static
 bool transaction::from_data(data_chunk const& data, uint64_t minimum_output_satoshis) {
     data_ = data;
     data_source istream(data_);
     return from_data(istream, minimum_output_satoshis);
 }
 
-
-
+// protected
 bool transaction::from_data(std::istream& stream, uint64_t minimum_output_satoshis) {
     istream_reader source(stream);
     return from_data(source, minimum_output_satoshis);
@@ -310,6 +314,7 @@ bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_sato
     return source;    
 }
 
+// protected
 bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
     reset();
 
@@ -435,6 +440,7 @@ void transaction::set_locktime(uint32_t value) {
     // invalidate_cache();
 }
 
+
 input::list& transaction::inputs() {
     return inputs_;
 }
@@ -453,6 +459,10 @@ void transaction::set_inputs(input::list&& value) {
     inputs_ = std::move(value);
     // invalidate_cache();
     // total_input_value_ = boost::none;
+}
+
+outputs_info const& transaction::outputs_info() const {
+    return outputs_info_;
 }
 
 // output::list& transaction::outputs() {
