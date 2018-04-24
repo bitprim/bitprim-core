@@ -207,39 +207,42 @@ size_t opcode_value(machine::opcode code) {
 
 
 
-// // Concurrent read/write is not supported, so no critical section.
-// bool script::from_data(reader& source, bool prefix) {
-//     reset();
-//     valid_ = true;
-
-//     if (prefix) {
-//         auto const size = source.read_size_little_endian();
-
-//         // The max_script_size constant limits evaluation, but not all scripts
-//         // evaluate, so use max_block_size to guard memory allocation here.
-//         if (size > get_max_block_size()) {
-//             source.invalidate();
-//         } else {
-//             bytes_ = source.read_bytes(size);
-//         }
-//     } else {
-//         bytes_ = source.read_bytes();
-//     }
-
-//     if (!source) {
-//         reset();
-//     }
-
-//     return source;
-// }
-
-
 // bool script::is_unspendable() const {
 //     // The first operations access must be method-based to guarantee the cache.
 //     return (!operations().empty() && operations_[0].code() == opcode::return_)
 //         || satoshi_content_size() > max_script_size;
 // }
 
+/*
+// Concurrent read/write is not supported, so no critical section.
+bool script::from_data(reader& source, bool prefix)
+{
+    reset();
+    valid_ = true;
+
+    if (prefix)
+    {
+        const auto size = source.read_size_little_endian();
+
+        // The max_script_size constant limits evaluation, but not all scripts
+        // evaluate, so use max_block_size to guard memory allocation here.
+        if (size > get_max_block_size())
+            source.invalidate();
+        else
+            bytes_ = source.read_bytes(size);
+    }
+    else
+    {
+        bytes_ = source.read_bytes();
+    }
+
+    if (!source)
+        reset();
+
+    return source;
+}
+
+*/
 
 inline
 std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source) {
@@ -262,7 +265,7 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 
     std::cout << "transaction::count_output_sigops_is_unspendable - 4 - bool(source): " << bool(source) << std::endl;
 
-    if ( ! source.is_exhausted()) {
+    if ( ! source.is_exhausted() && satoshi_content_size > 0) {
         std::cout << "transaction::count_output_sigops_is_unspendable - 5 - bool(source): " << bool(source) << std::endl;
 
         auto const op = machine::operation::factory_from_data(source);
@@ -279,13 +282,15 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
         }
     }
 
-    while ( ! source.is_exhausted()) {
+    size_t n = 1;
+    while ( ! source.is_exhausted() && n < satoshi_content_size) {
         std::cout << "transaction::count_output_sigops_is_unspendable - 8 - bool(source): " << bool(source) << std::endl;
         auto const op = machine::operation::factory_from_data(source);
         std::cout << "transaction::count_output_sigops_is_unspendable - 9 - bool(source): " << bool(source) << std::endl;
 
         machine::opcode const code = op.code();
         total += opcode_value(code);
+        ++n;
     }
 
     std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
@@ -300,6 +305,50 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 //     // If provably unspendable it does not expand the unspent output set.
 //     return value_ < minimum_output_value && !script_.is_unspendable();
 // }
+
+
+/*
+
+
+bool output::from_data(reader& source, bool wire)
+{
+    reset();
+
+    if (!wire)
+        validation.spender_height = source.read_4_bytes_little_endian();
+
+    value_ = source.read_8_bytes_little_endian();
+    script_.from_data(source, true);
+
+    if (!source)
+        reset();
+
+    return source;
+}
+
+
+// Read a length-prefixed collection of inputs or outputs from the source.
+template<class Source, class Put>
+bool read(Source& source, std::vector<Put>& puts, bool wire)
+{
+    auto result = true;
+    const auto count = source.read_size_little_endian();
+
+    // Guard against potential for arbitary memory allocation.
+    if (count > get_max_block_size())
+        source.invalidate();
+    else
+        puts.resize(count);
+
+    const auto deserialize = [&result, &source, wire](Put& put)
+    {
+        result = result && put.from_data(source, wire);
+    };
+
+    std::for_each(puts.begin(), puts.end(), deserialize);
+    return result;
+}
+*/
 
 bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_satoshis) {
     std::cout << "transaction::read_outputs_info - 1 - bool(source): " << bool(source) << std::endl;
@@ -360,6 +409,14 @@ bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_sato
 
     return source;    
 }
+
+
+/*
+version_ = source.read_4_bytes_little_endian();
+read(source, inputs_, wire);
+read(source, outputs_, wire);
+locktime_ = source.read_4_bytes_little_endian();
+*/
 
 // protected
 bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
