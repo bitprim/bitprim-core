@@ -246,17 +246,33 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
     size_t total = 0;
     bool is_unspendable = false;
 
+    std::cout << "transaction::count_output_sigops_is_unspendable - 1 - bool(source): " << bool(source) << std::endl;
+
     auto const satoshi_content_size = source.read_size_little_endian();
+
+    std::cout << "transaction::count_output_sigops_is_unspendable - 2 - bool(source): " << bool(source) << std::endl;
+
 
     if (satoshi_content_size > get_max_block_size()) {
         source.invalidate();
+        std::cout << "transaction::count_output_sigops_is_unspendable - 3 - bool(source): " << bool(source) << std::endl;
+        
         return std::make_tuple(total, is_unspendable, false);
     }
 
+    std::cout << "transaction::count_output_sigops_is_unspendable - 4 - bool(source): " << bool(source) << std::endl;
+
     if ( ! source.is_exhausted()) {
+        std::cout << "transaction::count_output_sigops_is_unspendable - 5 - bool(source): " << bool(source) << std::endl;
+
         auto const op = machine::operation::factory_from_data(source);
+    
+        std::cout << "transaction::count_output_sigops_is_unspendable - 6 - bool(source): " << bool(source) << std::endl;
+
         machine::opcode const code = op.code();
         total += opcode_value(code);
+
+        std::cout << "transaction::count_output_sigops_is_unspendable - 7 - bool(source): " << bool(source) << std::endl;
 
         if (code == machine::opcode::return_) {
             is_unspendable = true;
@@ -264,10 +280,16 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
     }
 
     while ( ! source.is_exhausted()) {
+        std::cout << "transaction::count_output_sigops_is_unspendable - 8 - bool(source): " << bool(source) << std::endl;
         auto const op = machine::operation::factory_from_data(source);
+        std::cout << "transaction::count_output_sigops_is_unspendable - 9 - bool(source): " << bool(source) << std::endl;
+
         machine::opcode const code = op.code();
         total += opcode_value(code);
     }
+
+    std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
+
 
     is_unspendable = is_unspendable || satoshi_content_size > max_script_size;
 
@@ -280,29 +302,52 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
 // }
 
 bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_satoshis) {
+    std::cout << "transaction::read_outputs_info - 1 - bool(source): " << bool(source) << std::endl;
     outputs_info_.total_output_value = 0;
     outputs_info_.signature_operations = 0;
     outputs_info_.any_is_dusty = false;
     outputs_info_.count = source.read_size_little_endian();
 
+
+    std::cout << "transaction::read_outputs_info - 2 - bool(source): " << bool(source) << std::endl;
+
     // Guard against potential for arbitary memory allocation.
     if (outputs_info_.count > get_max_block_size()) {
         source.invalidate();
+
+        std::cout << "transaction::read_outputs_info - 3 - bool(source): " << bool(source) << std::endl;
         return false;
     } 
 
+    std::cout << "transaction::read_outputs_info - 4 - bool(source): " << bool(source) << std::endl;
+    
+
     size_t i = 0;
     while (source && i < outputs_info_.count) {
+            std::cout << "transaction::read_outputs_info - 5 - bool(source): " << bool(source) << std::endl;
+
         auto const value = source.read_8_bytes_little_endian();
+
+        std::cout << "transaction::read_outputs_info - 6 - bool(source): " << bool(source) << std::endl;
+
         auto const res = count_output_sigops_is_unspendable(source);
 
+        std::cout << "transaction::read_outputs_info - 7 - bool(source): " << bool(source) << std::endl;
+
+
         if (! std::get<2>(res)) {
+            std::cout << "transaction::read_outputs_info - 8 - bool(source): " << bool(source) << std::endl;
             return false;
         }
+
+        std::cout << "transaction::read_outputs_info - 9 - bool(source): " << bool(source) << std::endl;
+
 
         outputs_info_.total_output_value += value;
         outputs_info_.signature_operations += std::get<0>(res);
         bool const script_is_unspendable = std::get<1>(res);
+
+        std::cout << "transaction::read_outputs_info - 10 - bool(source): " << bool(source) << std::endl;
 
         if ( ! outputs_info_.any_is_dusty && value < minimum_output_satoshis && !script_is_unspendable) {
             outputs_info_.any_is_dusty = true;
@@ -310,6 +355,8 @@ bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_sato
 
         ++i;
     }
+
+    std::cout << "transaction::read_outputs_info - 11 - bool(source): " << bool(source) << std::endl;
 
     return source;    
 }
@@ -357,6 +404,11 @@ void transaction::reset() {
     // invalidate_cache();
     // total_input_value_ = boost::none;
     // total_output_value_ = boost::none;
+
+    outputs_info_.total_output_value = 0;
+    outputs_info_.signature_operations = 0;
+    outputs_info_.any_is_dusty = false;
+    outputs_info_.count = 0;
 }
 
 bool transaction::is_valid() const {
