@@ -317,25 +317,25 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
     size_t total = 0;
     bool is_unspendable = false;
 
-    std::cout << "transaction::count_output_sigops_is_unspendable - 1 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::count_output_sigops_is_unspendable - 1 - bool(source): " << bool(source) << std::endl;
 
     auto const satoshi_content_size = source.read_size_little_endian();
 
-    std::cout << "transaction::count_output_sigops_is_unspendable - satoshi_content_size: " << satoshi_content_size << std::endl;
+    //std::cout << "transaction::count_output_sigops_is_unspendable - satoshi_content_size: " << satoshi_content_size << std::endl;
 
-    std::cout << "transaction::count_output_sigops_is_unspendable - 2 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::count_output_sigops_is_unspendable - 2 - bool(source): " << bool(source) << std::endl;
 
 
     if (satoshi_content_size > get_max_block_size()) {
         source.invalidate();
-        std::cout << "transaction::count_output_sigops_is_unspendable - 3 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - 3 - bool(source): " << bool(source) << std::endl;
         
         return std::make_tuple(total, is_unspendable, false);
     }
 
     size_t readed_bytes = 0;
 
-    std::cout << "transaction::count_output_sigops_is_unspendable - 4 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::count_output_sigops_is_unspendable - 4 - bool(source): " << bool(source) << std::endl;
 
     // if ( ! source.is_exhausted() && satoshi_content_size > 0) {
     if ( source && satoshi_content_size > 0) {
@@ -368,14 +368,14 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
             return std::make_tuple(total, is_unspendable, false);
         }
         
-        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
-        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
         
         total += std::get<0>(res);
         readed_bytes += std::get<1>(res);
 
-        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
-        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
 
         if (std::get<3>(res) == machine::opcode::return_) {
             is_unspendable = true;
@@ -395,17 +395,17 @@ std::tuple<size_t, bool, bool> count_output_sigops_is_unspendable(reader& source
             return std::make_tuple(total, is_unspendable, false);
         }
         
-        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
-        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
         
         total += std::get<0>(res);
         readed_bytes += std::get<1>(res);
 
-        std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
-        std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - total:        " << total << std::endl;
+        //std::cout << "transaction::count_output_sigops_is_unspendable - readed_bytes: " << readed_bytes << std::endl;
     }
 
-    std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::count_output_sigops_is_unspendable - 10 - bool(source): " << bool(source) << std::endl;
 
     is_unspendable = is_unspendable || satoshi_content_size > max_script_size;
     return std::make_tuple(total, is_unspendable, bool(source));
@@ -461,53 +461,53 @@ bool read(Source& source, std::vector<Put>& puts, bool wire)
 */
 
 bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_satoshis) {
-    std::cout << "transaction::read_outputs_info - 1 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::read_outputs_info - 1 - bool(source): " << bool(source) << std::endl;
     outputs_info_.total_output_value = 0;
     outputs_info_.signature_operations = 0;
     outputs_info_.any_is_dusty = false;
     outputs_info_.count = source.read_size_little_endian();
 
-    std::cout << "transaction::read_outputs_info - outputs_info_.count: " << outputs_info_.count << std::endl;
+    //std::cout << "transaction::read_outputs_info - outputs_info_.count: " << outputs_info_.count << std::endl;
 
-    std::cout << "transaction::read_outputs_info - 2 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::read_outputs_info - 2 - bool(source): " << bool(source) << std::endl;
 
     // Guard against potential for arbitary memory allocation.
     if (outputs_info_.count > get_max_block_size()) {
         source.invalidate();
 
-        std::cout << "transaction::read_outputs_info - 3 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::read_outputs_info - 3 - bool(source): " << bool(source) << std::endl;
         return false;
     } 
 
-    std::cout << "transaction::read_outputs_info - 4 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::read_outputs_info - 4 - bool(source): " << bool(source) << std::endl;
     
 
     size_t i = 0;
     while (source && i < outputs_info_.count) {
-            std::cout << "transaction::read_outputs_info - 5 - bool(source): " << bool(source) << std::endl;
+            //std::cout << "transaction::read_outputs_info - 5 - bool(source): " << bool(source) << std::endl;
 
         auto const value = source.read_8_bytes_little_endian();
 
-        std::cout << "transaction::read_outputs_info - 6 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::read_outputs_info - 6 - bool(source): " << bool(source) << std::endl;
 
         auto const res = count_output_sigops_is_unspendable(source);
 
-        std::cout << "transaction::read_outputs_info - 7 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::read_outputs_info - 7 - bool(source): " << bool(source) << std::endl;
 
 
         if (! std::get<2>(res)) {
-            std::cout << "transaction::read_outputs_info - 8 - bool(source): " << bool(source) << std::endl;
+            //std::cout << "transaction::read_outputs_info - 8 - bool(source): " << bool(source) << std::endl;
             return false;
         }
 
-        std::cout << "transaction::read_outputs_info - 9 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::read_outputs_info - 9 - bool(source): " << bool(source) << std::endl;
 
 
         outputs_info_.total_output_value += value;
         outputs_info_.signature_operations += std::get<0>(res);
         bool const script_is_unspendable = std::get<1>(res);
 
-        std::cout << "transaction::read_outputs_info - 10 - bool(source): " << bool(source) << std::endl;
+        //std::cout << "transaction::read_outputs_info - 10 - bool(source): " << bool(source) << std::endl;
 
         if ( ! outputs_info_.any_is_dusty && value < minimum_output_satoshis && !script_is_unspendable) {
             outputs_info_.any_is_dusty = true;
@@ -516,7 +516,7 @@ bool transaction::read_outputs_info(reader& source, uint64_t minimum_output_sato
         ++i;
     }
 
-    std::cout << "transaction::read_outputs_info - 11 - bool(source): " << bool(source) << std::endl;
+    //std::cout << "transaction::read_outputs_info - 11 - bool(source): " << bool(source) << std::endl;
 
     return source;    
 }
@@ -536,26 +536,26 @@ bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
     // Wire (satoshi protocol) deserialization.
     version_ = source.read_4_bytes_little_endian();
 
-    std::cout << "1 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+    //std::cout << "1 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
     read_inputs(source, inputs_);
-    std::cout << "2 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+    //std::cout << "2 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     // && read_output(source, outputs_, wire); //TODO(fernando)
     read_outputs_info(source, minimum_output_satoshis);
 
-    std::cout << "3 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+    //std::cout << "3 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     locktime_ = source.read_4_bytes_little_endian();
 
 
-    std::cout << "4 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+    //std::cout << "4 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
     if (!source) {
-        std::cout << "5 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+        //std::cout << "5 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
         reset();
     }
 
-    std::cout << "6 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
+    //std::cout << "6 transaction::from_data - inputs_.size(): " << inputs_.size() << " - bool(source): " << bool(source) << std::endl;
 
 
     return source;
