@@ -282,4 +282,37 @@ BOOST_AUTO_TEST_CASE(payment_address__hash__compressed_point__expected)
     BOOST_REQUIRE_EQUAL(encode_base16(address.hash()), COMPRESSED_HASH);
 }
 
+#ifdef BITPRIM_CURRENCY_BCH
+//cashAddr payment_address
+BOOST_AUTO_TEST_CASE(payment_address__cashAddr__mainnet__encode)
+{
+    const payment_address address(ec_public("04278f7bfee4ef625f85279c3a01d57c22e2877a902128b2df85071f9d6c95b290f094f5bd1bff5880d09cc231c774d71ac22d3ab9bdd9dda2e75017b52d893367"),
+                                            libbitcoin::wallet::payment_address::mainnet_p2kh);
+    BOOST_REQUIRE(address);
+    BOOST_REQUIRE_EQUAL(address.encoded_cashaddr(), "bitcoincash:qpzz8n7jp6847yyx8t33matrgcsdx6c0cvmtevrfgz");
+}
+
+BOOST_AUTO_TEST_CASE(payment_address__cashAddr__testnet__encode)
+{
+    const payment_address address(ec_public("04278f7bfee4ef625f85279c3a01d57c22e2877a902128b2df85071f9d6c95b290f094f5bd1bff5880d09cc231c774d71ac22d3ab9bdd9dda2e75017b52d893367"),
+                                  libbitcoin::wallet::payment_address::testnet_p2kh);
+    BOOST_REQUIRE(address);
+    BOOST_REQUIRE_EQUAL(address.encoded_cashaddr(), "bchtest:qpzz8n7jp6847yyx8t33matrgcsdx6c0cvleatp707");
+}
+
+BOOST_AUTO_TEST_CASE(payment_address__cashAddr__mainnet__from_string)
+{
+    const payment_address address("bitcoincash:qpzz8n7jp6847yyx8t33matrgcsdx6c0cvmtevrfgz");
+    BOOST_REQUIRE(address);
+    BOOST_REQUIRE_EQUAL(address.encoded(), "17DHrHvtmMRs9ciersFCPNhvJtryd5NWbT");
+}
+
+BOOST_AUTO_TEST_CASE(payment_address__cashAddr__testnet__from_string)
+{
+    const payment_address address("bchtest:qpzz8n7jp6847yyx8t33matrgcsdx6c0cvleatp707");
+    BOOST_REQUIRE(address);
+    BOOST_REQUIRE_EQUAL(address.encoded(), "mmjF9M1saNs7vjCGaSDaDHvFAtTgUNtfrJ");
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()

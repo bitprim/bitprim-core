@@ -31,7 +31,8 @@ static config::currency currency_ = config::currency::none;
 static config::settings network_ = config::settings::none;
 
 #ifdef BITPRIM_CURRENCY_BCH
-static std::string cashaddr_prefix_ = "bitcoincash";
+static std::string cashaddr_prefix_mainnet_ = "bitcoincash";
+static std::string cashaddr_prefix_testnet_ = "bchtest";
 #endif // BITPRIM_CURRENCY_BCH
 
 } // namespace anonymous
@@ -106,12 +107,20 @@ config::settings get_network(uint32_t identifier) {
 }
 
 #ifdef BITPRIM_CURRENCY_BCH
-std::string cashaddr_prefix() {
-    return cashaddr_prefix_;
+std::string cashaddr_prefix_mainnet() {
+    return cashaddr_prefix_mainnet_;
 }
 
-void set_cashaddr_prefix(std::string const& x) {
-    cashaddr_prefix_ = x;
+void set_cashaddr_prefix_mainnet(std::string const& x) {
+    cashaddr_prefix_mainnet_ = x;
+}
+
+std::string cashaddr_prefix_testnet() {
+    return cashaddr_prefix_testnet_;
+}
+
+void set_cashaddr_prefix_testnet(std::string const& x) {
+    cashaddr_prefix_testnet_ = x;
 }
 #endif //BITPRIM_CURRENCY_BCH
 

@@ -145,9 +145,9 @@ bool ConvertBits(O &out, I it, I end) {
 payment_address payment_address::from_string_cashaddr(std::string const& address) {
     std::string prefix;
     data_chunk payload;
-    std::tie(prefix, payload) = cashaddr::decode(address, cashaddr_prefix());
+    std::tie(prefix, payload) = cashaddr::decode(address, cashaddr_prefix_mainnet()); // This prefix is used in case the address is missing the prefix:. The default is mainnet
 
-    if (prefix != cashaddr_prefix()) {
+    if (prefix != cashaddr_prefix_mainnet() && prefix != cashaddr_prefix_testnet()) {
         return payment_address();
     }
 
@@ -204,7 +204,12 @@ payment_address payment_address::from_string_cashaddr(std::string const& address
     payment decoded;
     short_hash hash;
     std::copy(std::begin(data) + 1, std::end(data), std::begin(hash));
-    return payment_address(hash, type == PUBKEY_TYPE ? 0x00 : 0x05);
+    if (prefix == cashaddr_prefix_mainnet()) {
+        return payment_address(hash, type == PUBKEY_TYPE ? 0x00 : 0x05);
+    } else {
+        return payment_address(hash, type == PUBKEY_TYPE ? 0x6f : 0xc4);
+    }
+
     // // Pop the version.
     // data.erase(data.begin());
     // return {type, std::move(data)};
@@ -333,9 +338,22 @@ data_chunk pack_addr_data_(T const& id, uint8_t type) {
 }
 
 std::string encode_cashaddr_(payment_address const& wallet) {
-    uint8_t const type = wallet.version() == 0x00 ? PUBKEY_TYPE : SCRIPT_TYPE;
+
+    uint8_t type = SCRIPT_TYPE;
+    std::string prefix = cashaddr_prefix_mainnet();
+    if (wallet.version() == 0x00){
+        type = PUBKEY_TYPE;
+        //// prefix = cashaddr_prefix_mainnet();
+    } else if (wallet.version() == 0x6f) {
+        type = PUBKEY_TYPE;
+        prefix = cashaddr_prefix_testnet();
+    } else if (wallet.version() == 0xc4) {
+        //// type = SCRIPT_TYPE;
+        prefix = cashaddr_prefix_testnet();
+    }
+
     data_chunk data = pack_addr_data_(wallet.hash(), type);
-    return cashaddr::encode(cashaddr_prefix(), data);
+    return cashaddr::encode(prefix, data);
 }
 
 std::string payment_address::encoded_cashaddr() const {
