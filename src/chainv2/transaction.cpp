@@ -67,7 +67,7 @@ using bc::machine::rule_fork;
 
 // Read a length-prefixed collection of inputs or outputs from the source.
 template<class Source, class Put>
-bool read_input(Source& source, std::vector<Put>& puts) {
+bool read_inputs(Source& source, std::vector<Put>& puts) {
     auto result = true;
     auto const count = source.read_size_little_endian();
 
@@ -320,14 +320,28 @@ bool transaction::from_data(reader& source, uint64_t minimum_output_satoshis) {
 
     // Wire (satoshi protocol) deserialization.
     version_ = source.read_4_bytes_little_endian();
-    read_input(source, inputs_);
+
+    std::cout << "1 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+    read_inputs(source, inputs_);
+    std::cout << "2 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+
     // && read_output(source, outputs_, wire); //TODO(fernando)
     read_outputs_info(source, minimum_output_satoshis);
+
+    std::cout << "3 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+
     locktime_ = source.read_4_bytes_little_endian();
 
+
+    std::cout << "4 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+
     if (!source) {
+        std::cout << "5 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
         reset();
     }
+
+    std::cout << "6 transaction::from_data - inputs_.size(): " << inputs_.size() << std::endl;
+
 
     return source;
 }
