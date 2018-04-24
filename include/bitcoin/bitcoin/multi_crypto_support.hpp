@@ -57,10 +57,8 @@ config::currency get_currency();
 config::settings get_network(uint32_t identifier);
 
 #ifdef BITPRIM_CURRENCY_BCH
-std::string cashaddr_prefix_mainnet();
-void set_cashaddr_prefix_mainnet(std::string const& x);
-std::string cashaddr_prefix_testnet();
-void set_cashaddr_prefix_testnet(std::string const& x);
+std::string cashaddr_prefix();
+void set_cashaddr_prefix(std::string const& x);
 #endif //BITPRIM_CURRENCY_BCH
 
 } /*namespace libbitcoin*/

@@ -18,6 +18,7 @@
  */
 #include <boost/test/unit_test.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/bitcoin/multi_crypto_support.hpp>
 
 using namespace bc;
 using namespace bc::chain;
@@ -309,6 +310,7 @@ BOOST_AUTO_TEST_CASE(payment_address__cashAddr__mainnet__from_string)
 
 BOOST_AUTO_TEST_CASE(payment_address__cashAddr__testnet__from_string)
 {
+    set_cashaddr_prefix("bchtest");
     const payment_address address("bchtest:qpzz8n7jp6847yyx8t33matrgcsdx6c0cvleatp707");
     BOOST_REQUIRE(address);
     BOOST_REQUIRE_EQUAL(address.encoded(), "mmjF9M1saNs7vjCGaSDaDHvFAtTgUNtfrJ");

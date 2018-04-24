@@ -51,6 +51,9 @@ const uint8_t payment_address::mainnet_p2sh = 0x05;
 const uint8_t payment_address::testnet_p2kh = 0x6f;
 const uint8_t payment_address::testnet_p2sh = 0xc4;
 
+const std::string payment_address::cashaddr_prefix_mainnet = "bitcoincash";
+const std::string payment_address::cashaddr_prefix_testnet = "bchtest";
+
 payment_address::payment_address()
   : valid_(false), version_(0), hash_(null_short_hash)
 {
@@ -143,11 +146,13 @@ bool ConvertBits(O &out, I it, I end) {
 
 // CashAddrContent DecodeCashAddrContent(std::string const& address) {
 payment_address payment_address::from_string_cashaddr(std::string const& address) {
+    // In order to avoid using the wrong network address, the from_string method
+    // only accepts the cashaddr_prefix set on the multi_crypto_support file
     std::string prefix;
     data_chunk payload;
-    std::tie(prefix, payload) = cashaddr::decode(address, cashaddr_prefix_mainnet()); // This prefix is used in case the address is missing the prefix:. The default is mainnet
+    std::tie(prefix, payload) = cashaddr::decode(address, cashaddr_prefix());
 
-    if (prefix != cashaddr_prefix_mainnet() && prefix != cashaddr_prefix_testnet()) {
+    if (prefix != cashaddr_prefix()) {
         return payment_address();
     }
 
@@ -201,10 +206,10 @@ payment_address payment_address::from_string_cashaddr(std::string const& address
     //        break;
     //}
 
-    payment decoded;
     short_hash hash;
     std::copy(std::begin(data) + 1, std::end(data), std::begin(hash));
-    if (prefix == cashaddr_prefix_mainnet()) {
+
+    if (prefix == payment_address::cashaddr_prefix_mainnet) {
         return payment_address(hash, type == PUBKEY_TYPE ? 0x00 : 0x05);
     } else {
         return payment_address(hash, type == PUBKEY_TYPE ? 0x6f : 0xc4);
@@ -338,22 +343,14 @@ data_chunk pack_addr_data_(T const& id, uint8_t type) {
 }
 
 std::string encode_cashaddr_(payment_address const& wallet) {
-
-    uint8_t type = SCRIPT_TYPE;
-    std::string prefix = cashaddr_prefix_mainnet();
-    if (wallet.version() == 0x00){
-        type = PUBKEY_TYPE;
-        //// prefix = cashaddr_prefix_mainnet();
-    } else if (wallet.version() == 0x6f) {
-        type = PUBKEY_TYPE;
-        prefix = cashaddr_prefix_testnet();
-    } else if (wallet.version() == 0xc4) {
-        //// type = SCRIPT_TYPE;
-        prefix = cashaddr_prefix_testnet();
+    if (wallet.version() == payment_address::mainnet_p2kh || wallet.version() == payment_address::mainnet_p2sh) {
+        // Mainnet
+        return cashaddr::encode(payment_address::cashaddr_prefix_mainnet, pack_addr_data_(wallet.hash(), wallet.version() == payment_address::mainnet_p2kh ? PUBKEY_TYPE : SCRIPT_TYPE));
+    } else if (wallet.version() == payment_address::testnet_p2kh || wallet.version() == payment_address::testnet_p2sh) {
+        // Testnet
+        return cashaddr::encode(payment_address::cashaddr_prefix_testnet, pack_addr_data_(wallet.hash(), wallet.version() == payment_address::testnet_p2kh ? PUBKEY_TYPE : SCRIPT_TYPE));
     }
-
-    data_chunk data = pack_addr_data_(wallet.hash(), type);
-    return cashaddr::encode(prefix, data);
+    return "";
 }
 
 std::string payment_address::encoded_cashaddr() const {
