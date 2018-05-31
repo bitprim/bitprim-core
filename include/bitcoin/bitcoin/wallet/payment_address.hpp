@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 #include <bitcoin/bitcoin/chain/script.hpp>
+#include <bitcoin/bitcoin/chainv2/script.hpp>
+
 #include <bitcoin/bitcoin/compat.hpp>
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/math/checksum.hpp>
@@ -42,8 +44,7 @@ static BC_CONSTEXPR size_t payment_size = 1u + short_hash_size + checksum_size; 
 typedef byte_array<payment_size> payment;
 
 /// A class for working with non-stealth payment addresses.
-class BC_API payment_address
-{
+class BC_API payment_address {
 public:
     static const uint8_t mainnet_p2kh;
     static const uint8_t mainnet_p2sh;

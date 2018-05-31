@@ -22,7 +22,7 @@ branches:
   - master
   - dev
   - /^v\d+\.\d+\.\d+$/
-  - feature_2018_may_hardfork
+  - feature_improvements
 
 linux: &linux
    os: linux
@@ -82,7 +82,9 @@ matrix:
         osx_image: xcode9
         env: CONAN_APPLE_CLANG_VERSIONS=9.0
              BITPRIM_RUN_TESTS=true
-
+      - <<: *osx
+        osx_image: xcode9
+        env: CONAN_APPLE_CLANG_VERSIONS=9.2
 
       # # - <<: *linux
       # - <<: *osx

@@ -21,8 +21,10 @@
 
 #include <cstdint>
 #include <utility>
-#include <bitcoin/bitcoin/chain/transaction.hpp>
-#include <bitcoin/bitcoin/chain/script.hpp>
+// #include <bitcoin/bitcoin/chain/transaction.hpp>
+// #include <bitcoin/bitcoin/chain/script.hpp>
+// #include <bitcoin/bitcoin/chainv2/transaction.hpp>
+// #include <bitcoin/bitcoin/chainv2/script.hpp>
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/error.hpp>
 #include <bitcoin/bitcoin/math/elliptic_curve.hpp>
@@ -41,30 +43,38 @@ static BC_CONSTEXPR auto op_75 = static_cast<uint8_t>(opcode::push_size_75);
 // Operations (shared).
 //-----------------------------------------------------------------------------
 
-inline interpreter::result interpreter::op_nop(opcode)
-{
+
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_nop(opcode) {
     return error::success;
 }
 
-inline interpreter::result interpreter::op_disabled(opcode)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_disabled(opcode)
 {
     return error::op_disabled;
 }
 
-inline interpreter::result interpreter::op_reserved(opcode)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_reserved(opcode)
 {
     return error::op_reserved;
 }
 
-inline interpreter::result interpreter::op_push_number(program& program,
-    uint8_t value)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_push_number(Program& program, uint8_t value)
 {
     program.push_move({ value });
     return error::success;
 }
 
-inline interpreter::result interpreter::op_push_size(program& program,
-    const operation& op)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_push_size(Program& program, const operation& op)
 {
     if (op.data().size() > op_75)
         return error::op_push_size;
@@ -73,8 +83,9 @@ inline interpreter::result interpreter::op_push_size(program& program,
     return error::success;
 }
 
-inline interpreter::result interpreter::op_push_data(program& program,
-    const data_chunk& data, uint32_t size_limit)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_push_data(Program& program, const data_chunk& data, uint32_t size_limit)
 {
     if (data.size() > size_limit)
         return error::op_push_data;
@@ -87,7 +98,9 @@ inline interpreter::result interpreter::op_push_data(program& program,
 //-----------------------------------------------------------------------------
 // All index parameters are zero-based and relative to stack top.
 
-inline interpreter::result interpreter::op_if(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_if(Program& program)
 {
     auto value = false;
 
@@ -104,7 +117,9 @@ inline interpreter::result interpreter::op_if(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_notif(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_notif(Program& program)
 {
     auto value = false;
 
@@ -121,7 +136,9 @@ inline interpreter::result interpreter::op_notif(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_else(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_else(Program& program)
 {
     if (program.closed())
         return error::op_else;
@@ -130,7 +147,9 @@ inline interpreter::result interpreter::op_else(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_endif(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_endif(Program& program)
 {
     if (program.closed())
         return error::op_endif;
@@ -139,7 +158,9 @@ inline interpreter::result interpreter::op_endif(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_verify(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_verify(Program& program)
 {
     if (program.empty())
         return error::op_verify1;
@@ -151,12 +172,16 @@ inline interpreter::result interpreter::op_verify(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_return(program&)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_return(Program&)
 {
     return error::op_return;
 }
 
-inline interpreter::result interpreter::op_to_alt_stack(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_to_alt_stack(Program& program)
 {
     if (program.empty())
         return error::op_to_alt_stack;
@@ -165,7 +190,9 @@ inline interpreter::result interpreter::op_to_alt_stack(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_from_alt_stack(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_from_alt_stack(Program& program)
 {
     if (program.empty_alternate())
         return error::op_from_alt_stack;
@@ -174,8 +201,9 @@ inline interpreter::result interpreter::op_from_alt_stack(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_drop2(program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_drop2(Program& program) {
     if (program.size() < 2)
         return error::op_drop2;
 
@@ -184,8 +212,9 @@ inline interpreter::result interpreter::op_drop2(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_dup2(program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_dup2(Program& program) {
     if (program.size() < 2)
         return error::op_dup2;
 
@@ -197,7 +226,9 @@ inline interpreter::result interpreter::op_dup2(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_dup3(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_dup3(Program& program)
 {
     if (program.size() < 3)
         return error::op_dup3;
@@ -212,7 +243,9 @@ inline interpreter::result interpreter::op_dup3(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_over2(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_over2(Program& program)
 {
     if (program.size() < 4)
         return error::op_over2;
@@ -225,7 +258,9 @@ inline interpreter::result interpreter::op_over2(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_rot2(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_rot2(Program& program)
 {
     if (program.size() < 6)
         return error::op_rot2;
@@ -242,7 +277,9 @@ inline interpreter::result interpreter::op_rot2(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_swap2(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_swap2(Program& program)
 {
     if (program.size() < 4)
         return error::op_swap2;
@@ -252,7 +289,9 @@ inline interpreter::result interpreter::op_swap2(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_if_dup(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_if_dup(Program& program)
 {
     if (program.empty())
         return error::op_if_dup;
@@ -263,13 +302,17 @@ inline interpreter::result interpreter::op_if_dup(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_depth(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_depth(Program& program)
 {
     program.push_move(number(program.size()).data());
     return error::success;
 }
 
-inline interpreter::result interpreter::op_drop(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_drop(Program& program)
 {
     if (program.empty())
         return error::op_drop;
@@ -278,7 +321,9 @@ inline interpreter::result interpreter::op_drop(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_dup(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_dup(Program& program)
 {
     if (program.empty())
         return error::op_dup;
@@ -287,7 +332,9 @@ inline interpreter::result interpreter::op_dup(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_nip(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_nip(Program& program)
 {
     if (program.size() < 2)
         return error::op_nip;
@@ -296,8 +343,9 @@ inline interpreter::result interpreter::op_nip(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_over(program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_over(Program& program) {
     if (program.size() < 2)
         return error::op_over;
 
@@ -305,8 +353,9 @@ inline interpreter::result interpreter::op_over(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_pick(program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_pick(Program& program) {
     program::stack_iterator position;
     if (!program.pop_position(position))
         return error::op_pick;
@@ -315,7 +364,9 @@ inline interpreter::result interpreter::op_pick(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_roll(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_roll(Program& program)
 {
     program::stack_iterator position;
     if (!program.pop_position(position))
@@ -327,7 +378,9 @@ inline interpreter::result interpreter::op_roll(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_rot(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_rot(Program& program)
 {
     if (program.size() < 3)
         return error::op_rot;
@@ -337,7 +390,9 @@ inline interpreter::result interpreter::op_rot(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_swap(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_swap(Program& program)
 {
     if (program.size() < 2)
         return error::op_swap;
@@ -346,7 +401,9 @@ inline interpreter::result interpreter::op_swap(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_tuck(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_tuck(Program& program)
 {
     if (program.size() < 2)
         return error::op_tuck;
@@ -359,7 +416,9 @@ inline interpreter::result interpreter::op_tuck(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_size(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_size(Program& program)
 {
     if (program.empty())
         return error::op_size;
@@ -371,7 +430,9 @@ inline interpreter::result interpreter::op_size(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_equal(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_equal(Program& program)
 {
     if (program.size() < 2)
         return error::op_equal;
@@ -380,7 +441,9 @@ inline interpreter::result interpreter::op_equal(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_equal_verify(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_equal_verify(Program& program)
 {
     if (program.size() < 2)
         return error::op_equal_verify1;
@@ -389,7 +452,9 @@ inline interpreter::result interpreter::op_equal_verify(program& program)
         error::op_equal_verify2;
 }
 
-inline interpreter::result interpreter::op_add1(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_add1(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -400,7 +465,9 @@ inline interpreter::result interpreter::op_add1(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_sub1(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_sub1(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -411,7 +478,9 @@ inline interpreter::result interpreter::op_sub1(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_negate(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_negate(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -422,7 +491,9 @@ inline interpreter::result interpreter::op_negate(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_abs(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_abs(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -435,7 +506,9 @@ inline interpreter::result interpreter::op_abs(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_not(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_not(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -445,7 +518,9 @@ inline interpreter::result interpreter::op_not(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_nonzero(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_nonzero(Program& program)
 {
     number number;
     if (!program.pop(number))
@@ -455,7 +530,9 @@ inline interpreter::result interpreter::op_nonzero(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_add(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_add(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -466,7 +543,9 @@ inline interpreter::result interpreter::op_add(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_sub(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_sub(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -477,7 +556,9 @@ inline interpreter::result interpreter::op_sub(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_bool_and(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_bool_and(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -487,7 +568,9 @@ inline interpreter::result interpreter::op_bool_and(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_bool_or(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_bool_or(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -497,7 +580,9 @@ inline interpreter::result interpreter::op_bool_or(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_num_equal(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_num_equal(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -507,7 +592,9 @@ inline interpreter::result interpreter::op_num_equal(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_num_equal_verify(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_num_equal_verify(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -517,7 +604,9 @@ inline interpreter::result interpreter::op_num_equal_verify(program& program)
         error::op_num_equal_verify2;
 }
 
-inline interpreter::result interpreter::op_num_not_equal(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_num_not_equal(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -527,7 +616,9 @@ inline interpreter::result interpreter::op_num_not_equal(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_less_than(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_less_than(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -537,7 +628,9 @@ inline interpreter::result interpreter::op_less_than(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_greater_than(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_greater_than(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -547,7 +640,9 @@ inline interpreter::result interpreter::op_greater_than(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_less_than_or_equal(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_less_than_or_equal(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -557,8 +652,10 @@ inline interpreter::result interpreter::op_less_than_or_equal(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_greater_than_or_equal(
-    program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_greater_than_or_equal(
+    Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -568,7 +665,9 @@ inline interpreter::result interpreter::op_greater_than_or_equal(
     return error::success;
 }
 
-inline interpreter::result interpreter::op_min(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_min(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -578,7 +677,9 @@ inline interpreter::result interpreter::op_min(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_max(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_max(Program& program)
 {
     number first, second;
     if (!program.pop_binary(first, second))
@@ -588,7 +689,9 @@ inline interpreter::result interpreter::op_max(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_within(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_within(Program& program)
 {
     number first, second, third;
     if (!program.pop_ternary(first, second, third))
@@ -598,7 +701,9 @@ inline interpreter::result interpreter::op_within(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_ripemd160(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_ripemd160(Program& program)
 {
     if (program.empty())
         return error::op_ripemd160;
@@ -607,7 +712,9 @@ inline interpreter::result interpreter::op_ripemd160(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_sha1(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_sha1(Program& program)
 {
     if (program.empty())
         return error::op_sha1;
@@ -616,7 +723,9 @@ inline interpreter::result interpreter::op_sha1(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_sha256(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_sha256(Program& program)
 {
     if (program.empty())
         return error::op_sha256;
@@ -625,7 +734,9 @@ inline interpreter::result interpreter::op_sha256(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_hash160(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_hash160(Program& program)
 {
     if (program.empty())
         return error::op_hash160;
@@ -634,7 +745,9 @@ inline interpreter::result interpreter::op_hash160(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_hash256(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_hash256(Program& program)
 {
     if (program.empty())
         return error::op_hash256;
@@ -643,14 +756,18 @@ inline interpreter::result interpreter::op_hash256(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_codeseparator(program& program,
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_codeseparator(Program& program,
     const operation& op)
 {
     return program.set_jump_register(op, + 1) ? error::success :
         error::op_code_seperator;
 }
 
-inline interpreter::result interpreter::op_check_sig_verify(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_sig_verify(Program& program)
 {
     if (program.size() < 2)
         return error::op_check_sig_verify1;
@@ -689,7 +806,9 @@ inline interpreter::result interpreter::op_check_sig_verify(program& program)
                 error::incorrect_signature;
 }
 
-inline interpreter::result interpreter::op_check_sig(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_sig(Program& program)
 {
     const auto verified = op_check_sig_verify(program);
 
@@ -701,9 +820,9 @@ inline interpreter::result interpreter::op_check_sig(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_check_multisig_verify(
-    program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_multisig_verify(Program& program) {
     int32_t key_count;
     if (!program.pop(key_count))
         return error::op_check_multisig_verify1;
@@ -784,7 +903,9 @@ inline interpreter::result interpreter::op_check_multisig_verify(
     return error::success;
 }
 
-inline interpreter::result interpreter::op_check_multisig(program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_multisig(Program& program)
 {
     const auto verified = op_check_multisig_verify(program);
 
@@ -796,11 +917,11 @@ inline interpreter::result interpreter::op_check_multisig(program& program)
     return error::success;
 }
 
-inline interpreter::result interpreter::op_check_locktime_verify(
-    program& program)
-{
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_locktime_verify(Program& program) {
     // BIP65: nop2 subsumed by checklocktimeverify when bip65 fork is active.
-    if (!chain::script::is_enabled(program.forks(), rule_fork::bip65_rule))
+    if (!script_t::is_enabled(program.forks(), rule_fork::bip65_rule))
         return op_nop(opcode::nop2);
 
     const auto& tx = program.transaction();
@@ -836,11 +957,13 @@ inline interpreter::result interpreter::op_check_locktime_verify(
         error::success;
 }
 
-inline interpreter::result interpreter::op_check_sequence_verify(
-    program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::op_check_sequence_verify(
+    Program& program)
 {
     // BIP112: nop3 subsumed by checksequenceverify when bip112 fork is active.
-    if (!chain::script::is_enabled(program.forks(), rule_fork::bip112_rule))
+    if (!script_t::is_enabled(program.forks(), rule_fork::bip112_rule))
         return op_nop(opcode::nop3);
 
     const auto& tx = program.transaction();
@@ -888,8 +1011,10 @@ inline interpreter::result interpreter::op_check_sequence_verify(
 }
 
 // It is expected that the compiler will produce a very efficient jump table.
-inline interpreter::result interpreter::run_op(const operation& op,
-    program& program)
+template <typename Program>
+inline 
+typename interpreter<Program>::result interpreter<Program>::run_op(const operation& op,
+    Program& program)
 {
     const auto code = op.code();
     BITCOIN_ASSERT(op.data().empty() || op.is_push());
@@ -1262,7 +1387,6 @@ inline interpreter::result interpreter::run_op(const operation& op,
     }
 }
 
-} // namespace machine
-} // namespace libbitcoin
+}} // namespace libbitcoin::machine
 
 #endif

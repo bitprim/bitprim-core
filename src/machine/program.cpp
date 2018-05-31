@@ -28,8 +28,7 @@
 #include <bitcoin/bitcoin/machine/script_version.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
 
-namespace libbitcoin {
-namespace machine {
+namespace libbitcoin { namespace machine {
 
 using namespace bc::chain;
 
@@ -146,15 +145,12 @@ program::program(const script& script, program&& other, bool)
 // Instructions.
 //-----------------------------------------------------------------------------
 
-code program::evaluate()
-{
-    return interpreter::run(*this);
+code program::evaluate() {
+    return interpreter<program>::run(*this);
 }
 
-code program::evaluate(const operation& op)
-{
-    return interpreter::run(op, *this);
+code program::evaluate(const operation& op) {
+    return interpreter<program>::run(op, *this);
 }
 
-} // namespace machine
-} // namespace libbitcoin
+}} // namespace libbitcoin::machine

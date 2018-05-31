@@ -544,5 +544,116 @@ payment_address::list payment_address::extract_output(
     }
 }
 
+
+payment_address payment_address::extract(chainv2::script const& script, uint8_t p2kh_version, uint8_t p2sh_version) {
+    if (!script.is_valid())
+        return{};
+
+    short_hash hash;
+    const auto pattern = script.pattern();
+
+    // Split out the assertions for readability.
+    // We know that the script is valid and can therefore rely on these.
+    switch (pattern) {
+        // pay
+        // --------------------------------------------------------------------
+        case script_pattern::pay_multisig:
+            break;
+        case script_pattern::pay_public_key:
+            BITCOIN_ASSERT(script.size() == 2);
+            BITCOIN_ASSERT(
+                script[0].data().size() == ec_compressed_size ||
+                script[0].data().size() == ec_uncompressed_size);
+            break;
+        case script_pattern::pay_key_hash:
+            BITCOIN_ASSERT(script.size() == 5);
+            BITCOIN_ASSERT(script[2].data().size() == short_hash_size);
+            break;
+        case script_pattern::pay_script_hash:
+            BITCOIN_ASSERT(script.size() == 3);
+            BITCOIN_ASSERT(script[1].data().size() == short_hash_size);
+            break;
+
+        // sign
+        // --------------------------------------------------------------------
+        case script_pattern::sign_multisig:
+            break;
+        case script_pattern::sign_public_key:
+            break;
+        case script_pattern::sign_key_hash:
+            BITCOIN_ASSERT(script.size() == 2);
+            BITCOIN_ASSERT(
+                script[1].data().size() == ec_compressed_size ||
+                script[1].data().size() == ec_uncompressed_size);
+            break;
+        case script_pattern::sign_script_hash:
+            BITCOIN_ASSERT(script.size() > 1);
+            break;
+        case script_pattern::non_standard:
+        default:;
+    }
+
+    // Convert data to hash or point and construct address.
+    switch (pattern) {
+        // pay
+        // --------------------------------------------------------------------
+
+        // TODO: extract addresses into a vector result.
+        case script_pattern::pay_multisig:
+            return{};
+
+        case script_pattern::pay_public_key: {
+            const auto& data = script[0].data();
+            if (data.size() == ec_compressed_size) {
+                const auto point = to_array<ec_compressed_size>(data);
+                return payment_address(point, p2kh_version);
+            }
+
+            const auto point = to_array<ec_uncompressed_size>(data);
+            return payment_address(point, p2kh_version);
+        }
+
+        case script_pattern::pay_key_hash:
+            hash = to_array<short_hash_size>(script[2].data());
+            return payment_address(hash, p2kh_version);
+
+        case script_pattern::pay_script_hash:
+            hash = to_array<short_hash_size>(script[1].data());
+            return payment_address(hash, p2sh_version);
+
+        // sign
+        // --------------------------------------------------------------------
+
+        // TODO: extract addresses into a vector result.
+        case script_pattern::sign_multisig:
+            return{};
+
+        // There is no address in a sign_public_key script.
+        case script_pattern::sign_public_key:
+            return{};
+
+        case script_pattern::sign_key_hash: {
+            const auto& data = script[1].data();
+            if (data.size() == ec_compressed_size) {
+                const auto point = to_array<ec_compressed_size>(data);
+                return payment_address(point, p2kh_version);
+            }
+
+            const auto point = to_array<ec_uncompressed_size>(data);
+            return payment_address(point, p2kh_version);
+        }
+
+        case script_pattern::sign_script_hash:
+            hash = bitcoin_short_hash(script.back().data());
+            return payment_address(hash, p2sh_version);
+
+        case script_pattern::non_standard:
+        default:
+            return{};
+    }
+}
+
+
+
 } // namespace wallet
 } // namespace libbitcoin

@@ -355,19 +355,31 @@ set(bitprim_core_sources
         src/chain/output_point.cpp
         src/chain/point.cpp
         src/chain/point_iterator.cpp
-
         src/chain/point_value.cpp
         src/chain/points_value.cpp
-
         src/chain/script.cpp
         src/chain/transaction.cpp
         src/chain/witness.cpp
+
+        src/chainv2/block.cpp
+        src/chainv2/compact.cpp
+        src/chainv2/header.cpp
+        src/chainv2/input.cpp
+        src/chainv2/output.cpp
+        src/chainv2/output_point.cpp
+        src/chainv2/point.cpp
+        src/chainv2/point_iterator.cpp
+        src/chainv2/point_value.cpp
+        src/chainv2/points_value.cpp
+        src/chainv2/script.cpp
+        src/chainv2/transaction.cpp
 
         src/machine/interpreter.cpp
         src/machine/number.cpp
         src/machine/opcode.cpp
         src/machine/operation.cpp
         src/machine/program.cpp
+        src/machine/programv2.cpp
 
         src/config/authority.cpp
         src/config/base16.cpp
@@ -660,10 +672,9 @@ if (WITH_TESTS)
         # test/chain/script/operation.cpp
         # test/chain/script/script.cpp
         # test/chain/script/script.hpp
-
         test/chain/script.cpp
-
         test/chain/transaction.cpp
+
         test/config/authority.cpp
         test/config/base58.cpp
         test/config/checkpoint.cpp
@@ -952,22 +963,38 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/chain/output.hpp
     bitcoin/bitcoin/chain/output_point.hpp
     bitcoin/bitcoin/chain/point.hpp
-    
     bitcoin/bitcoin/chain/point_iterator.hpp
-
     bitcoin/bitcoin/chain/point_value.hpp
     bitcoin/bitcoin/chain/points_value.hpp
-
     bitcoin/bitcoin/chain/script.hpp
     bitcoin/bitcoin/chain/stealth.hpp
     bitcoin/bitcoin/chain/transaction.hpp
     bitcoin/bitcoin/chain/witness.hpp
 
+    bitcoin/bitcoin/chainv2/block.hpp
+    bitcoin/bitcoin/chainv2/compact.hpp    
+    bitcoin/bitcoin/chainv2/header.hpp
+    bitcoin/bitcoin/chainv2/history.hpp
+    bitcoin/bitcoin/chainv2/input.hpp
+    bitcoin/bitcoin/chainv2/input_point.hpp
+    bitcoin/bitcoin/chainv2/output.hpp
+    bitcoin/bitcoin/chainv2/output_point.hpp
+    bitcoin/bitcoin/chainv2/point.hpp
+    bitcoin/bitcoin/chainv2/point_iterator.hpp
+    bitcoin/bitcoin/chainv2/point_value.hpp
+    bitcoin/bitcoin/chainv2/points_value.hpp
+    bitcoin/bitcoin/chainv2/script.hpp
+    bitcoin/bitcoin/chainv2/stealth.hpp
+    bitcoin/bitcoin/chainv2/transaction.hpp
+
     bitcoin/bitcoin/machine/interpreter.hpp
     bitcoin/bitcoin/machine/number.hpp    
     bitcoin/bitcoin/machine/opcode.hpp
     bitcoin/bitcoin/machine/operation.hpp
+    
     bitcoin/bitcoin/machine/program.hpp
+    bitcoin/bitcoin/machine/programv2.hpp
+
     bitcoin/bitcoin/machine/rule_fork.hpp
     bitcoin/bitcoin/machine/script_pattern.hpp
     bitcoin/bitcoin/machine/sighash_algorithm.hpp
@@ -1012,6 +1039,7 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/impl/machine/number.ipp
     bitcoin/bitcoin/impl/machine/operation.ipp
     bitcoin/bitcoin/impl/machine/program.ipp
+    bitcoin/bitcoin/impl/machine/programv2.ipp
 
     bitcoin/bitcoin/impl/utility/array_slice.ipp
     bitcoin/bitcoin/impl/utility/collection.ipp
