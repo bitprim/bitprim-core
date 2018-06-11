@@ -730,7 +730,7 @@ uint32_t chain_state::work_required_retarget(data const& values) {
 
     // return target > pow_limit ? pow_limit.compact() : target.compact();
 
-    return target > pow_limit ? proof_of_work_limit : compact(target).normal();
+    return target > pow_limit ? retarget_proof_of_work_limit : compact(target).normal();
 
 
 #else //BITPRIM_CURRENCY_LTC
