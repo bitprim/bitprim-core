@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 Bitprim developers (see AUTHORS)
+# Copyright (c) 2017-2018 Bitprim Inc.
 #
 # This file is part of Bitprim.
 #
@@ -22,7 +22,11 @@ branches:
     - master
     - dev
     - /^v\d+\.\d+\.\d+$/
-    - feature_2018_may_hardfork
+    - /^release-\d+\.\d+\.\d+$/
+    - /^feature-ci-.+$/
+    - /^feature_ci_.+$/
+    - /^feature-appveyor-.+$/
+    - /^feature_appveyor_.+$/
 
 build: false
 
@@ -50,22 +54,63 @@ environment:
         #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         #  CONAN_VISUAL_VERSIONS: 12
 
-        - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix, 6@x86_64@seh@posix"
-        - MINGW_CONFIGURATIONS: "5@x86_64@seh@posix, 4.9@x86_64@seh@posix"
+        - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
+        - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
+        - MINGW_CONFIGURATIONS: "6@x86_64@seh@posix"
+        - MINGW_CONFIGURATIONS: "5@x86_64@seh@posix"
+        # - MINGW_CONFIGURATIONS: "4.9@x86_64@seh@posix"     
+
+
+init:
+  - ps: |
+      if ($Env:APPVEYOR_REPO_BRANCH -ceq "master" -And [string]::IsNullOrEmpty($Env:APPVEYOR_REPO_TAG_NAME)) {
+        Write-Host "branch is master without tags, exiting"
+        Exit-AppveyorBuild
+      }
+
+      # Note(fernando): It is implemented natively in Appveyor...
+      # if ($Env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*\[skip appveyor\]*") {
+      #   Write-Host "[skip appveyor] detected in commit message, exiting"
+      #   Exit-AppveyorBuild
+      # }
 
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
-  
+
   - pip.exe install conan --upgrade
-  # - pip.exe install conan==1.0.0   #Fixed 1.0.0 version...
+  # - pip.exe install conan==1.0.0b5   #Fixed Beta version...
 
   - pip.exe install conan_package_tools
+  - pip.exe install cpuid --upgrade
+  
   - conan user # It creates the conan data directory
 
 test_script:
-  # - git fetch --unshallow
-  # - export BITPRIM_BUILD_NUMBER="$(git describe)"
+
+  - git submodule init
+  - git submodule update
+
   - for /f %%i in ('git describe') do set BITPRIM_BUILD_NUMBER=%%i
   - echo %BITPRIM_BUILD_NUMBER%
+
+  - ps: |
+      if ($Env:APPVEYOR_REPO_BRANCH -ceq "dev") {
+        $Env:BITPRIM_CONAN_CHANNEL = "testing"
+      }
+      elseif ($Env:APPVEYOR_REPO_BRANCH.StartsWith("release")) {
+        $Env:BITPRIM_CONAN_CHANNEL = "stable"
+      }
+      elseif ($Env:APPVEYOR_REPO_BRANCH.StartsWith("feature")) {
+        $Env:BITPRIM_CONAN_CHANNEL = $Env:APPVEYOR_REPO_BRANCH
+      }
+      else {
+        $Env:BITPRIM_CONAN_CHANNEL = "stable"
+      }
+      
+      # if ([System.IO.File]::Exists("conan_channel")) {
+      #   Write-Host "Creating conan_channel file"
+      #   $Env:BITPRIM_CONAN_CHANNEL | Out-File conan_channel
+      # }
+
 
   - python build.py

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 Bitprim developers (see AUTHORS)
+# Copyright (c) 2017-2018 Bitprim developers (see AUTHORS)
 #
 # This file is part of Bitprim.
 #
@@ -142,11 +142,12 @@ message(STATUS "Bitprim: Cryptocurrency: ${CURRENCY}")
 # message( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
 # message( STATUS "CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR} )
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/bitprimbuildinfo.cmake)
-    include(${CMAKE_SOURCE_DIR}/bitprimbuildinfo.cmake)
+if(EXISTS ${CMAKE_SOURCE_DIR}/ci_utils/cmake/bitprimbuildinfo.cmake)
+    include(${CMAKE_SOURCE_DIR}/ci_utils/cmake/bitprimbuildinfo.cmake)
 else()
     message( STATUS "bitprimbuildinfo doent exists")
 endif()
+
 
 
 
@@ -274,8 +275,11 @@ include(CheckCXXCompilerFlag)
 
 # Including common functions
 #------------------------------------------------------------------------------
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/ci_utils/cmake)
+
 include(BitprimTools)
+
 
 
 # Warn on all stuff.

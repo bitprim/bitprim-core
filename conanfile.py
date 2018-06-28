@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017 Bitprim developers (see AUTHORS)
+# Copyright (c) 2017-2018 Bitprim Inc.
 #
 # This file is part of Bitprim.
 #
@@ -21,24 +21,7 @@ import os
 from conans import ConanFile, CMake
 from conans import __version__ as conan_version
 from conans.model.version import Version
-
-def option_on_off(option):
-    return "ON" if option else "OFF"
-
-def get_content(file_name):
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
-    with open(file_path, 'r') as f:
-        return f.read().replace('\n', '').replace('\r', '')
-
-def get_version():
-    return get_content('conan_version')
-
-def get_channel():
-    return get_content('conan_channel')
-
-def get_conan_req_version():
-    return get_content('conan_req_version')
-
+from ci_utils.utils import option_on_off, get_version, get_conan_req_version, get_cpu_microarchitecture, get_cpuid
 
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
@@ -48,8 +31,8 @@ class BitprimCoreConan(ConanFile):
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
     settings = "os", "compiler", "build_type", "arch"
 
-    if conan_version < Version(get_conan_req_version()):
-        raise Exception ("Conan version should be greater or equal than %s" % (get_conan_req_version(), ))
+    if Version(conan_version) < Version(get_conan_req_version()):
+        raise Exception ("Conan version should be greater or equal than %s. Detected: %s." % (get_conan_req_version(), conan_version))
 
     options = {"shared": [True, False],
                "fPIC": [True, False],
@@ -57,8 +40,8 @@ class BitprimCoreConan(ConanFile):
                "with_qrencode": [True, False],
                "with_tests": [True, False],
                "with_examples": [True, False],
-            #    "currency": "ANY" #["BCH", "BTC", "LTC", ...]
-               "currency": ['BCH', 'BTC', 'LTC']
+               "currency": ['BCH', 'BTC', 'LTC'],
+               "verbose": [True, False]
     }
 
         # "with_litecoin": [True, False],
@@ -70,19 +53,25 @@ class BitprimCoreConan(ConanFile):
         "with_qrencode=False", \
         "with_tests=False", \
         "with_examples=False", \
-        "currency=BCH"
+        "currency=BCH", \
+        "verbose=True"
 
         # "with_litecoin=False", \
         # "with_png=False", \
 
     generators = "cmake"
-    exports = "conan_channel", "conan_version", "conan_req_version"
-    exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "bitprimbuildinfo.cmake", "include/*", "test/*", "examples/*"
+
+    exports = "conan_version", "conan_req_version", "conan_user", "ci_utils/*"      #"conan_channel"
+    exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "include/*", "test/*", "examples/*"
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
-    requires = (("boost/1.66.0@bitprim/stable"),
-               ("secp256k1/0.3@bitprim/stable"))
+    requires = (
+               ("boost/1.66.0@%s/%s" % (self.user, self.channel)),
+               ("secp256k1/0.3@%s/%s" % (self.user, self.channel))
+               )
+
+    # self.requires("Say/0.1@%s/%s" % (self.user, self.channel))
 
     @property
     def msvc_mt_build(self):
@@ -114,16 +103,15 @@ class BitprimCoreConan(ConanFile):
             self.requires("libqrencode/4.0.0@bitprim/stable")
 
     def config_options(self):
-        self.output.info('def config_options(self):')
         if self.settings.compiler == "Visual Studio":
             self.options.remove("fPIC")
-
             if self.options.shared and self.msvc_mt_build:
                 self.options.remove("shared")
 
     def package_id(self):
         self.info.options.with_tests = "ANY"
         self.info.options.with_examples = "ANY"
+        self.info.options.verbose = "ANY"
 
         #For Bitprim Packages libstdc++ and libstdc++11 are the same
         if self.settings.compiler == "gcc" or self.settings.compiler == "clang":
@@ -141,22 +129,12 @@ class BitprimCoreConan(ConanFile):
         cmake = CMake(self)
         cmake.definitions["USE_CONAN"] = option_on_off(True)
         cmake.definitions["NO_CONAN_AT_ALL"] = option_on_off(False)
-        
-        # cmake.definitions["CMAKE_VERBOSE_MAKEFILE"] = option_on_off(False)
-        cmake.verbose = True
-
+        cmake.verbose = self.options.verbose        
         cmake.definitions["ENABLE_SHARED"] = option_on_off(self.is_shared)
         cmake.definitions["ENABLE_POSITION_INDEPENDENT_CODE"] = option_on_off(self.fPIC_enabled)
 
         cmake.definitions["WITH_TESTS"] = option_on_off(self.options.with_tests)
         cmake.definitions["WITH_EXAMPLES"] = option_on_off(self.options.with_examples)
-
-        # cmake.definitions["WITH_LITECOIN"] = option_on_off(self.options.with_litecoin)
-
-        # cmake.definitions["WITH_LTC"] = option_on_off(self.options.currency == 'LTC')
-        # cmake.definitions["WITH_BTC"] = option_on_off(self.options.currency == 'LTC')
-        # cmake.definitions["WITH_LITECOIN"] = option_on_off(self.options.currency == 'LTC')
-
         cmake.definitions["CURRENCY"] = self.options.currency
 
         cmake.definitions["WITH_ICU"] = option_on_off(self.options.with_icu)
