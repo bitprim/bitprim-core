@@ -22,7 +22,7 @@
 namespace libbitcoin {
 
 char const* version() {
-    return BITPRIM_PROJECT_VERSION;
+    return BITPRIM_CORE_VERSION;
 }
 
 } /*namespace libbitcoin*/

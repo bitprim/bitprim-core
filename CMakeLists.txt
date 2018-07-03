@@ -125,6 +125,10 @@ set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Versio
 # message(${BITPRIM_PROJECT_VERSION})
 
 
+set(MICROARCHITECTURE "x86_64" CACHE STRING "Specify the Cryptocurrency (x86_64|...).")
+message( STATUS "Bitprim: Compiling for ${MICROARCHITECTURE}")
+# add_definitions(-DBITPRIM_MICROARCHITECTURE=${MICROARCHITECTURE})
+# add_definitions(-DBITPRIM_MICROARCHITECTURE_STR="${MICROARCHITECTURE}")
 
 
 set(CURRENCY "BCH" CACHE STRING "Specify the Cryptocurrency (BCH|BTC|LTC).")
@@ -134,8 +138,6 @@ if (${CURRENCY} STREQUAL "BCH")
 elseif (${CURRENCY} STREQUAL "BTC")
   add_definitions(-DBITPRIM_CURRENCY_BTC)
 elseif (${CURRENCY} STREQUAL "LTC")
-  # add_definitions(-DWITH_LITECOIN)
-  # add_definitions(-DBITPRIM_LITECOIN)
   add_definitions(-DBITPRIM_CURRENCY_LTC)
 else()
   message(FATAL_ERROR "Invalid Cryptocurrency: ${CURRENCY}")
@@ -171,30 +173,6 @@ endif()
 #     message( STATUS "Found Define: " ${d} )
 # endforeach()
 # message( STATUS "DirDefs: " ${DirDefs} )
-
-# if (NOT NO_CONAN_AT_ALL)
-#   if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-#       include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-#       conan_basic_setup()
-
-#       get_directory_property( DirDefs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS )
-#       foreach( d ${DirDefs} )
-#         message( STATUS "Found Define: " ${d} )
-#       endforeach()
-#       message( STATUS "DirDefs: " ${DirDefs} )
-  
-#       remove_definitions(-D_GLIBCXX_USE_CXX11_ABI)
-
-#       get_directory_property( DirDefs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS )
-#       foreach( d ${DirDefs} )
-#         message( STATUS "Found Define: " ${d} )
-#       endforeach()
-#       message( STATUS "DirDefs: " ${DirDefs} )
-
-#   else()
-#       message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
-#   endif()
-# endif()
 
 
 set(Boost_DEBUG ON)
@@ -269,11 +247,11 @@ if (NOT USE_CONAN)
 endif()
 
 
-if (UNIX)
-  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/lib/cmake")
-elseif (WIN32)
-  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "cmake")
-endif()
+#if (UNIX)
+#  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/lib/cmake")
+#elseif (WIN32)
+#  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "cmake")
+#endif()
 
 # Set flags.
 #==============================================================================
