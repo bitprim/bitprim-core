@@ -131,8 +131,8 @@ jobs:
         #                             /bin/bash \
         #                             -c /tmp/check_format.sh
 
-# Unit Tests and upload ----------------------------------------
-    - stage: unit tests
+# Unit Tests and upload binaries -------------------------------
+    - stage: unit tests and upload binaries
       os: linux
       sudo: required
       language: python
