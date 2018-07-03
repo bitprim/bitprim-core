@@ -90,7 +90,7 @@ class BitprimCoreConan(ConanFile):
             return self.options.shared
 
     def requirements(self):
-        self.requires("boost/1.66.0@%s/%s" % (self.user, self.channel))
+        self.requires("boost/1.66.0@bitprim/stable")
         self.requires("secp256k1/0.X@%s/%s" % (self.user, self.channel))
 
         # if self.options.with_png:
