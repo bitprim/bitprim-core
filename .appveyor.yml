@@ -19,10 +19,11 @@
 
 branches:
   only:
-    - master
+    # - master
+    # - /^v\d+\.\d+\.\d+$/
     - dev
-    - /^v\d+\.\d+\.\d+$/
     - /^release-\d+\.\d+\.\d+$/
+    - /^hotfix-\d+\.\d+\.\d+$/
     - /^feature-ci-.+$/
     - /^feature_ci_.+$/
     - /^feature-appveyor-.+$/
@@ -35,76 +36,60 @@ environment:
     PYTHON_VERSION: "2.7.8"
     PYTHON_ARCH: "32"
 
-    matrix:
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-          CONAN_VISUAL_VERSIONS: 15
-          CONAN_VISUAL_RUNTIMES: MT
-          BITPRIM_RUN_TESTS: true
-          VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
+# init:
+#   - ps: Write-Host "common init script"
 
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-          CONAN_VISUAL_VERSIONS: 15
-          CONAN_VISUAL_RUNTIMES: MD
-          BITPRIM_RUN_TESTS: true
-          VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
+#   - ps: |
+#       if ($Env:APPVEYOR_REPO_BRANCH -ceq "master" -And [string]::IsNullOrEmpty($Env:APPVEYOR_REPO_TAG_NAME)) {
+#         Write-Host "branch is master without tags, exiting"
+#         Exit-AppveyorBuild
+#       }
 
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015 
-          CONAN_VISUAL_VERSIONS: 14
-
-        #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-        #  CONAN_VISUAL_VERSIONS: 12
-
-        - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
-        - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
-        - MINGW_CONFIGURATIONS: "6@x86_64@seh@posix"
-        - MINGW_CONFIGURATIONS: "5@x86_64@seh@posix"
-        # - MINGW_CONFIGURATIONS: "4.9@x86_64@seh@posix"     
-
-
-init:
-  - ps: |
-      if ($Env:APPVEYOR_REPO_BRANCH -ceq "master" -And [string]::IsNullOrEmpty($Env:APPVEYOR_REPO_TAG_NAME)) {
-        Write-Host "branch is master without tags, exiting"
-        Exit-AppveyorBuild
-      }
-
-      # Note(fernando): It is implemented natively in Appveyor...
-      # if ($Env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*\[skip appveyor\]*") {
-      #   Write-Host "[skip appveyor] detected in commit message, exiting"
-      #   Exit-AppveyorBuild
-      # }
+#       Note(fernando): It is implemented natively in Appveyor...
+#       if ($Env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*\[skip appveyor\]*") {
+#         Write-Host "[skip appveyor] detected in commit message, exiting"
+#         Exit-AppveyorBuild
+#       }
 
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
-
   - pip.exe install conan --upgrade
   # - pip.exe install conan==1.0.0b5   #Fixed Beta version...
-
   - pip.exe install conan_package_tools
   - pip.exe install cpuid --upgrade
-  
   - conan user # It creates the conan data directory
 
 test_script:
-
   - git submodule init
+  # - git submodule update --remote
   - git submodule update
 
-  - for /f %%i in ('git describe') do set BITPRIM_BUILD_NUMBER=%%i
-  - echo %BITPRIM_BUILD_NUMBER%
-
+  # - git fetch --unshallow
+  # - for /f %%i in ('git describe') do set BITPRIM_BUILD_NUMBER=%%i
+  # - echo %BITPRIM_BUILD_NUMBER%
+  
   - ps: |
+      $Env:BITPRIM_BRANCH = $Env:APPVEYOR_REPO_BRANCH
+
       if ($Env:APPVEYOR_REPO_BRANCH -ceq "dev") {
         $Env:BITPRIM_CONAN_CHANNEL = "testing"
+        $Env:BITPRIM_FULL_BUILD = 0
       }
       elseif ($Env:APPVEYOR_REPO_BRANCH.StartsWith("release")) {
         $Env:BITPRIM_CONAN_CHANNEL = "stable"
+        $Env:BITPRIM_FULL_BUILD = 1
+      }
+      elseif ($Env:APPVEYOR_REPO_BRANCH.StartsWith("hotfix")) {
+        $Env:BITPRIM_CONAN_CHANNEL = "stable"
+        $Env:BITPRIM_FULL_BUILD = 1
       }
       elseif ($Env:APPVEYOR_REPO_BRANCH.StartsWith("feature")) {
         $Env:BITPRIM_CONAN_CHANNEL = $Env:APPVEYOR_REPO_BRANCH
+        $Env:BITPRIM_FULL_BUILD = 0
       }
       else {
         $Env:BITPRIM_CONAN_CHANNEL = "stable"
+        $Env:BITPRIM_FULL_BUILD = 1
       }
       
       # if ([System.IO.File]::Exists("conan_channel")) {
@@ -112,5 +97,79 @@ test_script:
       #   $Env:BITPRIM_CONAN_CHANNEL | Out-File conan_channel
       # }
 
+  # - dir *.*
+  # - echo %BITPRIM_CONAN_CHANNEL%
+
+  - python ci_utils/print_version.py
+
+  - for /f %%i in ('python ci_utils/print_version.py') do set BITPRIM_BUILD_NUMBER=%%i
+  - set BITPRIM_CONAN_VERSION=%BITPRIM_BUILD_NUMBER%
+  - echo %BITPRIM_BUILD_NUMBER%
+  - echo %BITPRIM_CONAN_VERSION%
+
+  - ps: |
+      if ([System.IO.File]::Exists("conan_version")) {
+        Write-Host "Creating conan_version file"
+        $Env:BITPRIM_BUILD_NUMBER | Out-File conan_version
+      }
+
 
   - python build.py
+
+
+for:
+  -
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      CONAN_VISUAL_VERSIONS: 15
+      CONAN_VISUAL_RUNTIMES: MT
+      BITPRIM_RUN_TESTS: true
+      VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      CONAN_VISUAL_VERSIONS: 15
+      CONAN_VISUAL_RUNTIMES: MD
+      BITPRIM_RUN_TESTS: true
+      VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      CONAN_VISUAL_VERSIONS: 14
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      MINGW_CONFIGURATIONS: "6@x86_64@seh@posix"
+  -
+    branches:
+      only:
+        - /^(release|hotfix).+$/
+    environment:
+      MINGW_CONFIGURATIONS: "5@x86_64@seh@posix"
+
+
+# MINGW_CONFIGURATIONS: "4.9@x86_64@seh@posix" 
+
+# matrix:
+#   fast_finish: true     # set this flag to immediately finish build once one of the jobs fails.
+

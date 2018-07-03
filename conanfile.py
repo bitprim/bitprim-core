@@ -18,10 +18,11 @@
 #
 
 import os
+# import sys
 from conans import ConanFile, CMake
 from conans import __version__ as conan_version
 from conans.model.version import Version
-from ci_utils.utils import option_on_off, get_version, get_conan_req_version, get_cpu_microarchitecture, get_cpuid
+from ci_utils.utils import option_on_off, get_version, get_conan_req_version, march_conan_manip, pass_march_to_compiler
 
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
@@ -41,6 +42,8 @@ class BitprimCoreConan(ConanFile):
                "with_tests": [True, False],
                "with_examples": [True, False],
                "currency": ['BCH', 'BTC', 'LTC'],
+               "microarchitecture": "ANY", #["x86_64", "haswell", "ivybridge", "sandybridge", "bulldozer", ...]
+               "fix_march": [True, False],
                "verbose": [True, False]
     }
 
@@ -54,6 +57,8 @@ class BitprimCoreConan(ConanFile):
         "with_tests=False", \
         "with_examples=False", \
         "currency=BCH", \
+        "microarchitecture=_DUMMY_",  \
+        "fix_march=False", \
         "verbose=True"
 
         # "with_litecoin=False", \
@@ -61,17 +66,16 @@ class BitprimCoreConan(ConanFile):
 
     generators = "cmake"
 
-    exports = "conan_version", "conan_req_version", "conan_user", "ci_utils/*"      #"conan_channel"
+    exports = "conan_*", "ci_utils/*"      #"conan_channel", "conan_user", "conan_version", "conan_req_version"
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*", "bitprim-coreConfig.cmake.in", "include/*", "test/*", "examples/*"
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
     requires = (
                ("boost/1.66.0@%s/%s" % (self.user, self.channel)),
-               ("secp256k1/0.3@%s/%s" % (self.user, self.channel))
+               ("secp256k1/0.X@%s/%s" % (self.user, self.channel))
                )
 
-    # self.requires("Say/0.1@%s/%s" % (self.user, self.channel))
 
     @property
     def msvc_mt_build(self):
@@ -103,15 +107,31 @@ class BitprimCoreConan(ConanFile):
             self.requires("libqrencode/4.0.0@bitprim/stable")
 
     def config_options(self):
+        if self.settings.arch != "x86_64":
+            self.output.info("microarchitecture is disabled for architectures other than x86_64, your architecture: %s" % (self.settings.arch,))
+            self.options.remove("microarchitecture")
+            self.options.remove("fix_march")
+
         if self.settings.compiler == "Visual Studio":
             self.options.remove("fPIC")
             if self.options.shared and self.msvc_mt_build:
                 self.options.remove("shared")
 
+    def configure(self):
+        if self.settings.arch == "x86_64" and self.options.microarchitecture == "_DUMMY_":
+            del self.options.fix_march
+            # self.options.remove("fix_march")
+            raise Exception ("fix_march option is for using together with microarchitecture option.")
+
+        if self.settings.arch == "x86_64":
+            march_conan_manip(self)
+            self.options["*"].microarchitecture = self.options.microarchitecture
+
     def package_id(self):
         self.info.options.with_tests = "ANY"
         self.info.options.with_examples = "ANY"
         self.info.options.verbose = "ANY"
+        self.info.options.fix_march = "ANY"
 
         #For Bitprim Packages libstdc++ and libstdc++11 are the same
         if self.settings.compiler == "gcc" or self.settings.compiler == "clang":
@@ -119,17 +139,17 @@ class BitprimCoreConan(ConanFile):
                 self.info.settings.compiler.libcxx = "ANY"
 
     def build(self):
-        for dep in self.deps_cpp_info.deps:
-            # self.output.warn(self.deps_cpp_info["MyLib"].libdirs)
-            print(dep)
-            print(self.options[dep])
+        # for dep in self.deps_cpp_info.deps:
+        #     # self.output.warn(self.deps_cpp_info["MyLib"].libdirs)
+        #     print(dep)
+        #     print(self.options[dep])
 
-            # self.options["boost"]
+        #     # self.options["boost"]
 
         cmake = CMake(self)
         cmake.definitions["USE_CONAN"] = option_on_off(True)
         cmake.definitions["NO_CONAN_AT_ALL"] = option_on_off(False)
-        cmake.verbose = self.options.verbose        
+        cmake.verbose = self.options.verbose
         cmake.definitions["ENABLE_SHARED"] = option_on_off(self.is_shared)
         cmake.definitions["ENABLE_POSITION_INDEPENDENT_CODE"] = option_on_off(self.fPIC_enabled)
 
@@ -150,11 +170,8 @@ class BitprimCoreConan(ConanFile):
         if self.settings.compiler == "Visual Studio":
             cmake.definitions["CONAN_CXX_FLAGS"] = cmake.definitions.get("CONAN_CXX_FLAGS", "") + " /DBOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE"
 
-
-        # self.output.info("------------------------------------------------------")
-        # self.output.info(self.settings.compiler)
-        # self.output.info(self.settings.compiler.libcxx)
-        # self.output.info("------------------------------------------------------")
+        cmake.definitions["MICROARCHITECTURE"] = self.options.microarchitecture
+        cmake.definitions["BITPRIM_PROJECT_VERSION"] = get_version()
 
         # if self.settings.compiler != "Visual Studio"
         if self.settings.compiler == "gcc":
@@ -166,14 +183,7 @@ class BitprimCoreConan(ConanFile):
             if str(self.settings.compiler.libcxx) == "libstdc++" or str(self.settings.compiler.libcxx) == "libstdc++11":
                 cmake.definitions["NOT_USE_CPP11_ABI"] = option_on_off(False)
 
-        # if self.settings.compiler == "clang":
-        #     self.output.info("compiler is clang")
-
-        # if str(self.settings.compiler.libcxx) == "libstdc++":
-        #     self.output.info("libcxx is libstdc++")
-
-        # if str(self.settings.compiler.libcxx) == "libstdc++11":
-        #     self.output.info("libcxx is libstdc++11")
+        pass_march_to_compiler(self, cmake)
 
         cmake.definitions["BITPRIM_BUILD_NUMBER"] = os.getenv('BITPRIM_BUILD_NUMBER', '-')
         cmake.configure(source_dir=self.source_folder)

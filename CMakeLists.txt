@@ -22,8 +22,9 @@ cmake_minimum_required(VERSION 3.4)
 # bitprim-core
 #==============================================================================
 project(bitprim-core
-  VERSION 0.11.0
+  VERSION 0
   LANGUAGES CXX C)
+  # VERSION 0.11.0
 
 
 #if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -120,6 +121,11 @@ endif()
 
 set(BITPRIM_BUILD_NUMBER "-" CACHE STRING "Specify the Bitprim Build Number.")
 # message(${BITPRIM_BUILD_NUMBER})
+set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Version.")
+# message(${BITPRIM_PROJECT_VERSION})
+
+
+
 
 set(CURRENCY "BCH" CACHE STRING "Specify the Cryptocurrency (BCH|BTC|LTC).")
 
@@ -255,10 +261,10 @@ endif()
 
 
 if (NOT USE_CONAN)
-# Require secp256k1 of at least version 0.0.1 and output ${secp256k1_CPPFLAGS/LIBS/PKG}.
+# Require secp256k1 of at least version 0 and output ${secp256k1_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
   if (NOT TARGET secp256k1)
-    find_package(secp256k1 0.0.01 REQUIRED) 
+    find_package(secp256k1 0 REQUIRED) 
   endif()
 endif()
 
@@ -579,6 +585,8 @@ if (NOT ENABLE_SHARED)
 endif()
 
 target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_BUILD_NUMBER="\\"${BITPRIM_BUILD_NUMBER}\\"") #TODO(fernando): manage with Conan????
+target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_PROJECT_VERSION="\\"${BITPRIM_PROJECT_VERSION}\\"") #TODO(fernando): manage with Conan????
+
 
 target_include_directories(bitprim-core SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 
