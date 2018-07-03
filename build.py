@@ -2,8 +2,7 @@ import copy
 import os
 import cpuid
 import platform
-from ci_utils.utils import get_builder, handle_microarchs, copy_env_vars
-from ci_utils.marchs import filter_valid_exts
+from ci_utils import get_builder, handle_microarchs, copy_env_vars, filter_valid_exts
 
 if __name__ == "__main__":
 

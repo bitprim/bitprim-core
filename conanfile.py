@@ -22,7 +22,7 @@ import os
 from conans import ConanFile, CMake
 from conans import __version__ as conan_version
 from conans.model.version import Version
-from ci_utils.utils import option_on_off, get_version, get_conan_req_version, march_conan_manip, pass_march_to_compiler
+from ci_utils import option_on_off, get_version, get_conan_req_version, march_conan_manip, pass_march_to_compiler
 
 class BitprimCoreConan(ConanFile):
     name = "bitprim-core"
@@ -71,12 +71,6 @@ class BitprimCoreConan(ConanFile):
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
-    requires = (
-               ("boost/1.66.0@%s/%s" % (self.user, self.channel)),
-               ("secp256k1/0.X@%s/%s" % (self.user, self.channel))
-               )
-
-
     @property
     def msvc_mt_build(self):
         return "MT" in str(self.settings.compiler.runtime)
@@ -96,12 +90,14 @@ class BitprimCoreConan(ConanFile):
             return self.options.shared
 
     def requirements(self):
+        self.requires("boost/1.66.0@%s/%s" % (self.user, self.channel))
+        self.requires("secp256k1/0.X@%s/%s" % (self.user, self.channel))
+
         # if self.options.with_png:
         #     self.requires("libpng/1.6.34@bitprim/stable")
             
         if self.options.currency == "LTC":
              self.requires("OpenSSL/1.0.2l@conan/stable")
-            
 
         if self.options.with_qrencode:
             self.requires("libqrencode/4.0.0@bitprim/stable")
