@@ -265,6 +265,7 @@ jobs:
       script:
         - |
           cd ${TRAVIS_BUILD_DIR}
+          export BITPRIM_BRANCH="${TRAVIS_BRANCH}"
           git fetch --unshallow
 
           if [[ "${TRAVIS_BRANCH}" = "dev" ]]; then
