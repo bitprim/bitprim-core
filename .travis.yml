@@ -131,7 +131,7 @@ jobs:
         #                             /bin/bash \
         #                             -c /tmp/check_format.sh
 
-# Unit Tests ------------------------------------------------------
+# Unit Tests and upload ----------------------------------------
     - stage: unit tests
       os: linux
       sudo: required
@@ -139,8 +139,9 @@ jobs:
       python: "3.6"
       services:
         - docker
-      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7 CONAN_UPLOAD="" 
+      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7 
            BITPRIM_RUN_TESTS=true
+           # CONAN_UPLOAD="" 
 
 # Builds ------------------------------------------------------
     # Linux, GCC, libstdc++ ------------------------------------------------------
@@ -239,7 +240,16 @@ jobs:
       os: osx
       language: generic
       osx_image: xcode9
-      env: CONAN_APPLE_CLANG_VERSIONS=9.0 BITPRIM_RUN_TESTS=true
+      env: CONAN_APPLE_CLANG_VERSIONS=9.0 
+           BITPRIM_RUN_TESTS=true
+      if: branch =~ /^(release|hotfix).+$/           
+
+    - stage: build and upload binaries
+      os: osx
+      language: generic
+      osx_image: xcode9
+      env: CONAN_APPLE_CLANG_VERSIONS=9.0 
+      if: branch =~ /^(feature|dev).*$/
 
     - stage: build and upload binaries
       os: osx
