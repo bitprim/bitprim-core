@@ -12,11 +12,13 @@
  * For interpretation of the versioning scheme see: http://semver.org
  */
 
-#ifndef BITPRIM_PROJECT_VERSION
-#define BITPRIM_PROJECT_VERSION "0.0.0"
+#ifdef BITPRIM_PROJECT_VERSION
+#define BITPRIM_CORE_VERSION BITPRIM_PROJECT_VERSION
+#else
+#define BITPRIM_CORE_VERSION "0.0.0"
 #endif
 
-#define LIBBITCOIN_VERSION BITPRIM_PROJECT_VERSION
+#define LIBBITCOIN_VERSION BITPRIM_CORE_VERSION
 
 namespace libbitcoin {
 char const* version();

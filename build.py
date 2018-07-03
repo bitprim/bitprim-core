@@ -35,7 +35,6 @@ if __name__ == "__main__":
                 else:
                     marchs = ["x86-64"]
 
-
             opts_bch = copy.deepcopy(options)
             opts_btc = copy.deepcopy(options)
             # opts_ltc = copy.deepcopy(options)
