@@ -257,6 +257,16 @@ jobs:
       env: CONAN_APPLE_CLANG_VERSIONS=7.3
       if: branch =~ /^(release|hotfix).+$/
 
+# Upload Aliases -----------------------------------------------------
+    - stage: upload aliases
+      # install: skip
+      script:
+        - conan remote add bitprim_temp https://api.bintray.com/conan/bitprim/bitprim
+        - conan user
+        - conan user ${CONAN_LOGIN_USERNAME} -r bitprim_temp -p ${CONAN_PASSWORD}
+        - conan user
+        - conan alias "bitprim-core/0.X@bitprim/${BITPRIM_CONAN_CHANNEL}" "bitprim-core/${BITPRIM_CONAN_VERSION}@bitprim/${BITPRIM_CONAN_CHANNEL}"
+        - conan upload "bitprim-core/0.X@bitprim/${BITPRIM_CONAN_CHANNEL}" --all -r bitprim_temp
 
 # Push to repos ------------------------------------------------------
     - stage: push to repos

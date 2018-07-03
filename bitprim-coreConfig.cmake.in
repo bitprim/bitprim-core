@@ -9,4 +9,4 @@ set(BITPRIM_CORE_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 include("${BITPRIM_CORE_CMAKE_DIR}/bitprim-coreTargets.cmake")
 set(BITPRIM_CORE_LIBRARIES bitprim-core)
 
-find_package(secp256k1 0.0.01 REQUIRED)
+find_package(secp256k1 0 REQUIRED)
