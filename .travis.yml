@@ -19,7 +19,7 @@
 
 branches:
   only:
-  # - master
+  - master
   # - /^v\d+\.\d+\.\d+$/
   - dev
   - /^release-\d+\.\d+\.\d+$/
@@ -61,9 +61,7 @@ script:
   - export BITPRIM_BRANCH="${TRAVIS_BRANCH}"
   - git fetch --unshallow
 
-
   - |
-    echo "${TRAVIS_BRANCH}"
     if [[ "${TRAVIS_BRANCH}" = "dev" ]]; then
       export BITPRIM_CONAN_CHANNEL="testing"
       export BITPRIM_FULL_BUILD=0
@@ -259,8 +257,32 @@ jobs:
 
 # Upload Aliases -----------------------------------------------------
     - stage: upload aliases
+      os: linux
+      sudo: required
+      language: python
+      python: "3.6"
       # install: skip
       script:
+        - |
+          cd ${TRAVIS_BUILD_DIR}
+          git fetch --unshallow
+
+          if [[ "${TRAVIS_BRANCH}" = "dev" ]]; then
+            export BITPRIM_CONAN_CHANNEL="testing"
+          elif  [[ "${TRAVIS_BRANCH}" = "release"* ]]; then
+            export BITPRIM_CONAN_CHANNEL="stable"
+          elif  [[ "${TRAVIS_BRANCH}" = "hotfix"* ]]; then
+            export BITPRIM_CONAN_CHANNEL="stable"
+          elif  [[ "${TRAVIS_BRANCH}" = "feature"* ]]; then
+            export BITPRIM_CONAN_CHANNEL="${TRAVIS_BRANCH}"
+          else
+            export BITPRIM_CONAN_CHANNEL="stable"
+          fi      
+          export BITPRIM_CONAN_VERSION="$(python ci_utils/print_version.py)"
+          
+        - echo $BITPRIM_CONAN_VERSION
+        - echo $BITPRIM_CONAN_CHANNEL
+
         - conan remote add bitprim_temp https://api.bintray.com/conan/bitprim/bitprim
         - conan user
         - conan user ${CONAN_LOGIN_USERNAME} -r bitprim_temp -p ${CONAN_PASSWORD}
@@ -275,6 +297,14 @@ jobs:
           - chmod +x .travis/push_other_repo.sh
           - ./.travis/push_other_repo.sh
       if: branch =~ /^(dev|feature).+$/
+
+# Dummy for master ------------------------------------------------------
+    - stage: build and upload binaries
+      install: 
+        - echo "Stable packages are published in Release branches"
+      script:
+        - echo "Stable packages are published in Release branches"
+      if: branch =~ /^master$/
 
 
 # # Integration Tests ------------------------------------------------------

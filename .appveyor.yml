@@ -19,7 +19,7 @@
 
 branches:
   only:
-    # - master
+    - master
     # - /^v\d+\.\d+\.\d+$/
     - dev
     - /^release-\d+\.\d+\.\d+$/
@@ -166,6 +166,14 @@ for:
         - /^(release|hotfix).+$/
     environment:
       MINGW_CONFIGURATIONS: "5@x86_64@seh@posix"
+  -
+    branches:
+      only:
+        - master
+    test_script:
+      - echo "Stable packages are published in Release branches"
+    install: 
+      - echo "Stable packages are published in Release branches"
 
 
 # MINGW_CONFIGURATIONS: "4.9@x86_64@seh@posix" 
