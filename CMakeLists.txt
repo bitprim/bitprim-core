@@ -146,10 +146,8 @@ endif()
 message(STATUS "Bitprim: Cryptocurrency: ${CURRENCY}")
 
 
-# message( STATUS "1 NO_CONAN_AT_ALL: " ${NO_CONAN_AT_ALL} )
-# message( STATUS "CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR} )
-# message( STATUS "CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR} )
-
+# Conan infrastructure
+#==============================================================================
 if(EXISTS ${CMAKE_SOURCE_DIR}/ci_utils/cmake/bitprimbuildinfo.cmake)
     include(${CMAKE_SOURCE_DIR}/ci_utils/cmake/bitprimbuildinfo.cmake)
 else()
@@ -179,7 +177,7 @@ set(Boost_DEBUG ON)
 
 # Check dependencies.
 #==============================================================================
-
+#------------------------------------------------------------------------------
 if (NO_CONAN_AT_ALL)
   # Require Boost of at least version 1.56.0 and output ${boost_CPPFLAGS/LDFLAGS}.
   #------------------------------------------------------------------------------
