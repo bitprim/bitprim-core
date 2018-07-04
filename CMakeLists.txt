@@ -119,8 +119,6 @@ if (WITH_QRENCODE)
 endif()
 
 
-set(BITPRIM_BUILD_NUMBER "-" CACHE STRING "Specify the Bitprim Build Number.")
-# message(${BITPRIM_BUILD_NUMBER})
 set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Version.")
 # message(${BITPRIM_PROJECT_VERSION})
 
@@ -552,7 +550,6 @@ if (NOT ENABLE_SHARED)
     target_compile_definitions(bitprim-core PUBLIC -DBC_STATIC) #TODO(fernando): manage with Conan????
 endif()
 
-target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_BUILD_NUMBER="\\"${BITPRIM_BUILD_NUMBER}\\"") #TODO(fernando): manage with Conan????
 target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_PROJECT_VERSION="\\"${BITPRIM_PROJECT_VERSION}\\"") #TODO(fernando): manage with Conan????
 
 
