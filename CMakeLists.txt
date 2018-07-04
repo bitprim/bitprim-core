@@ -245,23 +245,15 @@ if (NOT USE_CONAN)
 endif()
 
 
-#if (UNIX)
-#  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/lib/cmake")
-#elseif (WIN32)
-#  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "cmake")
-#endif()
-
 # Set flags.
 #==============================================================================
 include(CheckCXXCompilerFlag)
 
 # Including common functions
 #------------------------------------------------------------------------------
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/ci_utils/cmake)
 
 include(BitprimTools)
-
 
 
 # Warn on all stuff.
@@ -609,7 +601,6 @@ if (WITH_PNG)
     endif (NO_CONAN_AT_ALL)
 endif()
 
-# if (WITH_LITECOIN)
 if (${CURRENCY} STREQUAL "LTC")
   target_link_libraries(bitprim-core PUBLIC ${OPENSSL_CRYPTO_LIBRARY})  #TODO(fernando): manage with Conan
 
