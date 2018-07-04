@@ -142,7 +142,6 @@ class BitprimCoreConan(ConanFile):
         #     # self.output.warn(self.deps_cpp_info["MyLib"].libdirs)
         #     print(dep)
         #     print(self.options[dep])
-
         #     # self.options["boost"]
 
         cmake = CMake(self)
