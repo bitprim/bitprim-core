@@ -15,7 +15,7 @@ echo "Bitprim branch: ${BITPRIM_PUSH_BRANCH}"
 export BITPRIM_PUSH_ACCOUNT=bitprim
 
 # ------------------------------------------------------
-export BITPRIM_PUSH_PROJECT=bitprim-node-exe
+export BITPRIM_PUSH_PROJECT=bitprim-consensus
 
 # body="{
 #     \"accountName\": \"bitprim\",
@@ -54,10 +54,38 @@ curl -s -X POST \
 
 
 
+# ------------------------------------------------------
+export BITPRIM_PUSH_PROJECT=bitprim-network
+
+body="{
+    \"accountName\": \"${BITPRIM_PUSH_ACCOUNT}\",
+    \"projectSlug\": \"${BITPRIM_PUSH_PROJECT}\",
+    \"branch\": \"${BITPRIM_PUSH_BRANCH}\"
+}"
+
+curl -s -d "$body" -X POST \
+    -H "Authorization: Bearer ${APPVEYOR_TOKEN}" \
+    -H "Content-Type: application/json" \
+    https://ci.appveyor.com/api/builds
+
+body="{
+    \"request\": {
+    \"branch\":\"${BITPRIM_PUSH_BRANCH}\",
+    \"message\": \"Force by bitprim-core build: ${TRAVIS_BUILD_NUMBER}\"
+}}"
+
+curl -s -X POST \
+   -H "Content-Type: application/json" \
+   -H "Accept: application/json" \
+   -H "Travis-API-Version: 3" \
+   -H "Authorization: token ${TRAVIS_TOKEN}" \
+   -d "$body" \
+   https://api.travis-ci.org/repo/${BITPRIM_PUSH_ACCOUNT}%2F${BITPRIM_PUSH_PROJECT}/requests
+
 
 
 # ------------------------------------------------------
-export BITPRIM_PUSH_PROJECT=bitprim-node-cint
+export BITPRIM_PUSH_PROJECT=bitprim-database
 
 body="{
     \"accountName\": \"${BITPRIM_PUSH_ACCOUNT}\",
