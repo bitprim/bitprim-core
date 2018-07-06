@@ -18,22 +18,20 @@
 #
 
 import os
-# import sys
-from conans import ConanFile, CMake
-from conans import __version__ as conan_version
-from conans.model.version import Version
+from conans import CMake
 from ci_utils import option_on_off, get_version, get_conan_req_version, march_conan_manip, pass_march_to_compiler
+from ci_utils import BitprimConanFile
 
-class BitprimCoreConan(ConanFile):
+class BitprimCoreConan(BitprimConanFile):
     name = "bitprim-core"
-    version = get_version()
+    # version = get_version()
     license = "http://www.boost.org/users/license.html"
     url = "https://github.com/bitprim/bitprim-core"
     description = "Bitcoin Cross-Platform C++ Development Toolkit"
     settings = "os", "compiler", "build_type", "arch"
 
-    if Version(conan_version) < Version(get_conan_req_version()):
-        raise Exception ("Conan version should be greater or equal than %s. Detected: %s." % (get_conan_req_version(), conan_version))
+    # if Version(conan_version) < Version(get_conan_req_version()):
+    #     raise Exception ("Conan version should be greater or equal than %s. Detected: %s." % (get_conan_req_version(), conan_version))
 
     options = {"shared": [True, False],
                "fPIC": [True, False],
@@ -70,24 +68,6 @@ class BitprimCoreConan(ConanFile):
 
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
-
-    @property
-    def msvc_mt_build(self):
-        return "MT" in str(self.settings.compiler.runtime)
-
-    @property
-    def fPIC_enabled(self):
-        if self.settings.compiler == "Visual Studio":
-            return False
-        else:
-            return self.options.fPIC
-
-    @property
-    def is_shared(self):
-        if self.options.shared and self.msvc_mt_build:
-            return False
-        else:
-            return self.options.shared
 
     def requirements(self):
         self.requires("boost/1.66.0@bitprim/stable")
