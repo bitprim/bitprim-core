@@ -42,7 +42,8 @@ class BitprimCoreConan(BitprimConanFile):
                "currency": ['BCH', 'BTC', 'LTC'],
                "microarchitecture": "ANY", #["x86_64", "haswell", "ivybridge", "sandybridge", "bulldozer", ...]
                "fix_march": [True, False],
-               "verbose": [True, False]
+               "verbose": [True, False],
+               "keoken": [True, False],
     }
 
         # "with_litecoin": [True, False],
@@ -57,7 +58,8 @@ class BitprimCoreConan(BitprimConanFile):
         "currency=BCH", \
         "microarchitecture=_DUMMY_",  \
         "fix_march=False", \
-        "verbose=False"
+        "verbose=False", \
+        "keoken=False"
 
         # "with_litecoin=False", \
         # "with_png=False", \
@@ -131,6 +133,8 @@ class BitprimCoreConan(BitprimConanFile):
         cmake.definitions["ENABLE_SHARED"] = option_on_off(self.is_shared)
         cmake.definitions["ENABLE_POSITION_INDEPENDENT_CODE"] = option_on_off(self.fPIC_enabled)
 
+
+        cmake.definitions["WITH_KEOKEN"] = option_on_off(self.options.keoken)
         cmake.definitions["WITH_TESTS"] = option_on_off(self.options.with_tests)
         cmake.definitions["WITH_EXAMPLES"] = option_on_off(self.options.with_examples)
         cmake.definitions["WITH_ICU"] = option_on_off(self.options.with_icu)

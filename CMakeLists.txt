@@ -82,6 +82,14 @@ option(WITH_TESTS_NEW "Compile with unit tests." OFF)
 option(WITH_EXAMPLES "Compile with examples." OFF)
 
 
+# Implement --with-keoken and declare WITH_KEOKEN.
+#------------------------------------------------------------------------------
+option(WITH_KEOKEN "Keoken enabled." OFF)
+if (WITH_KEOKEN)
+  message(STATUS "Bitprim: Keoken enabled")
+  add_definitions(-DWITH_KEOKEN)
+endif()
+
 # Implement --with-icu and define BOOST_HAS_ICU and output ${icu}.
 #------------------------------------------------------------------------------
 option(WITH_ICU "Compile with International Components for Unicode." OFF)
@@ -527,6 +535,13 @@ if (${CURRENCY} STREQUAL "BCH")
     set(bitprim_core_sources ${bitprim_core_sources}         
       src/wallet/cashaddr.cpp)
 endif()
+
+if (WITH_KEOKEN)
+  set(bitprim_core_sources ${bitprim_core_sources}         
+    src/bitprim/keoken/message/base.cpp)
+    src/bitprim/keoken/message/create_asset.cpp)
+endif()
+
 
 
 # if (WITH_LITECOIN)
