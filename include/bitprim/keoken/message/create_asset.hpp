@@ -30,8 +30,14 @@ namespace bitprim {
 namespace keoken {
 namespace message {
 
+static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8_t, unsigned char>::value,
+    "Bitprim requires std::uint8_t to be implemented as char or unsigned char.");
+
 class BC_API create_asset : public base {
 public:
+
+    base const& base_class() const;
+    base& base_class();
 
     // Constructors.
     //-------------------------------------------------------------------------
@@ -51,33 +57,33 @@ public:
     // Deserialization.
     //-------------------------------------------------------------------------
 
-    static create_asset factory_from_data(data_chunk const& data);
+    static create_asset factory_from_data(libbitcoin::data_chunk const& data);
     static create_asset factory_from_data(std::istream& stream);
-    static create_asset factory_from_data(reader& source);
+    static create_asset factory_from_data(libbitcoin::reader& source);
 
-    bool from_data(data_chunk const& data);
+    bool from_data(libbitcoin::data_chunk const& data);
     bool from_data(std::istream& stream);
-    bool from_data(reader& source);
+    bool from_data(libbitcoin::reader& source);
 
     // bool is_valid() const;
 
     // Serialization.
     //-------------------------------------------------------------------------
 
-    data_chunk to_data() const;
+    libbitcoin::data_chunk to_data() const;
     void to_data(std::ostream& stream) const;
-    void to_data(writer& sink) const;
+    void to_data(libbitcoin::writer& sink) const;
 
     // Properties (size, accessors, cache).
     //-------------------------------------------------------------------------
 
     size_t serialized_size() const;
 
-    std::string name();
+    std::string const& name() const;
     void set_name(std::string const& x);
     void set_name(std::string&& x);
 
-    amount_t amount();
+    amount_t amount() const;
     void set_amount(amount_t x);
 
 private:

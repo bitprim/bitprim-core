@@ -30,12 +30,23 @@ namespace message {
 
 using namespace bc;
 
+base const& create_asset::base_class() const {
+    return static_cast<base const&>(*this);
+}
+
+base& create_asset::base_class() {
+    return static_cast<base&>(*this);
+}
+    
+
+
 // Operators.
 //-----------------------------------------------------------------------------
 
 // friend
 bool operator==(create_asset const& a, create_asset const& b) {
-    return a.version_ == b.version_ && a.type_ == b.type_;
+    return static_cast<base const&>(a) == static_cast<base const&>(b) && 
+           a.name_ == b.name_ && a.amount_ == b.amount_;
 }
 
 // friend
@@ -77,10 +88,22 @@ bool create_asset::from_data(std::istream& stream) {
     return from_data(source);
 }
 
-bool create_asset::from_data(reader& source) {
+std::string read_null_terminated_string(reader& source) {
+    std::string res;
 
-    version_ = source.read_2_bytes_big_endian();
-    type_ = source.read_2_bytes_big_endian();
+    auto b = source.read_byte();
+    while (b != 0) {
+        res.push_back(b);
+        b = source.read_byte();
+    }
+
+    return res;
+}
+
+bool create_asset::from_data(reader& source) {
+    base::from_data(source);
+    name_ = read_null_terminated_string(source);
+    amount_ = source.read_8_bytes_big_endian();
 
     // if ( ! source)
     //     reset();
@@ -108,7 +131,8 @@ void create_asset::to_data(std::ostream& stream) const {
 }
 
 void create_asset::to_data(writer& sink) const {
-    sink.write_bytes(name_.data(), name_.size() + 1);
+    base::to_data(sink);
+    sink.write_bytes(reinterpret_cast<uint8_t const*>(name_.data()), name_.size() + 1);
     sink.write_8_bytes_big_endian(amount_);
 }
 
@@ -117,13 +141,13 @@ void create_asset::to_data(writer& sink) const {
 //-----------------------------------------------------------------------------
 
 size_t create_asset::serialized_size() const {
-    return serialized_size(static_cast<base const&>(x)) + 
+    return base::serialized_size() + 
            sizeof(amount_) + 
            name_.size() + 
            1;   //null terminated string
 }
 
-std::string create_asset::name() const {
+std::string const& create_asset::name() const {
     return name_;
 }
 
@@ -135,12 +159,11 @@ void create_asset::set_name(std::string&& x) {
     name_ = std::move(x);
 }
 
-
 amount_t create_asset::amount() const {
     return amount_;
 }
 
-void create_asset::set_type(amount_t x) {
+void create_asset::set_amount(amount_t x) {
     amount_ = x;
 }
 

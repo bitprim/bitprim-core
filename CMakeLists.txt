@@ -538,8 +538,9 @@ endif()
 
 if (WITH_KEOKEN)
   set(bitprim_core_sources ${bitprim_core_sources}         
-    src/bitprim/keoken/message/base.cpp)
-    src/bitprim/keoken/message/create_asset.cpp)
+    src/bitprim/keoken/message/base.cpp
+    src/bitprim/keoken/message/create_asset.cpp
+  )
 endif()
 
 
