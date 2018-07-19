@@ -86,18 +86,6 @@ bool send_tokens::from_data(std::istream& stream) {
     return from_data(source);
 }
 
-std::string read_null_terminated_string(reader& source) {
-    std::string res;
-
-    auto b = source.read_byte();
-    while (b != 0) {
-        res.push_back(b);
-        b = source.read_byte();
-    }
-
-    return res;
-}
-
 bool send_tokens::from_data(reader& source) {
     base::from_data(source);
 
