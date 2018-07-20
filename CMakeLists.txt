@@ -529,7 +529,8 @@ set(bitprim_core_sources
         src/wallet/stealth_address.cpp
         src/wallet/stealth_receiver.cpp
         src/wallet/stealth_sender.cpp
-        src/wallet/uri.cpp)
+        src/wallet/uri.cpp
+        src/wallet/transaction_functions.cpp)
 
 if (${CURRENCY} STREQUAL "BCH")
     set(bitprim_core_sources ${bitprim_core_sources}         
@@ -752,7 +753,8 @@ if (WITH_TESTS)
         test/wallet/qrcode.cpp
         test/wallet/stealth_address.cpp
         test/wallet/uri.cpp
-        test/wallet/uri_reader.cpp)
+        test/wallet/uri_reader.cpp
+        test/wallet/transaction_functions.cpp)
 
 # Simplified Test Project for testing Packaging purposes
 
@@ -868,7 +870,8 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
     uri_reader_tests
     uri_tests
     verack_tests
-    version_tests)
+    version_tests
+    transaction_functions_tests)
 
   if (WITH_PNG)
     _add_tests(bitprim_core_test png_tests)
@@ -1184,6 +1187,7 @@ set(_bitprim_core_headers
     bitcoin/bitcoin/wallet/stealth_sender.hpp
     bitcoin/bitcoin/wallet/uri.hpp
     bitcoin/bitcoin/wallet/uri_reader.hpp
+    bitcoin/bitcoin/wallet/transaction_functions.hpp
     bitcoin/bitcoin.hpp
     )
 
