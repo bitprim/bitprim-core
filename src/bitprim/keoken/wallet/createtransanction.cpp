@@ -1,0 +1,166 @@
+/**
+ * Copyright (c) 2017-2018 Bitprim Inc.
+ *
+ * This file is part of Bitprim.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include <bitprim/keoken/wallet/createtransaction.hpp>
+#include <bitcoin/bitcoin/formats/base_16.hpp>
+#include <bitcoin/bitcoin/wallet/transaction_functions.hpp>
+#include <bitprim/keoken/message/base.hpp>
+#include <bitprim/keoken/message/create_asset.hpp>
+#include <bitprim/keoken/message/send_tokens.hpp>
+
+
+namespace bitprim {
+namespace keoken {
+namespace wallet {
+
+using namespace bc;
+
+static bool push_scripts(libbitcoin::chain::output::list& outputs,
+                         libbitcoin::config::output const& output, uint8_t script_version) {
+  static constexpr uint64_t no_amount = 0;
+
+  // explicit script
+  if (!output.is_stealth() && output.script().is_valid()) {
+    outputs.push_back({output.amount(), output.script()});
+    return true;
+  }
+
+  // If it's not explicit the script must be a form of pay to short hash.
+  if (output.pay_to_hash() == libbitcoin::null_short_hash)
+    return false;
+
+  libbitcoin::machine::operation::list payment_ops;
+  const auto hash = output.pay_to_hash();
+
+  // This presumes stealth versions are the same as non-stealth.
+  if (output.version() != script_version)
+    payment_ops = libbitcoin::chain::script::to_pay_key_hash_pattern(hash);
+  else if (output.version() == script_version)
+    payment_ops = libbitcoin::chain::script::to_pay_script_hash_pattern(hash);
+  else
+    return false;
+
+  // If stealth add null data stealth output immediately before payment.
+  if (output.is_stealth())
+    outputs.push_back({no_amount, output.script()});
+
+  outputs.push_back({output.amount(), {payment_ops}});
+  return true;
+}
+
+
+inline
+libbitcoin::chain::output create_keoken_message(libbitcoin::data_chunk const& keoken_message){
+  libbitcoin::data_chunk header;
+  libbitcoin::decode_base16(header,"00004b50");
+  // Note: Adding an op_code using {data_chunk} automatically adds the size on front of the message
+  libbitcoin::machine::operation::list op_codes = {
+  {libbitcoin::machine::opcode::return_},
+  {header},
+  {keoken_message}
+  };
+  return {0, op_codes};
+
+}
+
+std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_encode_create_asset(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                                                                          libbitcoin::wallet::raw_output const& input_and_amount,
+                                                                          std::string& name,
+                                                                          bitprim::keoken::message::amount_t amount_tokens,
+                                                                          uint32_t locktime /*= 0*/,
+                                                                          uint32_t tx_version /*= 1*/,
+                                                                          uint8_t script_version /*= 5*/) {
+
+  libbitcoin::chain::transaction tx;
+  tx.set_version(tx_version);
+  tx.set_locktime(locktime);
+
+  for (auto const &input: outputs_to_spend) {
+    //TODO: move the elements instead of pushing back
+    tx.inputs().push_back(libbitcoin::config::input(input));
+  }
+
+  std::string destiny_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - 2000);
+  if (!push_scripts(tx.outputs(), libbitcoin::config::output(destiny_string), script_version)) {
+    return {libbitcoin::error::error_code_t::invalid_output, {}};
+  }
+
+
+  bitprim::keoken::message::create_asset asset{};
+  asset.set_name(name);
+  asset.set_amount(amount_tokens);
+
+  tx.outputs().push_back(create_keoken_message(asset.to_data()));
+
+  if (tx.is_locktime_conflict()) {
+    return {libbitcoin::error::error_code_t::lock_time_conflict, {}};
+  }
+
+  return {libbitcoin::error::error_code_t::success, tx};
+}
+
+
+std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_encode_simple_send(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                                                                          libbitcoin::wallet::raw_output const& input_and_amount,
+                                                                          libbitcoin::wallet::raw_output const& output_and_amount,
+                                                                          bitprim::keoken::message::asset_id_t asset_id,
+                                                                          bitprim::keoken::message::amount_t amount_tokens,
+                                                                          uint32_t locktime /*= 0*/,
+                                                                          uint32_t tx_version /*= 1*/,
+                                                                          uint8_t script_version /*= 5*/) {
+
+  libbitcoin::chain::transaction tx;
+  tx.set_version(tx_version);
+  tx.set_locktime(locktime);
+
+  for (auto const &input: outputs_to_spend) {
+    //TODO: move the elements instead of pushing back
+    tx.inputs().push_back(libbitcoin::config::input(input));
+  }
+
+  std::string return_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - output_and_amount.second - 2000);
+  if (!push_scripts(tx.outputs(), libbitcoin::config::output(return_string), script_version)) {
+    return {libbitcoin::error::error_code_t::invalid_output, {}};
+  }
+
+  std::string destiny_string = output_and_amount.first.encoded() + ":" + std::to_string(output_and_amount.second);
+  if (!push_scripts(tx.outputs(), libbitcoin::config::output(destiny_string), script_version)) {
+    return {libbitcoin::error::error_code_t::invalid_output, {}};
+  }
+
+
+  bitprim::keoken::message::send_tokens send_tokens{};
+  send_tokens.set_asset(asset_id);
+  send_tokens.set_amount(amount_tokens);
+
+  tx.outputs().push_back(create_keoken_message(send_tokens.to_data()));
+
+  if (tx.is_locktime_conflict()) {
+    return {libbitcoin::error::error_code_t::lock_time_conflict, {}};
+  }
+
+  return {libbitcoin::error::error_code_t::success, tx};
+}
+
+
+
+
+
+} // namespace wallet
+} // namespace keoken
+} // namespace bitprim
