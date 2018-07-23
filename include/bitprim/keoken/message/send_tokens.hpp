@@ -19,12 +19,12 @@
 #ifndef BITPRIM_KEOKEN_MESSAGE_SEND_TOKENS_HPP_
 #define BITPRIM_KEOKEN_MESSAGE_SEND_TOKENS_HPP_
 
-#include <bitprim/keoken/message/base.hpp>
-
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
 #include <bitcoin/bitcoin/utility/reader.hpp>
 #include <bitcoin/bitcoin/utility/writer.hpp>
+
+#include <bitprim/keoken/message/base.hpp>
 
 namespace bitprim {
 namespace keoken {
@@ -33,11 +33,11 @@ namespace message {
 static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8_t, unsigned char>::value,
     "Bitprim requires std::uint8_t to be implemented as char or unsigned char.");
 
-class BC_API send_tokens : public base {
+class BC_API send_tokens {
 public:
+    static const uint16_t version = 0;
+    static const uint16_t type = 10;
 
-    base const& base_class() const;
-    base& base_class();
 
     // Constructors.
     //-------------------------------------------------------------------------
@@ -79,8 +79,8 @@ public:
 
     size_t serialized_size() const;
 
-    asset_id_t asset() const;
-    void set_asset(asset_id_t x);
+    asset_id_t asset_id() const;
+    void set_asset_id(asset_id_t x);
 
     amount_t amount() const;
     void set_amount(amount_t x);

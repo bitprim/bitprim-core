@@ -18,6 +18,8 @@
  */
 #include <bitprim/keoken/message/create_asset.hpp>
 
+#include <bitprim/keoken/message/base.hpp>
+
 #include <bitcoin/bitcoin/utility/container_sink.hpp>
 #include <bitcoin/bitcoin/utility/container_source.hpp>
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
@@ -30,23 +32,13 @@ namespace message {
 
 using namespace bc;
 
-base const& create_asset::base_class() const {
-    return static_cast<base const&>(*this);
-}
-
-base& create_asset::base_class() {
-    return static_cast<base&>(*this);
-}
-    
-
 
 // Operators.
 //-----------------------------------------------------------------------------
 
 // friend
 bool operator==(create_asset const& a, create_asset const& b) {
-    return static_cast<base const&>(a) == static_cast<base const&>(b) && 
-           a.name_ == b.name_ && a.amount_ == b.amount_;
+    return a.name_ == b.name_ && a.amount_ == b.amount_;
 }
 
 // friend
@@ -100,8 +92,8 @@ std::string read_null_terminated_string(reader& source) {
     return res;
 }
 
+//Note: from_data and to_data are not longer simetrical.
 bool create_asset::from_data(reader& source) {
-    base::from_data(source);
     name_ = read_null_terminated_string(source);
     amount_ = source.read_8_bytes_big_endian();
 
@@ -130,8 +122,9 @@ void create_asset::to_data(std::ostream& stream) const {
     to_data(sink);
 }
 
+//Note: from_data and to_data are not simetrical.
 void create_asset::to_data(writer& sink) const {
-    base::to_data(sink);
+    base::to_data(sink, version, type);
     sink.write_bytes(reinterpret_cast<uint8_t const*>(name_.data()), name_.size() + 1);
     sink.write_8_bytes_big_endian(amount_);
 }
@@ -141,7 +134,7 @@ void create_asset::to_data(writer& sink) const {
 //-----------------------------------------------------------------------------
 
 size_t create_asset::serialized_size() const {
-    return base::serialized_size() + 
+    return base::serialized_size() +
            sizeof(amount_) + 
            name_.size() + 
            1;   //null terminated string
