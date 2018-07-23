@@ -755,7 +755,9 @@ if (WITH_TESTS)
         test/wallet/stealth_address.cpp
         test/wallet/uri.cpp
         test/wallet/uri_reader.cpp
-        test/wallet/transaction_functions.cpp)
+        test/wallet/transaction_functions.cpp
+        test/bitprim/keoken/create_transaction.cpp)
+
 
 # Simplified Test Project for testing Packaging purposes
 
@@ -872,7 +874,16 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
     uri_tests
     verack_tests
     version_tests
-    transaction_functions_tests)
+    transaction_functions_tests
+    bitprim_keoken_transactions_tests)
+
+#    if (WITH_KEOKEN)
+#      add_executable(bitprim_keoken_test
+#            test/bitprim/keoken/create_transaction.cpp)
+#      target_link_libraries(bitprim_keoken_test PUBLIC bitprim-core ${CONAN_LIBS})
+#      _group_sources(bitprim_keoken_test "${CMAKE_CURRENT_LIST_DIR}/test/bitprim/keoken")
+#      _add_tests(bitprim_keoken_test bitprim_keoken_transactions_tests)
+#    endif()
 
   if (WITH_PNG)
     _add_tests(bitprim_core_test png_tests)
