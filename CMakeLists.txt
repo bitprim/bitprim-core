@@ -539,6 +539,8 @@ endif()
 
 if (WITH_KEOKEN)
   set(bitprim_core_sources ${bitprim_core_sources}         
+    src/bitprim/keoken/domain/base.cpp
+    src/bitprim/keoken/domain/asset.cpp
     src/bitprim/keoken/message/base.cpp
     src/bitprim/keoken/message/create_asset.cpp
     src/bitprim/keoken/message/send_tokens.cpp

@@ -39,13 +39,21 @@ public:
     static const uint16_t version = 0;
     static const uint16_t type = 0;
 
-    // Constructors.
+    create_asset(std::string const& name, amount_t amount);
+    create_asset(std::string&& name, amount_t amount);
+
+    // Semiregular.
     //-------------------------------------------------------------------------
 
-    // create_asset() = default;
-    // create_asset(create_asset const& other) = default;
+    create_asset() = default;
 
-    // Operators.
+    create_asset(create_asset const& other) = default;
+    create_asset(create_asset&& other) = default;
+
+    create_asset& operator=(create_asset const& other) = default;
+    create_asset& operator=(create_asset&& other) = default;
+
+    // Equality Operators.
     //-------------------------------------------------------------------------
 
     friend
@@ -64,8 +72,6 @@ public:
     bool from_data(libbitcoin::data_chunk const& data);
     bool from_data(std::istream& stream);
     bool from_data(libbitcoin::reader& source);
-
-    // bool is_valid() const;
 
     // Serialization.
     //-------------------------------------------------------------------------

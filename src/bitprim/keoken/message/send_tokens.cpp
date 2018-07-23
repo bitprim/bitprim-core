@@ -34,7 +34,7 @@ using namespace bc;
 
 // friend
 bool operator==(send_tokens const& a, send_tokens const& b) {
-    return a.asset_ == b.asset_ && a.amount_ == b.amount_;
+    return a.asset_id_ == b.asset_id_ && a.amount_ == b.amount_;
 }
 
 // friend
@@ -78,7 +78,7 @@ bool send_tokens::from_data(std::istream& stream) {
 
 //Note: from_data and to_data are not longer simetrical.
 bool send_tokens::from_data(reader& source) {
-    asset_ = source.read_4_bytes_big_endian();
+    asset_id_ = source.read_4_bytes_big_endian();
     amount_ = source.read_8_bytes_big_endian();
 
     // if ( ! source)
@@ -109,7 +109,7 @@ void send_tokens::to_data(std::ostream& stream) const {
 //Note: from_data and to_data are not longer simetrical.
 void send_tokens::to_data(writer& sink) const {
     base::to_data(sink, version, type);
-    sink.write_4_bytes_big_endian(asset_);
+    sink.write_4_bytes_big_endian(asset_id_);
     sink.write_8_bytes_big_endian(amount_);
 }
 
@@ -119,16 +119,16 @@ void send_tokens::to_data(writer& sink) const {
 
 size_t send_tokens::serialized_size() const {
     return base::serialized_size() +
-           sizeof(asset_) + 
+           sizeof(asset_id_) + 
            sizeof(amount_);
 }
 
 asset_id_t send_tokens::asset_id() const {
-    return asset_;
+    return asset_id_;
 }
 
 void send_tokens::set_asset_id(asset_id_t x) {
-    asset_ = x;
+    asset_id_ = x;
 }
 
 amount_t send_tokens::amount() const {

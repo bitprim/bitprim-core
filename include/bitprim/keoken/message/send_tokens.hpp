@@ -37,15 +37,22 @@ class BC_API send_tokens {
 public:
     static const uint16_t version = 0;
     static const uint16_t type = 10;
+    
+    send_tokens(asset_id_t asset, amount_t amount);
 
-
-    // Constructors.
+    // Semiregular.
     //-------------------------------------------------------------------------
 
-    // send_tokens() = default;
-    // send_tokens(send_tokens const& other) = default;
+    send_tokens() = default;
 
-    // Operators.
+    send_tokens(send_tokens const& other) = default;
+    // send_tokens(send_tokens&& other) = default;
+
+    send_tokens& operator=(send_tokens const& other) = default;
+    // send_tokens& operator=(send_tokens&& other) = default;
+
+
+    // Equality Operators.
     //-------------------------------------------------------------------------
 
     friend
@@ -64,8 +71,6 @@ public:
     bool from_data(libbitcoin::data_chunk const& data);
     bool from_data(std::istream& stream);
     bool from_data(libbitcoin::reader& source);
-
-    // bool is_valid() const;
 
     // Serialization.
     //-------------------------------------------------------------------------
@@ -86,7 +91,7 @@ public:
     void set_amount(amount_t x);
 
 private:
-    asset_id_t asset_;
+    asset_id_t asset_id_;
     amount_t amount_;
 };
 
