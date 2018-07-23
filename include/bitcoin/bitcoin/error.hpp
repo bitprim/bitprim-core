@@ -271,7 +271,15 @@ enum error_code_t
     operation_failed_29,
     operation_failed_30,
     // Added out of order (bip147).
-    op_check_multisig_verify8
+    op_check_multisig_verify8,
+
+
+    // TX creation
+    invalid_output,
+    lock_time_conflict,
+    input_index_out_of_range,
+    input_sign_failed
+
 };
 
 enum error_condition_t
