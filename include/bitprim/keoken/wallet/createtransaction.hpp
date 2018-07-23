@@ -53,6 +53,26 @@ BC_API std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction
                                                                                        uint32_t tx_version = 1,
                                                                                        uint8_t script_version = 5);
 
+BC_API std::pair<libbitcoin::error::error_code_t,
+                 libbitcoin::chain::transaction> create_asset_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                                                          libbitcoin::chain::script const& output_script,
+                                                                          libbitcoin::ec_secret const& private_key,
+                                                                          libbitcoin::wallet::ec_public const& public_key,
+                                                                          uint64_t amount,
+                                                                          libbitcoin::wallet::payment_address const& addr,
+                                                                          std::string& token_name,
+                                                                          bitprim::keoken::message::amount_t amount_tokens);
+BC_API std::pair<libbitcoin::error::error_code_t,
+                 libbitcoin::chain::transaction> send_simple_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                                                         libbitcoin::chain::script const& output_script,
+                                                                         libbitcoin::ec_secret const& private_key,
+                                                                         libbitcoin::wallet::ec_public const& public_key,
+                                                                         uint64_t amount,
+                                                                         libbitcoin::wallet::payment_address const& addr_origin,
+                                                                         libbitcoin::wallet::payment_address const& addr_dest,
+                                                                         bitprim::keoken::message::asset_id_t asset_id,
+                                                                         bitprim::keoken::message::amount_t amount_tokens);
+
 
 } // namespace message
 } // namespace keoken

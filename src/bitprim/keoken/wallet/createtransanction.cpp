@@ -158,6 +158,116 @@ std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_en
 }
 
 
+// For internal use only
+libbitcoin::error::error_code_t sign_and_set(libbitcoin::chain::script const& output_script,
+                                             libbitcoin::ec_secret const& private_key,
+                                             libbitcoin::wallet::ec_public const& public_key,
+                                             uint64_t amount,
+                                             libbitcoin::chain::transaction & tx) {
+
+  auto sig = libbitcoin::wallet::input_signature_bch(private_key, output_script, tx, amount, 0);
+  if (sig.first != libbitcoin::error::success) {
+    return sig.first;
+  }
+
+  auto complete_tx = libbitcoin::wallet::input_set(sig.second, public_key, tx);
+  if (complete_tx.first != libbitcoin::error::success) {
+    return complete_tx.first;
+  }
+}
+
+std::pair<libbitcoin::error::error_code_t,
+                 libbitcoin::chain::transaction> create_asset_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                                                          libbitcoin::chain::script const& output_script,
+                                                                          libbitcoin::ec_secret const& private_key,
+                                                                          libbitcoin::wallet::ec_public const& public_key,
+                                                                          uint64_t amount,
+                                                                          libbitcoin::wallet::payment_address const& addr,
+                                                                          std::string& token_name,
+                                                                          bitprim::keoken::message::amount_t amount_tokens) {
+  uint64_t fee = 0;
+  bool complete = false;
+  // NOTE: the txns is created one time and then recreated using the calculated fee
+  // TODO: calculate the txn size without the need of the signature
+
+  while ( ! complete ) {
+    //Prepare to create_asset
+    libbitcoin::chain::input_point::list inputs;
+    inputs.push_back(output_to_spend);
+
+    libbitcoin::wallet::raw_output output = std::make_pair(addr, amount - fee);
+
+    auto raw_tx = tx_encode_create_asset(inputs, output, token_name, amount_tokens);
+    if ( raw_tx.first != libbitcoin::error::success ) {
+      return {raw_tx.first, {}};
+    }
+
+    // Sign the transaction
+    auto sign_and_set_result = sign_and_set (output_script, private_key, public_key, amount, raw_tx.second);
+    if ( sign_and_set_result != libbitcoin::error::success) {
+      return {sign_and_set_result, {}};
+    }
+
+
+    if ( fee == 0 ) {
+      fee = raw_tx.second.serialized_size(true);
+    } else {
+      complete = true;
+      return raw_tx;
+    }
+  }
+}
+
+std::pair<libbitcoin::error::error_code_t,
+                 libbitcoin::chain::transaction> send_simple_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                                                         libbitcoin::chain::script const& output_script,
+                                                                         libbitcoin::ec_secret const& private_key,
+                                                                         libbitcoin::wallet::ec_public const& public_key,
+                                                                         uint64_t amount,
+                                                                         libbitcoin::wallet::payment_address const& addr_origin,
+                                                                         libbitcoin::wallet::payment_address const& addr_dest,
+                                                                         bitprim::keoken::message::asset_id_t asset_id,
+                                                                         bitprim::keoken::message::amount_t amount_tokens) {
+  //TODO: dust should be a constant
+  uint64_t dust = 2000;
+
+  uint64_t fee = 0;
+  bool complete = false;
+  // NOTE: the txns is created one time and then recreated using the calculated fee
+  // TODO: calculate the txn size without the need of the signature
+
+  while ( ! complete ) {
+    //Prepare to send_simple
+    libbitcoin::chain::input_point::list inputs;
+    inputs.push_back(output_to_spend);
+
+    libbitcoin::wallet::raw_output output_origin_addr = std::make_pair(addr_origin, amount - fee - dust);
+    libbitcoin::wallet::raw_output output_dest_addr = std::make_pair(addr_dest, dust);
+
+    // Create raw transaction using the generated data
+    auto raw_tx = tx_encode_simple_send(inputs, output_origin_addr, output_dest_addr, asset_id, amount_tokens);
+    if ( raw_tx.first != libbitcoin::error::success ) {
+      return {raw_tx.first, {}};
+    }
+
+    // Sign the transaction
+    auto sign_and_set_result = sign_and_set (output_script, private_key, public_key, amount, raw_tx.second);
+    if ( sign_and_set_result != libbitcoin::error::success ) {
+      return {sign_and_set_result, {}};
+    }
+
+    // The first time calculate the fee and recreate, the second return the transaction
+    if ( fee == 0 ) {
+      fee = raw_tx.second.serialized_size(true);
+    } else {
+      complete = true;
+      return raw_tx;
+    }
+  }
+}
+
+
+
 
 
 
