@@ -133,11 +133,6 @@ std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_en
     tx.inputs().push_back(libbitcoin::config::input(input));
   }
 
-  std::string return_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - output_and_amount.second - 2000);
-  if (!push_scripts(tx.outputs(), libbitcoin::config::output(return_string), script_version)) {
-    return {libbitcoin::error::error_code_t::invalid_output, {}};
-  }
-
   std::string destiny_string = output_and_amount.first.encoded() + ":" + std::to_string(output_and_amount.second);
   if (!push_scripts(tx.outputs(), libbitcoin::config::output(destiny_string), script_version)) {
     return {libbitcoin::error::error_code_t::invalid_output, {}};
@@ -149,6 +144,11 @@ std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_en
   send_tokens.set_amount(amount_tokens);
 
   tx.outputs().push_back(create_keoken_message(send_tokens.to_data()));
+
+  std::string return_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - output_and_amount.second - 2000);
+  if (!push_scripts(tx.outputs(), libbitcoin::config::output(return_string), script_version)) {
+    return {libbitcoin::error::error_code_t::invalid_output, {}};
+  }
 
   if (tx.is_locktime_conflict()) {
     return {libbitcoin::error::error_code_t::lock_time_conflict, {}};
