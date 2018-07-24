@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-2018 Bitprim Inc.
+ * Copyright (c) 2016-2018 Bitprim Inc.
  *
  * This file is part of Bitprim.
  *
@@ -16,31 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitprim/keoken/message/base.hpp>
-
-// #include <bitcoin/bitcoin/utility/container_sink.hpp>
-// #include <bitcoin/bitcoin/utility/container_source.hpp>
-// #include <bitcoin/bitcoin/utility/istream_reader.hpp>
-#include <bitcoin/bitcoin/utility/ostream_writer.hpp>
-
+#ifndef BITPRIM_KEOKEN_DOMAIN_BASE_HPP_
+#define BITPRIM_KEOKEN_DOMAIN_BASE_HPP_
 
 namespace bitprim {
 namespace keoken {
-namespace message {
-namespace base {
+namespace domain {
 
-using namespace bc;
+using asset_id_t = uint32_t;
+using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
 
-size_t serialized_size() {
-    return sizeof(uint16_t) + sizeof(uint16_t);
-}
-
-void to_data(writer& sink, uint16_t version, uint16_t type) {
-    sink.write_2_bytes_big_endian(version);
-    sink.write_2_bytes_big_endian(type);
-}
-
-} // namespace base
-} // namespace message
+} // namespace domain
 } // namespace keoken
 } // namespace bitprim
+
+#endif //BITPRIM_KEOKEN_DOMAIN_BASE_HPP_

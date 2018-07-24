@@ -19,12 +19,13 @@
 #ifndef BITPRIM_KEOKEN_MESSAGE_CREATE_ASSET_HPP_
 #define BITPRIM_KEOKEN_MESSAGE_CREATE_ASSET_HPP_
 
-#include <bitprim/keoken/message/base.hpp>
-
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
 #include <bitcoin/bitcoin/utility/reader.hpp>
 #include <bitcoin/bitcoin/utility/writer.hpp>
+
+#include <bitprim/keoken/message/base.hpp>
+
 
 namespace bitprim {
 namespace keoken {
@@ -33,19 +34,26 @@ namespace message {
 static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8_t, unsigned char>::value,
     "Bitprim requires std::uint8_t to be implemented as char or unsigned char.");
 
-class BC_API create_asset : public base {
+class BC_API create_asset {
 public:
+    static const uint16_t version = 0;
+    static const uint16_t type = 0;
 
-    base const& base_class() const;
-    base& base_class();
+    create_asset(std::string const& name, amount_t amount);
+    create_asset(std::string&& name, amount_t amount);
 
-    // Constructors.
+    // Semiregular.
     //-------------------------------------------------------------------------
 
-    // create_asset() = default;
-    // create_asset(create_asset const& other) = default;
+    create_asset() = default;
 
-    // Operators.
+    create_asset(create_asset const& other) = default;
+    create_asset(create_asset&& other) = default;
+
+    create_asset& operator=(create_asset const& other) = default;
+    create_asset& operator=(create_asset&& other) = default;
+
+    // Equality Operators.
     //-------------------------------------------------------------------------
 
     friend
@@ -64,8 +72,6 @@ public:
     bool from_data(libbitcoin::data_chunk const& data);
     bool from_data(std::istream& stream);
     bool from_data(libbitcoin::reader& source);
-
-    // bool is_valid() const;
 
     // Serialization.
     //-------------------------------------------------------------------------

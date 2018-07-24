@@ -19,9 +19,9 @@
 #ifndef BITPRIM_KEOKEN_MESSAGE_BASE_HPP_
 #define BITPRIM_KEOKEN_MESSAGE_BASE_HPP_
 
-#include <bitcoin/bitcoin/define.hpp>
-#include <bitcoin/bitcoin/utility/data.hpp>
-#include <bitcoin/bitcoin/utility/reader.hpp>
+// #include <bitcoin/bitcoin/define.hpp>
+// #include <bitcoin/bitcoin/utility/data.hpp>
+// #include <bitcoin/bitcoin/utility/reader.hpp>
 #include <bitcoin/bitcoin/utility/writer.hpp>
 
 namespace bitprim {
@@ -31,60 +31,12 @@ namespace message {
 using asset_id_t = uint32_t;
 using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
 
-class BC_API base {
-public:
+namespace base {
 
-    // Constructors.
-    //-------------------------------------------------------------------------
+size_t serialized_size();
+void to_data(libbitcoin::writer& sink, uint16_t version, uint16_t type);
 
-    // base() = default;
-    // base(base const& other) = default;
-
-    // Operators.
-    //-------------------------------------------------------------------------
-
-    friend
-    bool operator==(base const& a, base const& b);
-    
-    friend
-    bool operator!=(base const& a, base const& b);
-
-    // Deserialization.
-    //-------------------------------------------------------------------------
-
-    static base factory_from_data(libbitcoin::data_chunk const& data);
-    static base factory_from_data(std::istream& stream);
-    static base factory_from_data(libbitcoin::reader& source);
-
-    bool from_data(libbitcoin::data_chunk const& data);
-    bool from_data(std::istream& stream);
-    bool from_data(libbitcoin::reader& source);
-
-    // bool is_valid() const;
-
-    // Serialization.
-    //-------------------------------------------------------------------------
-
-    libbitcoin::data_chunk to_data() const;
-    void to_data(std::ostream& stream) const;
-    void to_data(libbitcoin::writer& sink) const;
-
-    // Properties (size, accessors, cache).
-    //-------------------------------------------------------------------------
-
-    size_t serialized_size() const;
-
-    uint16_t version() const;
-    void set_version(uint16_t x);
-
-    uint16_t type() const;
-    void set_type(uint16_t x);
-
-private:
-    uint16_t version_;
-    uint16_t type_;
-};
-
+} // namespace base
 } // namespace message
 } // namespace keoken
 } // namespace bitprim

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017-2018 Bitprim Inc.
+ * Copyright (c) 2016-2018 Bitprim Inc.
  *
  * This file is part of Bitprim.
  *
@@ -16,31 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitprim/keoken/message/base.hpp>
+#ifndef BITPRIM_KEOKEN_TRANSACTION_EXTRACTOR_HPP_
+#define BITPRIM_KEOKEN_TRANSACTION_EXTRACTOR_HPP_
 
-// #include <bitcoin/bitcoin/utility/container_sink.hpp>
-// #include <bitcoin/bitcoin/utility/container_source.hpp>
-// #include <bitcoin/bitcoin/utility/istream_reader.hpp>
-#include <bitcoin/bitcoin/utility/ostream_writer.hpp>
-
+#include <bitcoin/bitcoin/chain/transaction.hpp>
+#include <bitcoin/bitcoin/utility/data.hpp>
 
 namespace bitprim {
 namespace keoken {
-namespace message {
-namespace base {
 
-using namespace bc;
+libbitcoin::data_chunk first_keoken_output(libbitcoin::chain::transaction const& tx);
 
-size_t serialized_size() {
-    return sizeof(uint16_t) + sizeof(uint16_t);
-}
-
-void to_data(writer& sink, uint16_t version, uint16_t type) {
-    sink.write_2_bytes_big_endian(version);
-    sink.write_2_bytes_big_endian(type);
-}
-
-} // namespace base
-} // namespace message
 } // namespace keoken
 } // namespace bitprim
+
+#endif //BITPRIM_KEOKEN_TRANSACTION_EXTRACTOR_HPP_

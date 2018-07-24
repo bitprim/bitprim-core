@@ -23,28 +23,18 @@
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
 
-
 namespace bitprim {
 namespace keoken {
 namespace message {
 
 using namespace bc;
 
-base const& send_tokens::base_class() const {
-    return static_cast<base const&>(*this);
-}
-
-base& send_tokens::base_class() {
-    return static_cast<base&>(*this);
-}
-
 // Operators.
 //-----------------------------------------------------------------------------
 
 // friend
 bool operator==(send_tokens const& a, send_tokens const& b) {
-    return static_cast<base const&>(a) == static_cast<base const&>(b) && 
-           a.asset_ == b.asset_ && a.amount_ == b.amount_;
+    return a.asset_id_ == b.asset_id_ && a.amount_ == b.amount_;
 }
 
 // friend
@@ -86,12 +76,10 @@ bool send_tokens::from_data(std::istream& stream) {
     return from_data(source);
 }
 
+//Note: from_data and to_data are not longer simetrical.
 bool send_tokens::from_data(reader& source) {
-    base::from_data(source);
-
-    asset_ = source.read_4_bytes_big_endian();
+    asset_id_ = source.read_4_bytes_big_endian();
     amount_ = source.read_8_bytes_big_endian();
-
 
     // if ( ! source)
     //     reset();
@@ -118,9 +106,10 @@ void send_tokens::to_data(std::ostream& stream) const {
     to_data(sink);
 }
 
+//Note: from_data and to_data are not longer simetrical.
 void send_tokens::to_data(writer& sink) const {
-    base::to_data(sink);
-    sink.write_4_bytes_big_endian(asset_);
+    base::to_data(sink, version, type);
+    sink.write_4_bytes_big_endian(asset_id_);
     sink.write_8_bytes_big_endian(amount_);
 }
 
@@ -129,17 +118,17 @@ void send_tokens::to_data(writer& sink) const {
 //-----------------------------------------------------------------------------
 
 size_t send_tokens::serialized_size() const {
-    return base::serialized_size() + 
-           sizeof(asset_) + 
+    return base::serialized_size() +
+           sizeof(asset_id_) + 
            sizeof(amount_);
 }
 
-asset_id_t send_tokens::asset() const {
-    return asset_;
+asset_id_t send_tokens::asset_id() const {
+    return asset_id_;
 }
 
-void send_tokens::set_asset(asset_id_t x) {
-    asset_ = x;
+void send_tokens::set_asset_id(asset_id_t x) {
+    asset_id_ = x;
 }
 
 amount_t send_tokens::amount() const {
