@@ -25,7 +25,18 @@ namespace keoken {
 namespace domain {
 
 using namespace bc;
+using bc::wallet::payment_address;
 
+
+// Constructors.
+//-----------------------------------------------------------------------------
+
+asset::asset(asset_id_t id, std::string name, amount_t amount, libbitcoin::wallet::payment_address owner) 
+    : id_(id)
+    , name_(std::move(name))
+    , amount_(amount)
+    , owner_(std::move(owner))
+{}
 
 // Operators.
 //-----------------------------------------------------------------------------
@@ -48,29 +59,34 @@ asset_id_t asset::id() const {
     return id_;
 }
 
-void asset::set_id(asset_id_t x) {
-    id_ = x;
-}
+// void asset::set_id(asset_id_t x) {
+//     id_ = x;
+// }
 
 std::string const& asset::name() const {
     return name_;
 }
 
-void asset::set_name(std::string const& x) {
-    name_ = x;
-}
-
-void asset::set_name(std::string&& x) {
-    name_ = std::move(x);
-}
+// void asset::set_name(std::string x) {
+//     name_ = std::move(x);
+// }
 
 amount_t asset::amount() const {
     return amount_;
 }
 
-void asset::set_amount(amount_t x) {
-    amount_ = x;
+// void asset::set_amount(amount_t x) {
+//     amount_ = x;
+// }
+
+payment_address const& asset::owner() const {
+    return owner_;
 }
+
+// void asset::set_owner(libbitcoin::wallet::payment_address x) {
+//     owner_ = std::move(x);
+// }
+
 
 } // namespace domain
 } // namespace keoken
