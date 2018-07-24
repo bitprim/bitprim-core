@@ -530,7 +530,8 @@ set(bitprim_core_sources
         src/wallet/stealth_receiver.cpp
         src/wallet/stealth_sender.cpp
         src/wallet/uri.cpp
-        src/wallet/transaction_functions.cpp)
+        src/wallet/transaction_functions.cpp
+)
 
 if (${CURRENCY} STREQUAL "BCH")
     set(bitprim_core_sources ${bitprim_core_sources}         
@@ -538,7 +539,8 @@ if (${CURRENCY} STREQUAL "BCH")
 endif()
 
 if (WITH_KEOKEN)
-  set(bitprim_core_sources ${bitprim_core_sources}         
+  set(bitprim_core_sources ${bitprim_core_sources}
+    src/bitprim/keoken/transaction_extractor.cpp
     src/bitprim/keoken/domain/base.cpp
     src/bitprim/keoken/domain/asset.cpp
     src/bitprim/keoken/message/base.cpp
@@ -886,32 +888,15 @@ endif()
 
 if (WITH_TESTS_NEW)
 
-  add_custom_target(testsfer ALL
-      COMMAND ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure -R "test.+"
-      COMMENT "Build and run all the unit tests.")
-
   add_executable(bitprim_core_test_new
           test_new/main.cpp
   )
-
   target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
 
-  # _group_sources(bitprim_core_test_new "${CMAKE_CURRENT_LIST_DIR}/test_new")
-
-  add_test(NAME test.new_tests COMMAND bitprim_core_test_new)
-
-  add_dependencies(testsfer test.new_tests)
-
-#    add_test(
-#            NAME test.core.new_tests
-#            COMMAND ${target}
-#            --run_test=${_test_name}
-#            --show_progress=no
-#            --detect_memory_leak=0
-#            --report_level=no
-#            --build_info=yes)
+  add_test(NAME bitprim_core_test_new COMMAND bitprim_core_test_new)
 
 endif()
+
 
 # Examples
 #==============================================================================
