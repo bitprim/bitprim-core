@@ -140,7 +140,7 @@ std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_en
 
 
   bitprim::keoken::message::send_tokens send_tokens{};
-  send_tokens.set_asset(asset_id);
+  send_tokens.set_asset_id(asset_id);
   send_tokens.set_amount(amount_tokens);
 
   tx.outputs().push_back(create_keoken_message(send_tokens.to_data()));
@@ -159,7 +159,8 @@ std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_en
 
 
 // For internal use only
-libbitcoin::error::error_code_t sign_and_set(libbitcoin::chain::script const& output_script,
+std::pair<libbitcoin::error::error_code_t,
+          libbitcoin::chain::transaction>  sign_and_set(libbitcoin::chain::script const& output_script,
                                              libbitcoin::ec_secret const& private_key,
                                              libbitcoin::wallet::ec_public const& public_key,
                                              uint64_t amount,
@@ -167,13 +168,11 @@ libbitcoin::error::error_code_t sign_and_set(libbitcoin::chain::script const& ou
 
   auto sig = libbitcoin::wallet::input_signature_bch(private_key, output_script, tx, amount, 0);
   if (sig.first != libbitcoin::error::success) {
-    return sig.first;
+    return {sig.first, {}};
   }
 
-  auto complete_tx = libbitcoin::wallet::input_set(sig.second, public_key, tx);
-  if (complete_tx.first != libbitcoin::error::success) {
-    return complete_tx.first;
-  }
+  return libbitcoin::wallet::input_set(sig.second, public_key, tx);
+
 }
 
 std::pair<libbitcoin::error::error_code_t,
@@ -204,10 +203,10 @@ std::pair<libbitcoin::error::error_code_t,
 
     // Sign the transaction
     auto sign_and_set_result = sign_and_set (output_script, private_key, public_key, amount, raw_tx.second);
-    if ( sign_and_set_result != libbitcoin::error::success) {
-      return {sign_and_set_result, {}};
+    if ( sign_and_set_result.first != libbitcoin::error::success) {
+      return {sign_and_set_result.first, {}};
     }
-
+    raw_tx.second = sign_and_set_result.second;
 
     if ( fee == 0 ) {
       fee = raw_tx.second.serialized_size(true);
@@ -252,9 +251,10 @@ std::pair<libbitcoin::error::error_code_t,
 
     // Sign the transaction
     auto sign_and_set_result = sign_and_set (output_script, private_key, public_key, amount, raw_tx.second);
-    if ( sign_and_set_result != libbitcoin::error::success ) {
-      return {sign_and_set_result, {}};
+    if ( sign_and_set_result.first != libbitcoin::error::success) {
+      return {sign_and_set_result.first, {}};
     }
+    raw_tx.second = sign_and_set_result.second;
 
     // The first time calculate the fee and recreate, the second return the transaction
     if ( fee == 0 ) {
