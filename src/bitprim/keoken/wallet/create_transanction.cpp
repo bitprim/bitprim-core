@@ -108,10 +108,7 @@ result_t tx_encode_send_token(input_point::list const& outputs_to_spend,
         {asset_owner, utxo_satoshis - dust - wallet::fees}
     };
 
-    message::send_tokens send_tokens{};
-    send_tokens.set_asset_id(asset_id);
-    send_tokens.set_amount(asset_amount);
-
+    message::send_tokens send_tokens(asset_id, asset_amount);
     return tx_encode(outputs_to_spend, outputs, {create_keoken_output(send_tokens.to_data())}, locktime, tx_version, script_version);
 }
 
