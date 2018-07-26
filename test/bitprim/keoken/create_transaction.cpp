@@ -50,13 +50,11 @@ BOOST_AUTO_TEST_CASE(keoken__send_token__expected)
   std::vector<chain::input_point> outputs_to_spend;
   libbitcoin::hash_digest hash_to_spend;
   libbitcoin::decode_hash(hash_to_spend, "980de6ce12c29698d54323c6b0f358e1a9ae867598b840ee0094b9df22b07393");
-  int const index_to_spend = 1;
+  uint32_t const index_to_spend = 1;
   outputs_to_spend.push_back({hash_to_spend, index_to_spend});
-  libbitcoin::wallet::raw_output input_and_amount{libbitcoin::wallet::payment_address(WALLET), 21647102398};
-  libbitcoin::wallet::raw_output output_and_amount{libbitcoin::wallet::payment_address(WALLETDESTINY), 20000};
   bitprim::keoken::message::asset_id_t asset_id = 1;
   bitprim::keoken::message::amount_t amount_tokens = 1;
-  auto result = bitprim::keoken::wallet::tx_encode_simple_send(outputs_to_spend, input_and_amount, output_and_amount, asset_id, amount_tokens);
+  auto result = bitprim::keoken::wallet::tx_encode_send_token(outputs_to_spend, libbitcoin::wallet::payment_address(WALLET), 21647102398, libbitcoin::wallet::payment_address(WALLETDESTINY), 20000, asset_id, amount_tokens);
   BOOST_REQUIRE_EQUAL(1, 1);
 }
 
@@ -65,12 +63,11 @@ BOOST_AUTO_TEST_CASE(keoken__create_asset__expected)
   std::vector<chain::input_point> outputs_to_spend;
   libbitcoin::hash_digest hash_to_spend;
   libbitcoin::decode_hash(hash_to_spend, "980de6ce12c29698d54323c6b0f358e1a9ae867598b840ee0094b9df22b07393");
-  int const index_to_spend = 1;
+  uint32_t const index_to_spend = 1;
   outputs_to_spend.push_back({hash_to_spend, index_to_spend});
-  libbitcoin::wallet::raw_output input_and_amount{libbitcoin::wallet::payment_address(WALLET), 21647102398};
   std::string name = "testcoin";
   bitprim::keoken::message::amount_t amount_tokens = 1;
-  auto result = bitprim::keoken::wallet::tx_encode_create_asset(outputs_to_spend, input_and_amount, name, amount_tokens);
+  auto result = bitprim::keoken::wallet::tx_encode_create_asset(outputs_to_spend, libbitcoin::wallet::payment_address(WALLET), 21647102398, name, amount_tokens);
   BOOST_REQUIRE_EQUAL(1, 1);
 }
 

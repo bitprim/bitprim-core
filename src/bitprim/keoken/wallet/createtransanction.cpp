@@ -30,42 +30,7 @@ namespace wallet {
 
 using namespace bc;
 
-static bool push_scripts(libbitcoin::chain::output::list& outputs,
-                         libbitcoin::config::output const& output, uint8_t script_version) {
-  static constexpr uint64_t no_amount = 0;
-
-  // explicit script
-  if (!output.is_stealth() && output.script().is_valid()) {
-    outputs.push_back({output.amount(), output.script()});
-    return true;
-  }
-
-  // If it's not explicit the script must be a form of pay to short hash.
-  if (output.pay_to_hash() == libbitcoin::null_short_hash)
-    return false;
-
-  libbitcoin::machine::operation::list payment_ops;
-  const auto hash = output.pay_to_hash();
-
-  // This presumes stealth versions are the same as non-stealth.
-  if (output.version() != script_version)
-    payment_ops = libbitcoin::chain::script::to_pay_key_hash_pattern(hash);
-  else if (output.version() == script_version)
-    payment_ops = libbitcoin::chain::script::to_pay_script_hash_pattern(hash);
-  else
-    return false;
-
-  // If stealth add null data stealth output immediately before payment.
-  if (output.is_stealth())
-    outputs.push_back({no_amount, output.script()});
-
-  outputs.push_back({output.amount(), {payment_ops}});
-  return true;
-}
-
-
-inline
-libbitcoin::chain::output create_keoken_message(libbitcoin::data_chunk const& keoken_message){
+libbitcoin::chain::output create_keoken_output(libbitcoin::data_chunk const& keoken_message){
   libbitcoin::data_chunk header;
   libbitcoin::decode_base16(header,"00004b50");
   // Note: Adding an op_code using {data_chunk} automatically adds the size on front of the message
@@ -75,86 +40,47 @@ libbitcoin::chain::output create_keoken_message(libbitcoin::data_chunk const& ke
   {keoken_message}
   };
   return {0, op_codes};
-
 }
 
 std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_encode_create_asset(libbitcoin::chain::input_point::list const& outputs_to_spend,
-                                                                          libbitcoin::wallet::raw_output const& input_and_amount,
+                                                                          libbitcoin::wallet::payment_address const& asset_owner,
+                                                                          uint64_t const& utxo_satoshis,
                                                                           std::string& name,
                                                                           bitprim::keoken::message::amount_t amount_tokens,
                                                                           uint32_t locktime /*= 0*/,
                                                                           uint32_t tx_version /*= 1*/,
                                                                           uint8_t script_version /*= 5*/) {
 
-  libbitcoin::chain::transaction tx;
-  tx.set_version(tx_version);
-  tx.set_locktime(locktime);
-
-  for (auto const &input: outputs_to_spend) {
-    //TODO: move the elements instead of pushing back
-    tx.inputs().push_back(libbitcoin::config::input(input));
-  }
-
-  std::string destiny_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - 2000);
-  if (!push_scripts(tx.outputs(), libbitcoin::config::output(destiny_string), script_version)) {
-    return {libbitcoin::error::error_code_t::invalid_output, {}};
-  }
-
-
   bitprim::keoken::message::create_asset asset{};
   asset.set_name(name);
   asset.set_amount(amount_tokens);
 
-  tx.outputs().push_back(create_keoken_message(asset.to_data()));
+  libbitcoin::wallet::raw_output_list outputs;
+  outputs.push_back({asset_owner, (utxo_satoshis - keoken::wallet::fees)});
 
-  if (tx.is_locktime_conflict()) {
-    return {libbitcoin::error::error_code_t::lock_time_conflict, {}};
+  return libbitcoin::wallet::tx_encode(outputs_to_spend, outputs, {create_keoken_output(asset.to_data())}, locktime, tx_version, script_version);
+
   }
 
-  return {libbitcoin::error::error_code_t::success, tx};
-}
-
-
-std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_encode_simple_send(libbitcoin::chain::input_point::list const& outputs_to_spend,
-                                                                          libbitcoin::wallet::raw_output const& input_and_amount,
-                                                                          libbitcoin::wallet::raw_output const& output_and_amount,
-                                                                          bitprim::keoken::message::asset_id_t asset_id,
-                                                                          bitprim::keoken::message::amount_t amount_tokens,
-                                                                          uint32_t locktime /*= 0*/,
-                                                                          uint32_t tx_version /*= 1*/,
-                                                                          uint8_t script_version /*= 5*/) {
-
-  libbitcoin::chain::transaction tx;
-  tx.set_version(tx_version);
-  tx.set_locktime(locktime);
-
-  for (auto const &input: outputs_to_spend) {
-    //TODO: move the elements instead of pushing back
-    tx.inputs().push_back(libbitcoin::config::input(input));
-  }
-
-  std::string destiny_string = output_and_amount.first.encoded() + ":" + std::to_string(output_and_amount.second);
-  if (!push_scripts(tx.outputs(), libbitcoin::config::output(destiny_string), script_version)) {
-    return {libbitcoin::error::error_code_t::invalid_output, {}};
-  }
-
+std::pair<libbitcoin::error::error_code_t, libbitcoin::chain::transaction> tx_encode_send_token(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                                                                                                       libbitcoin::wallet::payment_address const& token_owner,
+                                                                                                       uint64_t const& utxo_satoshis,
+                                                                                                       libbitcoin::wallet::payment_address const& token_receiver,
+                                                                                                       uint64_t const& dust,
+                                                                                                       bitprim::keoken::message::asset_id_t asset_id,
+                                                                                                       bitprim::keoken::message::amount_t amount_tokens,
+                                                                                                       uint32_t locktime,
+                                                                                                       uint32_t tx_version,
+                                                                                                       uint8_t script_version){
+  libbitcoin::wallet::raw_output_list outputs;
+  outputs.push_back({token_receiver, dust});
+  outputs.push_back({token_owner, utxo_satoshis - dust - keoken::wallet::fees});
 
   bitprim::keoken::message::send_tokens send_tokens{};
   send_tokens.set_asset_id(asset_id);
   send_tokens.set_amount(amount_tokens);
 
-  tx.outputs().push_back(create_keoken_message(send_tokens.to_data()));
-
-  std::string return_string = input_and_amount.first.encoded() + ":" + std::to_string(input_and_amount.second - output_and_amount.second - 2000);
-  if (!push_scripts(tx.outputs(), libbitcoin::config::output(return_string), script_version)) {
-    return {libbitcoin::error::error_code_t::invalid_output, {}};
-  }
-
-  if (tx.is_locktime_conflict()) {
-    return {libbitcoin::error::error_code_t::lock_time_conflict, {}};
-  }
-
-  return {libbitcoin::error::error_code_t::success, tx};
+  return libbitcoin::wallet::tx_encode(outputs_to_spend, outputs, {create_keoken_output(send_tokens.to_data())}, locktime, tx_version, script_version);
 }
 
 
@@ -172,8 +98,8 @@ std::pair<libbitcoin::error::error_code_t,
   }
 
   return libbitcoin::wallet::input_set(sig.second, public_key, tx);
-
 }
+
 
 std::pair<libbitcoin::error::error_code_t,
                  libbitcoin::chain::transaction> create_asset_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
@@ -184,19 +110,7 @@ std::pair<libbitcoin::error::error_code_t,
                                                                           libbitcoin::wallet::payment_address const& addr,
                                                                           std::string& token_name,
                                                                           bitprim::keoken::message::amount_t amount_tokens) {
-  uint64_t fee = 0;
-  bool complete = false;
-  // NOTE: the txns is created one time and then recreated using the calculated fee
-  // TODO: calculate the txn size without the need of the signature
-
-  while ( ! complete ) {
-    //Prepare to create_asset
-    libbitcoin::chain::input_point::list inputs;
-    inputs.push_back(output_to_spend);
-
-    libbitcoin::wallet::raw_output output = std::make_pair(addr, amount - fee);
-
-    auto raw_tx = tx_encode_create_asset(inputs, output, token_name, amount_tokens);
+    auto raw_tx = tx_encode_create_asset({output_to_spend}, addr, amount, token_name, amount_tokens);
     if ( raw_tx.first != libbitcoin::error::success ) {
       return {raw_tx.first, {}};
     }
@@ -206,45 +120,24 @@ std::pair<libbitcoin::error::error_code_t,
     if ( sign_and_set_result.first != libbitcoin::error::success) {
       return {sign_and_set_result.first, {}};
     }
-    raw_tx.second = sign_and_set_result.second;
 
-    if ( fee == 0 ) {
-      fee = raw_tx.second.serialized_size(true);
-    } else {
-      complete = true;
-      return raw_tx;
-    }
-  }
+    return {libbitcoin::error::success , sign_and_set_result.second};
 }
 
 std::pair<libbitcoin::error::error_code_t,
-                 libbitcoin::chain::transaction> send_simple_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                 libbitcoin::chain::transaction> send_token_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
                                                                          libbitcoin::chain::script const& output_script,
                                                                          libbitcoin::ec_secret const& private_key,
                                                                          libbitcoin::wallet::ec_public const& public_key,
                                                                          uint64_t amount,
                                                                          libbitcoin::wallet::payment_address const& addr_origin,
                                                                          libbitcoin::wallet::payment_address const& addr_dest,
+                                                                         uint64_t const& dust,
                                                                          bitprim::keoken::message::asset_id_t asset_id,
                                                                          bitprim::keoken::message::amount_t amount_tokens) {
-  //TODO: dust should be a constant
-  uint64_t dust = 2000;
-
-  uint64_t fee = 0;
-  bool complete = false;
-  // NOTE: the txns is created one time and then recreated using the calculated fee
-  // TODO: calculate the txn size without the need of the signature
-
-  while ( ! complete ) {
-    //Prepare to send_simple
-    libbitcoin::chain::input_point::list inputs;
-    inputs.push_back(output_to_spend);
-
-    libbitcoin::wallet::raw_output output_origin_addr = std::make_pair(addr_origin, amount - fee - dust);
-    libbitcoin::wallet::raw_output output_dest_addr = std::make_pair(addr_dest, dust);
 
     // Create raw transaction using the generated data
-    auto raw_tx = tx_encode_simple_send(inputs, output_origin_addr, output_dest_addr, asset_id, amount_tokens);
+    auto raw_tx = tx_encode_send_token({output_to_spend}, addr_origin, amount, addr_dest, dust, asset_id, amount_tokens);
     if ( raw_tx.first != libbitcoin::error::success ) {
       return {raw_tx.first, {}};
     }
@@ -254,21 +147,9 @@ std::pair<libbitcoin::error::error_code_t,
     if ( sign_and_set_result.first != libbitcoin::error::success) {
       return {sign_and_set_result.first, {}};
     }
-    raw_tx.second = sign_and_set_result.second;
 
-    // The first time calculate the fee and recreate, the second return the transaction
-    if ( fee == 0 ) {
-      fee = raw_tx.second.serialized_size(true);
-    } else {
-      complete = true;
-      return raw_tx;
-    }
-  }
+    return {libbitcoin::error::success , sign_and_set_result.second};
 }
-
-
-
-
 
 
 } // namespace wallet
