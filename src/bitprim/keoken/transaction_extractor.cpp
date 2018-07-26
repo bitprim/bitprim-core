@@ -24,26 +24,15 @@
 #include <bitcoin/bitcoin/machine/opcode.hpp>
 #include <bitcoin/bitcoin/machine/operation.hpp>
 
+#include <bitprim/keoken/constants.hpp>
+
 namespace bitprim {
 namespace keoken {
 
 using libbitcoin::data_chunk;
 using libbitcoin::machine::opcode;
 using libbitcoin::machine::operation;
-
-//C++11
-template <typename E>
-constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept {
-    return static_cast<typename std::underlying_type<E>::type>(e);
-}
-
-//TODO(fernando): move to constants
-uint8_t const protocol_name[] = {0x00, 0x00, 0x4b, 0x50};   //"  KP"
-// constexpr size_t kp_min_size = 4; //TODO(fernando): define
-constexpr size_t kp_min_size = to_underlying(opcode::push_size_4);
-constexpr size_t kp_max_size = to_underlying(opcode::push_four_size);
  
-
 template <typename I>
 data_chunk get_keoken_data(I f, I l) {
     //precondition:  
@@ -354,14 +343,5 @@ API:
 
 */    
 
-
 } // namespace keoken
 } // namespace bitprim
-
-
-
-// //C++14
-// template <typename E>
-// constexpr auto to_underlying(E e) noexcept {
-//     return static_cast<std::underlying_type_t<E>>(e);
-// }

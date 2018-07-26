@@ -25,13 +25,11 @@
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
 
-
 namespace bitprim {
 namespace keoken {
 namespace message {
 
 using namespace bc;
-
 
 // Operators.
 //-----------------------------------------------------------------------------

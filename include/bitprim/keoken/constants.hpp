@@ -16,18 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef BITPRIM_KEOKEN_DOMAIN_BASE_HPP_
-#define BITPRIM_KEOKEN_DOMAIN_BASE_HPP_
+#ifndef BITPRIM_KEOKEN_CONSTANTS_HPP_
+#define BITPRIM_KEOKEN_CONSTANTS_HPP_
+
+#include <bitcoin/bitcoin/machine/opcode.hpp>
+#include <bitcoin/bitcoin/machine/operation.hpp>
+
+#include <bitprim/keoken/utility.hpp>
 
 namespace bitprim {
 namespace keoken {
-namespace domain {
 
-using asset_id_t = uint32_t;
-using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
+//TODO(fernando): move to constants
+uint8_t const protocol_name[] = {0x00, 0x00, 0x4b, 0x50};   //"  KP"
+// constexpr size_t kp_min_size = 4; //TODO(fernando): define
+constexpr size_t kp_min_size = to_underlying(libbitcoin::machine::opcode::push_size_4);
+constexpr size_t kp_max_size = to_underlying(libbitcoin::machine::opcode::push_four_size);
 
-} // namespace domain
 } // namespace keoken
 } // namespace bitprim
 
-#endif //BITPRIM_KEOKEN_DOMAIN_BASE_HPP_
+#endif //BITPRIM_KEOKEN_CONSTANTS_HPP_

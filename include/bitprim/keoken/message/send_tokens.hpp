@@ -30,9 +30,6 @@ namespace bitprim {
 namespace keoken {
 namespace message {
 
-static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8_t, unsigned char>::value,
-    "Bitprim requires std::uint8_t to be implemented as char or unsigned char.");
-
 class BC_API send_tokens {
 public:
     static const uint16_t version = 0;
