@@ -23,15 +23,13 @@
 #include <bitcoin/bitcoin/chain/transaction.hpp>
 #include <bitcoin/bitcoin/formats/base_16.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
+#include <bitcoin/bitcoin/utility/container_source.hpp>
+#include <bitcoin/bitcoin/utility/istream_reader.hpp>
+
 #include <bitprim/keoken/transaction_extractor.hpp>
-
-
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/message/create_asset.hpp>
 #include <bitprim/keoken/message/send_tokens.hpp>
-
-#include <bitcoin/bitcoin/utility/container_source.hpp>
-#include <bitcoin/bitcoin/utility/istream_reader.hpp>
 
 using namespace bitprim::keoken;
 
