@@ -535,7 +535,7 @@ set(bitprim_core_sources_just_bitprim
 
 if (${CURRENCY} STREQUAL "BCH")
     set(bitprim_core_sources_just_bitprim 
-      ${bitprim_core_sources_just_bitprim}         
+      ${bitprim_core_sources_just_bitprim}
       src/wallet/cashaddr.cpp)
 endif()
 
@@ -550,7 +550,7 @@ if (WITH_KEOKEN)
   set(bitprim_core_sources_just_bitprim 
     ${bitprim_core_sources_just_bitprim}
     src/bitprim/keoken/transaction_extractor.cpp
-    src/bitprim/keoken/domain/asset.cpp
+    src/bitprim/keoken/entities/asset.cpp
     src/bitprim/keoken/message/base.cpp
     src/bitprim/keoken/message/create_asset.cpp
     src/bitprim/keoken/message/send_tokens.cpp

@@ -16,20 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef BITPRIM_KEOKEN_DOMAIN_PRIMITIVES_HPP_
-#define BITPRIM_KEOKEN_DOMAIN_PRIMITIVES_HPP_
+#ifndef BITPRIM_KEOKEN_PRIMITIVES_HPP_
+#define BITPRIM_KEOKEN_PRIMITIVES_HPP_
 
 #include <cstdint>
 
 namespace bitprim {
 namespace keoken {
-namespace domain {
 
 using asset_id_t = uint32_t;
 using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
 
-} // namespace domain
 } // namespace keoken
 } // namespace bitprim
 
-#endif //BITPRIM_KEOKEN_DOMAIN_PRIMITIVES_HPP_
+#endif //BITPRIM_KEOKEN_PRIMITIVES_HPP_

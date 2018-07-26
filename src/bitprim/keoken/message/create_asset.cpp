@@ -29,7 +29,21 @@ namespace bitprim {
 namespace keoken {
 namespace message {
 
-using namespace bc;
+using bc::data_chunk;
+using bc::data_source;
+using bc::data_sink;
+using bc::istream_reader;
+using bc::ostream_writer;
+using bc::writer;
+
+// Constructors.
+//-------------------------------------------------------------------------
+
+create_asset::create_asset(std::string name, amount_t amount)
+    : name_(std::move(name))
+    , amount_(amount)
+{}
+
 
 // Operators.
 //-----------------------------------------------------------------------------
@@ -62,7 +76,7 @@ create_asset create_asset::factory_from_data(std::istream& stream) {
 }
 
 // static
-create_asset create_asset::factory_from_data(reader& source) {
+create_asset create_asset::factory_from_data(bc::reader& source) {
     create_asset instance;
     instance.from_data(source);
     return instance;
@@ -78,11 +92,11 @@ bool create_asset::from_data(std::istream& stream) {
     return from_data(source);
 }
 
-std::string read_null_terminated_string(reader& source) {
+std::string read_null_terminated_string(bc::reader& source) {
     std::string res;
 
     auto b = source.read_byte();
-    while (b != 0) {
+    while (b != 0) {        //TODO(fernando): check the name limit: 32 + 1
         res.push_back(b);
         b = source.read_byte();
     }
@@ -91,8 +105,8 @@ std::string read_null_terminated_string(reader& source) {
 }
 
 //Note: from_data and to_data are not longer simetrical.
-bool create_asset::from_data(reader& source) {
-    name_ = read_null_terminated_string(source);
+bool create_asset::from_data(bc::reader& source) {
+    name_ = read_null_terminated_string(source);        //TODO(fernando): check the name limit: 32 + 1
     amount_ = source.read_8_bytes_big_endian();
 
     // if ( ! source)
@@ -123,7 +137,7 @@ void create_asset::to_data(std::ostream& stream) const {
 //Note: from_data and to_data are not simetrical.
 void create_asset::to_data(writer& sink) const {
     base::to_data(sink, version, type);
-    sink.write_bytes(reinterpret_cast<uint8_t const*>(name_.data()), name_.size() + 1);
+    sink.write_bytes(reinterpret_cast<uint8_t const*>(name_.data()), name_.size() + 1);     //NOLINT
     sink.write_8_bytes_big_endian(amount_);
 }
 

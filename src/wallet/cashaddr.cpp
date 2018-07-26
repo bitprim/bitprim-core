@@ -114,37 +114,37 @@ uint64_t poly_mod(data_chunk const& v) {
          */
 
         // First, determine the value of c0:
-        uint8_t c0 = c >> 35;
+        uint8_t c0 = c >> 35u;
 
         // Then compute c1*x^5 + c2*x^4 + c3*x^3 + c4*x^2 + c5*x + d:
-        c = ((c & 0x07ffffffff) << 5) ^ d;
+        c = ((c & 0x07ffffffffu) << 5u) ^ d;
 
         // Finally, for each set bit n in c0, conditionally add {2^n}k(x):
-        if (c0 & 0x01) {
+        if ((c0 & 0x01u) != 0u) {
             // k(x) = {19}*x^7 + {3}*x^6 + {25}*x^5 + {11}*x^4 + {25}*x^3 +
             //        {3}*x^2 + {19}*x + {1}
             c ^= 0x98f2bc8e61;
         }
 
-        if (c0 & 0x02) {
+        if ((c0 & 0x02u) != 0u) {
             // {2}k(x) = {15}*x^7 + {6}*x^6 + {27}*x^5 + {22}*x^4 + {27}*x^3 +
             //           {6}*x^2 + {15}*x + {2}
             c ^= 0x79b76d99e2;
         }
 
-        if (c0 & 0x04) {
+        if ((c0 & 0x04u) != 0u) {
             // {4}k(x) = {30}*x^7 + {12}*x^6 + {31}*x^5 + {5}*x^4 + {31}*x^3 +
             //           {12}*x^2 + {30}*x + {4}
             c ^= 0xf33e5fb3c4;
         }
 
-        if (c0 & 0x08) {
+        if ((c0 & 0x08u) != 0u) {
             // {8}k(x) = {21}*x^7 + {24}*x^6 + {23}*x^5 + {10}*x^4 + {23}*x^3 +
             //           {24}*x^2 + {21}*x + {8}
             c ^= 0xae2eabe2a8;
         }
 
-        if (c0 & 0x10) {
+        if ((c0 & 0x10u) != 0u) {
             // {16}k(x) = {3}*x^7 + {25}*x^6 + {7}*x^5 + {20}*x^4 + {7}*x^3 +
             //            {25}*x^2 + {3}*x + {16}
             c ^= 0x1e4f43e470;
@@ -158,7 +158,7 @@ uint64_t poly_mod(data_chunk const& v) {
      * new valid list. For that reason, cashaddr requires the resulting checksum
      * to be 1 instead.
      */
-    return c ^ 1;
+    return c ^ 1u;
 }
 
 /**
@@ -169,7 +169,7 @@ uint64_t poly_mod(data_chunk const& v) {
 inline 
 uint8_t lower_case(uint8_t c) {
     // ASCII black magic.
-    return c | 0x20;
+    return c | 0x20u;
 }
 
 /**
@@ -179,7 +179,7 @@ data_chunk expand_prefix(std::string const& prefix) {
     data_chunk ret;
     ret.resize(prefix.size() + 1);
     for (size_t i = 0; i < prefix.size(); ++i) {
-        ret[i] = prefix[i] & 0x1f;
+        ret[i] = static_cast<uint8_t>(prefix[i]) & 0x1fu;
     }
 
     ret[prefix.size()] = 0;
@@ -206,13 +206,13 @@ data_chunk create_checksum(std::string const& prefix, data_chunk const& payload)
 
     for (size_t i = 0; i < 8; ++i) {
         // Convert the 5-bit groups in mod to checksum values.
-        ret[i] = (mod >> (5 * (7 - i))) & 0x1f;
+        ret[i] = (mod >> (5 * (7 - i))) & 0x1fu;
     }
 
     return ret;
 }
 
-} // namespace anonymous
+} // namespace
 
 namespace libbitcoin { namespace wallet { namespace cashaddr {
 
@@ -300,11 +300,11 @@ std::pair<std::string, data_chunk> decode(std::string const& str, std::string co
     for (size_t i = 0; i < valuesSize; ++i) {
         uint8_t c = str[i + prefixSize];
         // We have an invalid char in there.
-        if (c > 127 || CHARSET_REV[c] == -1) {
+        if (c > 127 || CHARSET_REV[c] == -1) {      //NOLINT
             return {};
         }
 
-        values[i] = CHARSET_REV[c];
+        values[i] = CHARSET_REV[c];                 //NOLINT
     }
 
     // Verify the checksum.
@@ -315,4 +315,6 @@ std::pair<std::string, data_chunk> decode(std::string const& str, std::string co
     return {std::move(prefix), data_chunk(values.begin(), values.end() - 8)};
 }
 
-}}} // namespace libbitcoin::wallet::cashaddr
+} // namespace cashaddr
+} // namespace wallet
+} // namespace libbitcoin
