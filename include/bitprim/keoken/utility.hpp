@@ -16,30 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef BITPRIM_KEOKEN_MESSAGE_BASE_HPP_
-#define BITPRIM_KEOKEN_MESSAGE_BASE_HPP_
+#ifndef BITPRIM_KEOKEN_UTILITY_HPP_
+#define BITPRIM_KEOKEN_UTILITY_HPP_
 
-#include <bitcoin/bitcoin/utility/writer.hpp>
-
-// Platform check.
-static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8_t, unsigned char>::value,
-    "Bitprim requires std::uint8_t to be implemented as char or unsigned char.");
+#include <bitcoin/bitcoin/chain/transaction.hpp>
+#include <bitcoin/bitcoin/utility/data.hpp>
 
 namespace bitprim {
 namespace keoken {
-namespace message {
 
-using asset_id_t = uint32_t;
-using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
+//C++11
+template <typename E>
+constexpr 
+typename std::underlying_type<E>::type to_underlying(E e) noexcept {
+    return static_cast<typename std::underlying_type<E>::type>(e);
+}
 
-namespace base {
+// //C++14
+// template <typename E>
+// constexpr auto to_underlying(E e) noexcept {
+//     return static_cast<std::underlying_type_t<E>>(e);
+// }
 
-size_t serialized_size();
-void to_data(libbitcoin::writer& sink, uint16_t version, uint16_t type);
-
-} // namespace base
-} // namespace message
 } // namespace keoken
 } // namespace bitprim
 
-#endif //BITPRIM_KEOKEN_MESSAGE_BASE_HPP_
+#endif //BITPRIM_KEOKEN_UTILITY_HPP_

@@ -18,11 +18,7 @@
  */
 #include <bitprim/keoken/message/base.hpp>
 
-// #include <bitcoin/bitcoin/utility/container_sink.hpp>
-// #include <bitcoin/bitcoin/utility/container_source.hpp>
-// #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
-
 
 namespace bitprim {
 namespace keoken {

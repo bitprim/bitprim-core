@@ -24,7 +24,7 @@
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/wallet/payment_address.hpp>
 
-#include <bitprim/keoken/domain/base.hpp>
+#include <bitprim/keoken/domain/primitives.hpp>
 
 
 namespace bitprim {
@@ -40,14 +40,12 @@ public:
     //-------------------------------------------------------------------------
 
     asset() = default;
-
     asset(asset const& other) = default;
     asset(asset&& other) = default;
-
     asset& operator=(asset const& other) = default;
     asset& operator=(asset&& other) = default;
 
-    // Equality Operators.
+    // Regular.
     //-------------------------------------------------------------------------
 
     friend
