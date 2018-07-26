@@ -28,6 +28,7 @@
 
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/message/create_asset.hpp>
+#include <bitprim/keoken/message/send_tokens.hpp>
 
 #include <bitcoin/bitcoin/utility/container_source.hpp>
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
@@ -55,9 +56,9 @@ TEST_CASE("[test_get_keoken_output_empty]") {
     libbitcoin::chain::transaction tx;
     tx.from_data(raw_tx);
     
-    CHECK(tx.is_valid()); 
+    REQUIRE(tx.is_valid()); 
     auto ret = first_keoken_output(tx);
-    CHECK(ret.empty());
+    REQUIRE(ret.empty());
 }
 
 
@@ -68,68 +69,68 @@ TEST_CASE("[test_get_keoken_output_non_empty]") {
     libbitcoin::chain::transaction tx;
     tx.from_data(raw_tx);
     
-    CHECK(tx.is_valid()); 
+    REQUIRE(tx.is_valid()); 
     auto ret = first_keoken_output(tx);
-    CHECK( ! ret.empty());
+    REQUIRE( ! ret.empty());
 }
 
 
 TEST_CASE("[test_get_keoken_output_create_asset_valid]") {
     
-    data_chunk raw_tx = to_chunk(base16_literal("0100000001bd56eab5f51d3d888f72c3e88187dc6cbd0b1abeefbe2348912619301a9e489f000000006b4830450221009a89bf0c34b87154fc4eb3e99a6e044ae21e76e244264645e8de4a747f6989dc02205d350d3113af2ce3cb013f4931c9f4c34d5925d9ffc76e56272befd9f47b521a412102bbfc0ef6f18b7594a930e2dd4e05bb90fbe7be60f58fbc8829f4fda9580af72dffffffff02606b042a010000001976a91456233da90fa320a56359161d02a9eed76b6157c088ac00000000000000001b6a0400004b5014000000014269747072696d0000000000000f424000000000"));
+    //data_chunk raw_tx = to_chunk(base16_literal("0100000001bd56eab5f51d3d888f72c3e88187dc6cbd0b1abeefbe2348912619301a9e489f000000006b4830450221009a89bf0c34b87154fc4eb3e99a6e044ae21e76e244264645e8de4a747f6989dc02205d350d3113af2ce3cb013f4931c9f4c34d5925d9ffc76e56272befd9f47b521a412102bbfc0ef6f18b7594a930e2dd4e05bb90fbe7be60f58fbc8829f4fda9580af72dffffffff02606b042a010000001976a91456233da90fa320a56359161d02a9eed76b6157c088ac00000000000000001b6a0400004b5014000000014269747072696d0000000000000f424000000000"));
+
+    data_chunk raw_tx = to_chunk(base16_literal(""));
 
     libbitcoin::chain::transaction tx;
     tx.from_data(raw_tx);
     
-    CHECK(tx.is_valid()); 
+    REQUIRE(tx.is_valid()); 
     auto ret = first_keoken_output(tx);
-    CHECK( ! ret.empty());
+    REQUIRE( ! ret.empty());
 
     data_source ds(ret);
     istream_reader source(ds);
 
     auto version = source.read_2_bytes_big_endian();
-    CHECK(version == 0);
+    REQUIRE(version == 0);
     
     auto type = source.read_2_bytes_big_endian();
-    CHECK(type == 1);
+    REQUIRE(type == 0);
     
     auto msg = message::create_asset::factory_from_data(source);
     auto name = msg.name();
-    CHECK(name == "Bitprim");
+    REQUIRE(name == "Bitprim");
 
     auto amount = msg.amount();
-    CHECK(amount == 1000000);
+    REQUIRE(amount == 1000000);
 }
 
 
-// #include <bitcoin/bitcoin/multi_crypto_support.hpp>
-// //#include <bitcoin/bitcoin/wallet/cashaddr.hpp>
-// #include <bitcoin/bitcoin/wallet/payment_address.hpp>
+TEST_CASE("[test_get_keoken_output_send_tokens_valid]") {
+    
+    data_chunk raw_tx = to_chunk(base16_literal(""));
 
-// using namespace libbitcoin::wallet;
-// using namespace std;
+    libbitcoin::chain::transaction tx;
+    tx.from_data(raw_tx);
+    
+    REQUIRE(tx.is_valid()); 
+    auto ret = first_keoken_output(tx);
+    REQUIRE( ! ret.empty());
 
-// #ifdef BITPRIM_CURRENCY_BCH
-// TEST_CASE("[payment_address__construct__payment__valid_expected] payment_address__construct__payment__valid_expected") {
+    data_source ds(ret);
+    istream_reader source(ds);
 
-//     libbitcoin::set_bitcoin_cash(true);
-//     std::vector<std::pair<std::string, std::string>> cases = {
-//         {"1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu", "bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a"},
-//         {"1KXrWXciRDZUpQwQmuM1DbwsKDLYAYsVLR", "bitcoincash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y0qverfuy"},
-//         {"16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb", "bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r"},
-//         {"3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC", "bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq"},
-//         {"3LDsS579y7sruadqu11beEJoTjdFiFCdX4", "bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e"},
-//         {"31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw", "bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37"}
-//     };
+    auto version = source.read_2_bytes_big_endian();
+    REQUIRE(version == 0);
+    
+    auto type = source.read_2_bytes_big_endian();
+    REQUIRE(type == 1);
+    
+    auto msg = message::send_tokens::factory_from_data(source);
+    auto name = msg.asset_id();
+    REQUIRE(name == 1);
 
-//     for (auto&& c : cases) {
-//         payment_address const from_legacy(c.first);
-//         payment_address const from_cashaddr(c.second);
-//         CHECK(from_legacy.encoded() == from_cashaddr.encoded());
-//         CHECK(from_legacy.encoded_cashaddr() == from_cashaddr.encoded_cashaddr());
-//     }
-// }
-// #endif //BITPRIM_CURRENCY_BCH
-
+    auto amount = msg.amount();
+    REQUIRE(amount == 50);
+}
 
