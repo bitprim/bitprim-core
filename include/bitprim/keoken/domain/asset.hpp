@@ -22,6 +22,7 @@
 #include <string>
 
 #include <bitcoin/bitcoin/define.hpp>
+#include <bitcoin/bitcoin/wallet/payment_address.hpp>
 
 #include <bitprim/keoken/domain/base.hpp>
 
@@ -33,8 +34,7 @@ namespace domain {
 class BC_API asset {
 public:
 
-    asset(asset_id_t id, std::string const& name, amount_t amount);
-    asset(asset_id_t id, std::string&& name, amount_t amount);
+    asset(asset_id_t id, std::string name, amount_t amount, libbitcoin::wallet::payment_address owner);
 
     // Semiregular.
     //-------------------------------------------------------------------------
@@ -61,19 +61,23 @@ public:
     //-------------------------------------------------------------------------
 
     asset_id_t id() const;
-    void set_id(asset_id_t x);
+    // void set_id(asset_id_t x);
 
     std::string const& name() const;
-    void set_name(std::string const& x);
-    void set_name(std::string&& x);
+    // void set_name(std::string x);
 
     amount_t amount() const;
-    void set_amount(amount_t x);
+    // void set_amount(amount_t x);
+
+    libbitcoin::wallet::payment_address const& owner() const;
+    // void set_owner(libbitcoin::wallet::payment_address x);
+
 
 private:
     asset_id_t id_;
     std::string name_;
     amount_t amount_;
+    libbitcoin::wallet::payment_address owner_;
 };
 
 } // namespace domain

@@ -107,14 +107,6 @@ if (WITH_PNG)
   add_definitions(-DWITH_PNG)
 endif()
 
-# Implement --with-litecoin.
-#------------------------------------------------------------------------------
-# option(WITH_LITECOIN "Compile with Litecoin support." OFF)
-# if (WITH_LITECOIN)
-#   add_definitions(-DWITH_LITECOIN)
-#   add_definitions(-DBITPRIM_LITECOIN)
-# endif()
-
 # Implement --with-qrencode and output ${qrencode}.
 #------------------------------------------------------------------------------
 option(WITH_QRENCODE "Compile with QREncode." OFF)
@@ -127,9 +119,17 @@ if (WITH_QRENCODE)
 endif()
 
 
+# Implement --JUST_BITPRIM_SOURCES for linting.
+#------------------------------------------------------------------------------
+option(JUST_BITPRIM_SOURCES "Just Bitprim source code to be linted." OFF)
+if (JUST_BITPRIM_SOURCES)
+  message(STATUS "Bitprim: Just Bitprim source code to be linted: enabled")
+endif()
+
+
+
 set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Version.")
 # message(${BITPRIM_PROJECT_VERSION})
-
 
 set(MICROARCHITECTURE "x86_64" CACHE STRING "Specify the Cryptocurrency (x86_64|...).")
 message( STATUS "Bitprim: Compiling for ${MICROARCHITECTURE}")
@@ -329,7 +329,7 @@ if (ENABLE_SHARED)
   set(MODE SHARED)
 endif()
 
-set(bitprim_core_sources 
+set(bitprim_core_sources_just_libbitcoin
         src/chain/block.cpp
         src/chain/chain_state.cpp
         src/chain/compact.cpp
@@ -497,7 +497,6 @@ set(bitprim_core_sources
 
         src/wallet/bitcoin_uri.cpp
         
-
         src/wallet/dictionary.cpp
         src/wallet/ec_private.cpp
         src/wallet/ec_public.cpp
@@ -521,10 +520,8 @@ set(bitprim_core_sources
         src/wallet/parse_encrypted_keys/parse_encrypted_token.cpp
         src/wallet/parse_encrypted_keys/parse_encrypted_token.hpp
         src/wallet/payment_address.cpp
-        
         src/wallet/qrcode.cpp
         src/wallet/select_outputs.cpp
-
         src/wallet/select_outputs.cpp
         src/wallet/stealth_address.cpp
         src/wallet/stealth_receiver.cpp
@@ -533,13 +530,25 @@ set(bitprim_core_sources
         src/wallet/transaction_functions.cpp
 )
 
+set(bitprim_core_sources_just_bitprim
+)
+
 if (${CURRENCY} STREQUAL "BCH")
-    set(bitprim_core_sources ${bitprim_core_sources}         
+    set(bitprim_core_sources_just_bitprim 
+      ${bitprim_core_sources_just_bitprim}         
       src/wallet/cashaddr.cpp)
 endif()
 
+if (${CURRENCY} STREQUAL "LTC")
+    set(bitprim_core_sources_just_bitprim 
+      ${bitprim_core_sources_just_bitprim}         
+      src/math/external/scrypt.cpp
+      src/math/external/scrypt-sse2.cpp)
+endif()
+
 if (WITH_KEOKEN)
-  set(bitprim_core_sources ${bitprim_core_sources}
+  set(bitprim_core_sources_just_bitprim 
+    ${bitprim_core_sources_just_bitprim}
     src/bitprim/keoken/transaction_extractor.cpp
     src/bitprim/keoken/domain/base.cpp
     src/bitprim/keoken/domain/asset.cpp
@@ -550,14 +559,17 @@ if (WITH_KEOKEN)
   )
 endif()
 
-
-
-# if (WITH_LITECOIN)
-if (${CURRENCY} STREQUAL "LTC")
-    set(bitprim_core_sources ${bitprim_core_sources}         
-      src/math/external/scrypt.cpp
-      src/math/external/scrypt-sse2.cpp)
+if (NOT JUST_BITPRIM_SOURCES)
+  set(bitprim_core_sources 
+    ${bitprim_core_sources_just_libbitcoin}
+  )
 endif()
+
+set(bitprim_core_sources 
+  ${bitprim_core_sources}   
+  ${bitprim_core_sources_just_bitprim}         
+)
+
 
 add_library(bitprim-core ${MODE} ${bitprim_core_sources})
 
