@@ -554,7 +554,7 @@ if (WITH_KEOKEN)
     src/bitprim/keoken/message/base.cpp
     src/bitprim/keoken/message/create_asset.cpp
     src/bitprim/keoken/message/send_tokens.cpp
-    src/bitprim/keoken/wallet/createtransanction.cpp
+    src/bitprim/keoken/wallet/create_transanction.cpp
   )
 endif()
 

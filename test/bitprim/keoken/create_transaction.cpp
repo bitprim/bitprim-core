@@ -27,11 +27,12 @@
 #include <bitcoin/bitcoin/config/output.hpp>
 #include <bitcoin/bitcoin/config/input.hpp>
 #include <bitcoin/bitcoin/wallet/transaction_functions.hpp>
-#include <bitprim/keoken/wallet/createtransaction.hpp>
 #include <bitcoin/bitcoin/formats/base_16.hpp>
+
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/message/create_asset.hpp>
 #include <bitprim/keoken/message/send_tokens.hpp>
+#include <bitprim/keoken/wallet/create_transaction.hpp>
 
 using namespace bc;
 
