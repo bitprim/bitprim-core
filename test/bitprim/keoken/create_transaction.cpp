@@ -1,7 +1,7 @@
 /**
- * Copyright (c) 2011-2017 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2017-2018 Bitprim Inc
  *
- * This file is part of libbitcoin.
+ * This file is part of Bitprim.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -42,11 +42,9 @@ using namespace bc;
 #define SIGNATURE "30440220433c405e4cb7698ad5f58e0ea162c3c3571d46d96ff1b3cb9232a06eba3b444d02204bc5f48647c0f052ade7cf85eac3911f7afbfa69fa5ebd92084191a5da33f88d41"
 #define COMPLETE_TX "01000000019373b022dfb99400ee40b8987586aea9e158f3b0c62343d59896c212cee60d98010000006a4730440220433c405e4cb7698ad5f58e0ea162c3c3571d46d96ff1b3cb9232a06eba3b444d02204bc5f48647c0f052ade7cf85eac3911f7afbfa69fa5ebd92084191a5da33f88d4121027a45d4abb6ebb00214796e2c7cf61d18c9185ba771fe9ed75b303eb7a8e9028bffffffff0118beeb0b000000001976a914b43ff4532569a00bcab4ce60f87cdeebf985b69a88ac00000000"
 
-
 BOOST_AUTO_TEST_SUITE(bitprim_keoken_transactions_tests)
 
-BOOST_AUTO_TEST_CASE(keoken__send_token__expected)
-{
+BOOST_AUTO_TEST_CASE(keoken__send_token__expected) {
   std::vector<chain::input_point> outputs_to_spend;
   libbitcoin::hash_digest hash_to_spend;
   libbitcoin::decode_hash(hash_to_spend, "980de6ce12c29698d54323c6b0f358e1a9ae867598b840ee0094b9df22b07393");
@@ -54,12 +52,17 @@ BOOST_AUTO_TEST_CASE(keoken__send_token__expected)
   outputs_to_spend.push_back({hash_to_spend, index_to_spend});
   bitprim::keoken::message::asset_id_t asset_id = 1;
   bitprim::keoken::message::amount_t amount_tokens = 1;
-  auto result = bitprim::keoken::wallet::tx_encode_send_token(outputs_to_spend, libbitcoin::wallet::payment_address(WALLET), 21647102398, libbitcoin::wallet::payment_address(WALLETDESTINY), 20000, asset_id, amount_tokens);
+  auto result = bitprim::keoken::wallet::tx_encode_send_token(outputs_to_spend,
+                                                              libbitcoin::wallet::payment_address(WALLET),
+                                                              21647102398,
+                                                              libbitcoin::wallet::payment_address(WALLETDESTINY),
+                                                              20000,
+                                                              asset_id,
+                                                              amount_tokens);
   BOOST_REQUIRE_EQUAL(1, 1);
 }
 
-BOOST_AUTO_TEST_CASE(keoken__create_asset__expected)
-{
+BOOST_AUTO_TEST_CASE(keoken__create_asset__expected) {
   std::vector<chain::input_point> outputs_to_spend;
   libbitcoin::hash_digest hash_to_spend;
   libbitcoin::decode_hash(hash_to_spend, "980de6ce12c29698d54323c6b0f358e1a9ae867598b840ee0094b9df22b07393");
@@ -67,9 +70,12 @@ BOOST_AUTO_TEST_CASE(keoken__create_asset__expected)
   outputs_to_spend.push_back({hash_to_spend, index_to_spend});
   std::string name = "testcoin";
   bitprim::keoken::message::amount_t amount_tokens = 1;
-  auto result = bitprim::keoken::wallet::tx_encode_create_asset(outputs_to_spend, libbitcoin::wallet::payment_address(WALLET), 21647102398, name, amount_tokens);
+  auto result = bitprim::keoken::wallet::tx_encode_create_asset(outputs_to_spend,
+                                                                libbitcoin::wallet::payment_address(WALLET),
+                                                                21647102398,
+                                                                name,
+                                                                amount_tokens);
   BOOST_REQUIRE_EQUAL(1, 1);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
