@@ -66,7 +66,7 @@ BC_API std::pair<libbitcoin::error::error_code_t,
                                                                           libbitcoin::wallet::ec_public const &public_key,
                                                                           uint64_t amount,
                                                                           libbitcoin::wallet::payment_address const &addr,
-                                                                          std::string &token_name,
+                                                                          std::string &asset_name,
                                                                           bitprim::keoken::message::amount_t amount_tokens);
 BC_API std::pair<libbitcoin::error::error_code_t,
                  libbitcoin::chain::transaction> send_simple_tx_complete(libbitcoin::chain::input_point const &output_to_spend,

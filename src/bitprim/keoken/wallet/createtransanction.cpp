@@ -119,9 +119,9 @@ std::pair<libbitcoin::error::error_code_t,
                                                                    libbitcoin::wallet::ec_public const &public_key,
                                                                    uint64_t amount,
                                                                    libbitcoin::wallet::payment_address const &addr,
-                                                                   std::string &token_name,
+                                                                   std::string &asset_name,
                                                                    bitprim::keoken::message::amount_t amount_tokens) {
-  auto raw_tx = tx_encode_create_asset({output_to_spend}, addr, amount, token_name, amount_tokens);
+  auto raw_tx = tx_encode_create_asset({output_to_spend}, addr, amount, asset_name, amount_tokens);
   if (raw_tx.first != libbitcoin::error::success) {
     return {raw_tx.first, {}};
   }
