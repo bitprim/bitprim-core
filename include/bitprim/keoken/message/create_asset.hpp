@@ -25,32 +25,32 @@
 #include <bitcoin/bitcoin/utility/writer.hpp>
 
 #include <bitprim/keoken/message/base.hpp>
+#include <bitprim/keoken/primitives.hpp>
 
 namespace bitprim {
 namespace keoken {
 namespace message {
-
 
 class BC_API create_asset {
 public:
     static const uint16_t version = 0;
     static const uint16_t type = 0;
 
-    create_asset(std::string const& name, amount_t amount);
-    create_asset(std::string&& name, amount_t amount);
+    // Constructors.
+    //-------------------------------------------------------------------------
+
+    create_asset(std::string name, amount_t amount);
 
     // Semiregular.
     //-------------------------------------------------------------------------
 
     create_asset() = default;
+    // create_asset(create_asset const& other) = default;
+    // create_asset(create_asset&& other) = default;
+    // create_asset& operator=(create_asset const& other) = default;
+    // create_asset& operator=(create_asset&& other) = default;
 
-    create_asset(create_asset const& other) = default;
-    create_asset(create_asset&& other) = default;
-
-    create_asset& operator=(create_asset const& other) = default;
-    create_asset& operator=(create_asset&& other) = default;
-
-    // Equality Operators.
+    // Regular.
     //-------------------------------------------------------------------------
 
     friend
@@ -92,7 +92,7 @@ public:
 private:
     // char name[17];      // 16 + 1. minus the \0 termination
     std::string name_;
-    amount_t amount_;
+    amount_t amount_;       //NOLINT
 };
 
 } // namespace message

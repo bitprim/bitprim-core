@@ -28,10 +28,6 @@ static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8
 namespace bitprim {
 namespace keoken {
 namespace message {
-
-using asset_id_t = uint32_t;
-using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
-
 namespace base {
 
 size_t serialized_size();

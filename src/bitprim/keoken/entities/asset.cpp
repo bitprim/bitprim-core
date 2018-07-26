@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitprim/keoken/domain/asset.hpp>
+#include <bitprim/keoken/entities/asset.hpp>
 
-#include <bitprim/keoken/domain/primitives.hpp>
+#include <bitprim/keoken/primitives.hpp>
 
 namespace bitprim {
 namespace keoken {
-namespace domain {
+namespace entities {
 
-using namespace bc;
+// using namespace bc;
 using bc::wallet::payment_address;
 
 
@@ -88,6 +88,6 @@ payment_address const& asset::owner() const {
 // }
 
 
-} // namespace domain
+} // namespace entities
 } // namespace keoken
 } // namespace bitprim

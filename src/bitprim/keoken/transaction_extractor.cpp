@@ -42,19 +42,17 @@ data_chunk get_keoken_data(I f, I l) {
 
     if (f->code() != opcode::return_) return data_chunk{};
 
-    ++f;        //me muevo al siguiente operation (de Eric)
+    ++f;        //move to the next machine::operation
     if (f == l) return data_chunk{};
 
     if (f->code() != opcode::push_size_4) return data_chunk{};
 
-    if ( ! std::equal(f->data().begin(), f->data().end(), protocol_name)) {
+    if ( ! std::equal(f->data().begin(), f->data().end(), static_cast<uint8_t const*>(protocol_name))) {
         return data_chunk{};
     }
 
-    ++f;
+    ++f;        //move to the next machine::operation
     if (f == l) return data_chunk{};
-
-    // if (f->code() != opcode::push_size_4) return data_chunk{};
 
     if (to_underlying(f->code()) < kp_min_size) return data_chunk{};
     if (to_underlying(f->code()) > kp_max_size) return data_chunk{};

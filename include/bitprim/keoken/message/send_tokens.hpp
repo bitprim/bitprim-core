@@ -25,6 +25,7 @@
 #include <bitcoin/bitcoin/utility/writer.hpp>
 
 #include <bitprim/keoken/message/base.hpp>
+#include <bitprim/keoken/primitives.hpp>
 
 namespace bitprim {
 namespace keoken {
@@ -35,21 +36,21 @@ public:
     static const uint16_t version = 0;
     static const uint16_t type = 10;
     
-    send_tokens(asset_id_t asset, amount_t amount);
+    // Constructors.
+    //-------------------------------------------------------------------------
+
+    send_tokens(asset_id_t asset_id, amount_t amount);
 
     // Semiregular.
     //-------------------------------------------------------------------------
 
     send_tokens() = default;
-
-    send_tokens(send_tokens const& other) = default;
+    // send_tokens(send_tokens const& other) = default;
     // send_tokens(send_tokens&& other) = default;
-
-    send_tokens& operator=(send_tokens const& other) = default;
+    // send_tokens& operator=(send_tokens const& other) = default;
     // send_tokens& operator=(send_tokens&& other) = default;
 
-
-    // Equality Operators.
+    // Regular.
     //-------------------------------------------------------------------------
 
     friend

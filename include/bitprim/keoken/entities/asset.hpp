@@ -16,20 +16,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef BITPRIM_KEOKEN_DOMAIN_ASSET_HPP_
-#define BITPRIM_KEOKEN_DOMAIN_ASSET_HPP_
+#ifndef BITPRIM_KEOKEN_ENTITIES_ASSET_HPP_
+#define BITPRIM_KEOKEN_ENTITIES_ASSET_HPP_
 
 #include <string>
 
 #include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/wallet/payment_address.hpp>
 
-#include <bitprim/keoken/domain/primitives.hpp>
-
+#include <bitprim/keoken/primitives.hpp>
 
 namespace bitprim {
 namespace keoken {
-namespace domain {
+namespace entities {
 
 class BC_API asset {
 public:
@@ -40,10 +39,10 @@ public:
     //-------------------------------------------------------------------------
 
     asset() = default;
-    asset(asset const& other) = default;
-    asset(asset&& other) = default;
-    asset& operator=(asset const& other) = default;
-    asset& operator=(asset&& other) = default;
+    // asset(asset const& other) = default;
+    // asset(asset&& other) = default;
+    // asset& operator=(asset const& other) = default;
+    // asset& operator=(asset&& other) = default;
 
     // Regular.
     //-------------------------------------------------------------------------
@@ -78,8 +77,8 @@ private:
     libbitcoin::wallet::payment_address owner_;
 };
 
-} // namespace domain
+} // namespace entities
 } // namespace keoken
 } // namespace bitprim
 
-#endif //BITPRIM_KEOKEN_DOMAIN_ASSET_HPP_
+#endif //BITPRIM_KEOKEN_ENTITIES_ASSET_HPP_
