@@ -49,7 +49,7 @@ if __name__ == "__main__":
                 options["%s:currency" % name] = ci_currency
                 if ci_currency == "BCH":
                     options_keoken = copy.deepcopy(options)
-                    opts_bch_keoken["%s:keoken" % name] = True
+                    options_keoken["%s:keoken" % name] = True
                     handle_microarchs("%s:microarchitecture" % name, marchs, filtered_builds, settings, options_keoken, env_vars, build_requires)
 
                 handle_microarchs("%s:microarchitecture" % name, marchs, filtered_builds, settings, options, env_vars, build_requires)
