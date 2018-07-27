@@ -16,10 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import os
 from conans import CMake
-from ci_utils import option_on_off, get_version, get_conan_req_version, march_conan_manip, pass_march_to_compiler
+from ci_utils import option_on_off, march_conan_manip, pass_march_to_compiler
 from ci_utils import BitprimConanFile
 
 class BitprimCoreConan(BitprimConanFile):
@@ -71,6 +69,10 @@ class BitprimCoreConan(BitprimConanFile):
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
+    @property
+    def is_keoken(self):
+        return self.options.currency == "BCH" and self.options.get_safe("keoken")
+
     def requirements(self):
         self.requires("boost/1.66.0@bitprim/stable")
         self.requires("secp256k1/0.X@%s/%s" % (self.user, self.channel))
@@ -79,7 +81,7 @@ class BitprimCoreConan(BitprimConanFile):
         #     self.requires("libpng/1.6.34@bitprim/stable")
             
         if self.options.currency == "LTC":
-             self.requires("OpenSSL/1.0.2l@conan/stable")
+            self.requires("OpenSSL/1.0.2l@conan/stable")
 
         if self.options.with_qrencode:
             self.requires("libqrencode/4.0.0@bitprim/stable")
@@ -95,6 +97,7 @@ class BitprimCoreConan(BitprimConanFile):
             if self.options.shared and self.msvc_mt_build:
                 self.options.remove("shared")
 
+
     def configure(self):
         if self.settings.arch == "x86_64" and self.options.microarchitecture == "_DUMMY_":
             del self.options.fix_march
@@ -104,6 +107,12 @@ class BitprimCoreConan(BitprimConanFile):
         if self.settings.arch == "x86_64":
             march_conan_manip(self)
             self.options["*"].microarchitecture = self.options.microarchitecture
+
+        if self.options.keoken and self.options.currency != "BCH":
+            self.output.warn("For the moment Keoken is only enabled for BCH. Building without Keoken support...")
+            del self.options.keoken
+        else:
+            self.options["*"].keoken = self.options.keoken
 
         self.options["*"].currency = self.options.currency
         self.output.info("Compiling for currency: %s" % (self.options.currency,))
@@ -133,7 +142,7 @@ class BitprimCoreConan(BitprimConanFile):
         cmake.definitions["ENABLE_SHARED"] = option_on_off(self.is_shared)
         cmake.definitions["ENABLE_POSITION_INDEPENDENT_CODE"] = option_on_off(self.fPIC_enabled)
 
-        cmake.definitions["WITH_KEOKEN"] = option_on_off(self.options.keoken)
+        cmake.definitions["WITH_KEOKEN"] = option_on_off(self.is_keoken)
         cmake.definitions["WITH_TESTS"] = option_on_off(self.options.with_tests)
         cmake.definitions["WITH_TESTS_NEW"] = option_on_off(self.options.with_tests)
         cmake.definitions["WITH_EXAMPLES"] = option_on_off(self.options.with_examples)
@@ -172,7 +181,7 @@ class BitprimCoreConan(BitprimConanFile):
 
         cmake.build()
 
-        #TODO(fernando): Cmake Tests and Visual Studio doesn't work
+        #Note: Cmake Tests and Visual Studio doesn't work
         if self.options.with_tests:
             cmake.test()
             # cmake.test(target="tests")
