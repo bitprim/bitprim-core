@@ -29,9 +29,9 @@
 namespace bitprim {
 namespace keoken {
 
-using libbitcoin::data_chunk;
-using libbitcoin::machine::opcode;
-using libbitcoin::machine::operation;
+using bc::data_chunk;
+using bc::machine::opcode;
+using bc::machine::operation;
  
 template <typename I>
 data_chunk get_keoken_data(I f, I l) {
@@ -64,7 +64,7 @@ data_chunk get_keoken_data(operation::list const& ops) {
     return get_keoken_data(ops.begin(), ops.end());
 }
 
-data_chunk first_keoken_output(libbitcoin::chain::transaction const& tx) {
+data_chunk first_keoken_output(bc::chain::transaction const& tx) {
     //precondition: tx is a confirmed transaction
     for (auto const& out : tx.outputs()) {
         auto const& keo_data = get_keoken_data(out.script().operations());

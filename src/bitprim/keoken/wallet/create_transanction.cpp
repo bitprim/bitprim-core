@@ -21,6 +21,7 @@
 #include <bitcoin/bitcoin/formats/base_16.hpp>
 #include <bitcoin/bitcoin/wallet/transaction_functions.hpp>
 
+#include <bitprim/keoken/constants.hpp>
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/message/create_asset.hpp>
 #include <bitprim/keoken/message/send_tokens.hpp>
@@ -61,13 +62,13 @@ result_t sign_and_set(script const& output_script,
 } // namespace detail
 
 output create_keoken_output(data_chunk const& keoken_message){
-    data_chunk header;
-    libbitcoin::decode_base16(header,"00004b50");
+    // data_chunk header;
+    // libbitcoin::decode_base16(header,"00004b50");
 
     // Note: Adding an op_code using {data_chunk} automatically adds the size on front of the message
     libbitcoin::machine::operation::list op_codes = {
         {libbitcoin::machine::opcode::return_},
-        {header},
+        bc::to_chunk(protocol_name),
         {keoken_message}
     };
 

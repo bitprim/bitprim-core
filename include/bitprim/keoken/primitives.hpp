@@ -25,7 +25,7 @@ namespace bitprim {
 namespace keoken {
 
 using asset_id_t = uint32_t;
-using amount_t = int64_t;      //TODO(fernando): signed or unsigned ??
+using amount_t = int64_t;
 
 } // namespace keoken
 } // namespace bitprim

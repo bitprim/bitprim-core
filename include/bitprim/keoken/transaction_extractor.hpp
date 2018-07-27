@@ -25,7 +25,7 @@
 namespace bitprim {
 namespace keoken {
 
-libbitcoin::data_chunk first_keoken_output(libbitcoin::chain::transaction const& tx);
+bc::data_chunk first_keoken_output(bc::chain::transaction const& tx);
 
 } // namespace keoken
 } // namespace bitprim

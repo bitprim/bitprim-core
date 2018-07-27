@@ -33,7 +33,7 @@ namespace entities {
 class BC_API asset {
 public:
 
-    asset(asset_id_t id, std::string name, amount_t amount, libbitcoin::wallet::payment_address owner);
+    asset(asset_id_t id, std::string name, amount_t amount, bc::wallet::payment_address owner);
 
     // Semiregular.
     //-------------------------------------------------------------------------
@@ -66,15 +66,15 @@ public:
     amount_t amount() const;
     // void set_amount(amount_t x);
 
-    libbitcoin::wallet::payment_address const& owner() const;
-    // void set_owner(libbitcoin::wallet::payment_address x);
+    bc::wallet::payment_address const& owner() const;
+    // void set_owner(bc::::wallet::payment_address x);
 
 
 private:
     asset_id_t id_;
     std::string name_;
     amount_t amount_;
-    libbitcoin::wallet::payment_address owner_;
+    bc::wallet::payment_address owner_;
 };
 
 } // namespace entities

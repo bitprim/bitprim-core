@@ -31,7 +31,7 @@ using bc::wallet::payment_address;
 // Constructors.
 //-----------------------------------------------------------------------------
 
-asset::asset(asset_id_t id, std::string name, amount_t amount, libbitcoin::wallet::payment_address owner) 
+asset::asset(asset_id_t id, std::string name, amount_t amount, bc::wallet::payment_address owner) 
     : id_(id)
     , name_(std::move(name))
     , amount_(amount)
@@ -83,7 +83,7 @@ payment_address const& asset::owner() const {
     return owner_;
 }
 
-// void asset::set_owner(libbitcoin::wallet::payment_address x) {
+// void asset::set_owner(bc::wallet::payment_address x) {
 //     owner_ = std::move(x);
 // }
 

@@ -28,12 +28,14 @@ static_assert(std::is_same<std::uint8_t, char>::value || std::is_same<std::uint8
 namespace bitprim {
 namespace keoken {
 namespace message {
+
 namespace base {
 
 size_t serialized_size();
-void to_data(libbitcoin::writer& sink, uint16_t version, uint16_t type);
+void to_data(bc::writer& sink, uint16_t version, uint16_t type);
 
 } // namespace base
+
 } // namespace message
 } // namespace keoken
 } // namespace bitprim

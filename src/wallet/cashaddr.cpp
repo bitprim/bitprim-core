@@ -20,7 +20,7 @@
  */
 #include <bitcoin/bitcoin/wallet/cashaddr.hpp>
 
-using data_chunk = libbitcoin::data_chunk;
+using data_chunk = bc::data_chunk;
 
 namespace {
 
@@ -44,7 +44,7 @@ int8_t const CHARSET_REV[128] = {
 /**
  * Concatenate two byte arrays.
  */
-libbitcoin::data_chunk cat(data_chunk x, data_chunk const& y) {
+bc::data_chunk cat(data_chunk x, data_chunk const& y) {
     x.insert(x.end(), y.begin(), y.end());
     return x;
 }

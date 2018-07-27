@@ -35,6 +35,7 @@ class BC_API create_asset {
 public:
     static const uint16_t version = 0;
     static const uint16_t type = 0;
+    static const size_t max_name_size = 32u + 1u;   //32 real chars plus null-terminated
 
     // Constructors.
     //-------------------------------------------------------------------------
@@ -62,20 +63,20 @@ public:
     // Deserialization.
     //-------------------------------------------------------------------------
 
-    static create_asset factory_from_data(libbitcoin::data_chunk const& data);
+    static create_asset factory_from_data(bc::data_chunk const& data);
     static create_asset factory_from_data(std::istream& stream);
-    static create_asset factory_from_data(libbitcoin::reader& source);
+    static create_asset factory_from_data(bc::reader& source);
 
-    bool from_data(libbitcoin::data_chunk const& data);
+    bool from_data(bc::data_chunk const& data);
     bool from_data(std::istream& stream);
-    bool from_data(libbitcoin::reader& source);
+    bool from_data(bc::reader& source);
 
     // Serialization.
     //-------------------------------------------------------------------------
 
-    libbitcoin::data_chunk to_data() const;
+    bc::data_chunk to_data() const;
     void to_data(std::ostream& stream) const;
-    void to_data(libbitcoin::writer& sink) const;
+    void to_data(bc::writer& sink) const;
 
     // Properties (size, accessors, cache).
     //-------------------------------------------------------------------------

@@ -18,12 +18,13 @@
  */
 #include <bitprim/keoken/message/create_asset.hpp>
 
-#include <bitprim/keoken/message/base.hpp>
-
 #include <bitcoin/bitcoin/utility/container_sink.hpp>
 #include <bitcoin/bitcoin/utility/container_source.hpp>
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
+
+#include <bitprim/keoken/message/base.hpp>
+#include <bitprim/keoken/utility.hpp>
 
 namespace bitprim {
 namespace keoken {
@@ -92,21 +93,13 @@ bool create_asset::from_data(std::istream& stream) {
     return from_data(source);
 }
 
-std::string read_null_terminated_string(bc::reader& source) {
-    std::string res;
-
-    auto b = source.read_byte();
-    while (b != 0) {        //TODO(fernando): check the name limit: 32 + 1
-        res.push_back(b);
-        b = source.read_byte();
-    }
-
-    return res;
-}
-
 //Note: from_data and to_data are not longer simetrical.
 bool create_asset::from_data(bc::reader& source) {
-    name_ = read_null_terminated_string(source);        //TODO(fernando): check the name limit: 32 + 1
+    //TODO(fernando): check the name limit: 32 + 1
+    auto name_opt = read_null_terminated_string(source, max_name_size);
+    if ( ! name_opt) return false;
+    name_ = *name_opt;
+
     amount_ = source.read_8_bytes_big_endian();
 
     // if ( ! source)

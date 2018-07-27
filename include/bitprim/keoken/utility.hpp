@@ -19,6 +19,8 @@
 #ifndef BITPRIM_KEOKEN_UTILITY_HPP_
 #define BITPRIM_KEOKEN_UTILITY_HPP_
 
+#include <boost/optional.hpp>
+
 #include <bitcoin/bitcoin/chain/transaction.hpp>
 #include <bitcoin/bitcoin/utility/data.hpp>
 
@@ -37,6 +39,44 @@ typename std::underlying_type<E>::type to_underlying(E e) noexcept {
 // constexpr auto to_underlying(E e) noexcept {
 //     return static_cast<std::underlying_type_t<E>>(e);
 // }
+
+inline
+std::string read_null_terminated_string_unlimited(bc::reader& source) {
+    // precondition: there is almost 1 `\0` byte in source
+    std::string res;
+
+    auto b = source.read_byte();
+    while (source && b != 0) {
+        res.push_back(b);
+        b = source.read_byte();
+    }
+
+    return res;
+}
+
+//TODO(fernando): check the name limit: 32 + 1
+inline
+boost::optional<std::string> read_null_terminated_string(bc::reader& source, size_t max) {
+    if (max == 0) return boost::none;
+
+    std::string res;
+
+    auto b = source.read_byte();
+    while (source && b != 0) {
+        res.push_back(b);
+        if (res.size() >= max) return boost::none;
+        b = source.read_byte();
+    }
+
+    // std::cout << "----------------------------------------------- " << std::endl;
+    // std::cout << "bool(source): " << bool(source) << std::endl;
+    // std::cout << "bool(source): " << bool(source) << std::endl;
+    // std::cout << "res.size() < max: " << (res.size() < max) << std::endl;
+    // std::cout << "res.size(): " << res.size() << std::endl;
+    // std::cout << "max: " << max << std::endl;
+
+    return source ? boost::make_optional(res) : boost::none;
+}
 
 } // namespace keoken
 } // namespace bitprim

@@ -62,20 +62,20 @@ public:
     // Deserialization.
     //-------------------------------------------------------------------------
 
-    static send_tokens factory_from_data(libbitcoin::data_chunk const& data);
+    static send_tokens factory_from_data(bc::data_chunk const& data);
     static send_tokens factory_from_data(std::istream& stream);
-    static send_tokens factory_from_data(libbitcoin::reader& source);
+    static send_tokens factory_from_data(bc::reader& source);
 
-    bool from_data(libbitcoin::data_chunk const& data);
+    bool from_data(bc::data_chunk const& data);
     bool from_data(std::istream& stream);
-    bool from_data(libbitcoin::reader& source);
+    bool from_data(bc::reader& source);
 
     // Serialization.
     //-------------------------------------------------------------------------
 
-    libbitcoin::data_chunk to_data() const;
+    bc::data_chunk to_data() const;
     void to_data(std::ostream& stream) const;
-    void to_data(libbitcoin::writer& sink) const;
+    void to_data(bc::writer& sink) const;
 
     // Properties (size, accessors, cache).
     //-------------------------------------------------------------------------
