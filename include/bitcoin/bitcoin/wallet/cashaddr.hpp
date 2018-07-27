@@ -36,7 +36,7 @@ namespace libbitcoin { namespace wallet { namespace cashaddr {
 /**
  * Encode a cashaddr string. Returns the empty string in case of failure.
  */
-std::string encode(std::string const& prefix, data_chunk const& values);
+std::string encode(std::string const& prefix, data_chunk const& payload);
 
 /**
  * Decode a cashaddr string. Returns (prefix, data). Empty prefix means failure.
