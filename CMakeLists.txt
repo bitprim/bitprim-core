@@ -771,7 +771,8 @@ if (WITH_TESTS)
         test/wallet/uri.cpp
         test/wallet/uri_reader.cpp
         test/wallet/transaction_functions.cpp
-        test/bitprim/keoken/create_transaction.cpp)
+        # test/bitprim/keoken/create_transaction.cpp
+    )
 
 
 # Simplified Test Project for testing Packaging purposes
@@ -890,7 +891,8 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
     verack_tests
     version_tests
     transaction_functions_tests
-    bitprim_keoken_transactions_tests)
+    # bitprim_keoken_transactions_tests
+  )
 
 #    if (WITH_KEOKEN)
 #      add_executable(bitprim_keoken_test
@@ -913,6 +915,7 @@ if (WITH_TESTS_NEW)
 
   add_executable(bitprim_core_test_new
           test_new/main.cpp
+          test_new/create_transaction.cpp
   )
   target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
 

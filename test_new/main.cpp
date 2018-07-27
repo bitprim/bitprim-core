@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 Bitprim developers (see AUTHORS)
+ * Copyright (c) 2016-2018 Bitprim Inc.
  *
  * This file is part of Bitprim.
  *
