@@ -97,7 +97,7 @@ bool create_asset::from_data(std::istream& stream) {
 bool create_asset::from_data(bc::reader& source) {
     auto name_opt = read_null_terminated_string(source, max_name_size);
     if ( ! name_opt) return false;
-    if (name_opt->size() < 1) return false;
+    if (name_opt->size() < 1) return false;     //NOLINT
     name_ = *name_opt;
     amount_ = source.read_8_bytes_big_endian();
 
