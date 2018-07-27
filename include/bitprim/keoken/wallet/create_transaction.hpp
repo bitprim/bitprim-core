@@ -19,19 +19,18 @@
 #ifndef BITPRIM_KEOKEN_WALLET_CREATE_TRANSACTION_HPP_
 #define BITPRIM_KEOKEN_WALLET_CREATE_TRANSACTION_HPP_
 
-#include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/chain/input.hpp>
 #include <bitcoin/bitcoin/chain/input_point.hpp>
 #include <bitcoin/bitcoin/chain/output.hpp>
 #include <bitcoin/bitcoin/chain/output_point.hpp>
 #include <bitcoin/bitcoin/chain/transaction.hpp>
+#include <bitcoin/bitcoin/config/input.hpp>
 #include <bitcoin/bitcoin/config/output.hpp>
-#include <bitcoin/bitcoin/config/input.hpp>
-#include <bitcoin/bitcoin/config/input.hpp>
+#include <bitcoin/bitcoin/define.hpp>
 #include <bitcoin/bitcoin/wallet/transaction_functions.hpp>
 
-#include <bitprim/keoken/primitives.hpp>
 #include <bitprim/keoken/message/base.hpp>
+#include <bitprim/keoken/primitives.hpp>
 
 namespace bitprim {
 namespace keoken {
