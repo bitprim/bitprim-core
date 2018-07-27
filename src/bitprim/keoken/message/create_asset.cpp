@@ -23,6 +23,7 @@
 #include <bitcoin/bitcoin/utility/istream_reader.hpp>
 #include <bitcoin/bitcoin/utility/ostream_writer.hpp>
 
+#include <bitprim/keoken/constants.hpp>
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/utility.hpp>
 
@@ -97,7 +98,7 @@ bool create_asset::from_data(std::istream& stream) {
 bool create_asset::from_data(bc::reader& source) {
     auto name_opt = read_null_terminated_string(source, max_name_size);
     if ( ! name_opt) return false;
-    if (name_opt->size() < 1) return false;     //NOLINT
+    if (name_opt->size() < min_asset_name_size) return false;     //NOLINT
     name_ = *name_opt;
     amount_ = source.read_8_bytes_big_endian();
 

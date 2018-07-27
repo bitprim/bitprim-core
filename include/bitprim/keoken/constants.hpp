@@ -30,6 +30,7 @@ namespace keoken {
 uint8_t const protocol_name[] = {0x00, 0x00, 0x4b, 0x50};   //"  KP"
 constexpr size_t kp_min_size = to_underlying(bc::machine::opcode::push_size_4);
 constexpr size_t kp_max_size = to_underlying(bc::machine::opcode::push_four_size);
+constexpr size_t min_asset_name_size = 1;
 
 } // namespace keoken
 } // namespace bitprim
