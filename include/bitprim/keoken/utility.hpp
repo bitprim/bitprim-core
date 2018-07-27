@@ -54,7 +54,6 @@ std::string read_null_terminated_string_unlimited(bc::reader& source) {
     return res;
 }
 
-//TODO(fernando): check the name limit: 32 + 1
 inline
 boost::optional<std::string> read_null_terminated_string(bc::reader& source, size_t max) {
     if (max == 0) return boost::none;
@@ -67,13 +66,6 @@ boost::optional<std::string> read_null_terminated_string(bc::reader& source, siz
         if (res.size() >= max) return boost::none;
         b = source.read_byte();
     }
-
-    // std::cout << "----------------------------------------------- " << std::endl;
-    // std::cout << "bool(source): " << bool(source) << std::endl;
-    // std::cout << "bool(source): " << bool(source) << std::endl;
-    // std::cout << "res.size() < max: " << (res.size() < max) << std::endl;
-    // std::cout << "res.size(): " << res.size() << std::endl;
-    // std::cout << "max: " << max << std::endl;
 
     return source ? boost::make_optional(res) : boost::none;
 }

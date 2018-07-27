@@ -95,11 +95,10 @@ bool create_asset::from_data(std::istream& stream) {
 
 //Note: from_data and to_data are not longer simetrical.
 bool create_asset::from_data(bc::reader& source) {
-    //TODO(fernando): check the name limit: 32 + 1
     auto name_opt = read_null_terminated_string(source, max_name_size);
     if ( ! name_opt) return false;
+    if (name_opt->size() < 1) return false;
     name_ = *name_opt;
-
     amount_ = source.read_8_bytes_big_endian();
 
     // if ( ! source)
