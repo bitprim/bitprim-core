@@ -891,7 +891,6 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
     verack_tests
     version_tests
     transaction_functions_tests
-    # bitprim_keoken_transactions_tests
   )
 
 #    if (WITH_KEOKEN)
@@ -912,15 +911,15 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
 endif()
 
 if (WITH_TESTS_NEW)
+  if (WITH_KEOKEN)
+    add_executable(bitprim_core_test_new
+            test_new/main.cpp
+            test_new/create_transaction.cpp
+    )
+    target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
 
-  add_executable(bitprim_core_test_new
-          test_new/main.cpp
-          test_new/create_transaction.cpp
-  )
-  target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
-
-  add_test(NAME bitprim_core_test_new COMMAND bitprim_core_test_new)
-
+    add_test(NAME bitprim_core_test_new COMMAND bitprim_core_test_new)
+  endif()
 endif()
 
 
