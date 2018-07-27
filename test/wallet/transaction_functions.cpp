@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(create_transaction__test) {
   std::vector<chain::input_point> outputs_to_spend;
   libbitcoin::hash_digest hash_to_spend;
   libbitcoin::decode_hash(hash_to_spend, "980de6ce12c29698d54323c6b0f358e1a9ae867598b840ee0094b9df22b07393");
-  int const index_to_spend = 1;
+  uint32_t const index_to_spend = 1;
   outputs_to_spend.push_back({hash_to_spend, index_to_spend});
 
   // List of outputs

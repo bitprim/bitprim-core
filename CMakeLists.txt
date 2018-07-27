@@ -82,6 +82,14 @@ option(WITH_TESTS_NEW "Compile with unit tests." OFF)
 option(WITH_EXAMPLES "Compile with examples." OFF)
 
 
+# Implement --with-keoken and declare WITH_KEOKEN.
+#------------------------------------------------------------------------------
+option(WITH_KEOKEN "Keoken enabled." OFF)
+if (WITH_KEOKEN)
+  message(STATUS "Bitprim: Keoken enabled")
+  add_definitions(-DWITH_KEOKEN)
+endif()
+
 # Implement --with-icu and define BOOST_HAS_ICU and output ${icu}.
 #------------------------------------------------------------------------------
 option(WITH_ICU "Compile with International Components for Unicode." OFF)
@@ -99,14 +107,6 @@ if (WITH_PNG)
   add_definitions(-DWITH_PNG)
 endif()
 
-# Implement --with-litecoin.
-#------------------------------------------------------------------------------
-# option(WITH_LITECOIN "Compile with Litecoin support." OFF)
-# if (WITH_LITECOIN)
-#   add_definitions(-DWITH_LITECOIN)
-#   add_definitions(-DBITPRIM_LITECOIN)
-# endif()
-
 # Implement --with-qrencode and output ${qrencode}.
 #------------------------------------------------------------------------------
 option(WITH_QRENCODE "Compile with QREncode." OFF)
@@ -117,6 +117,15 @@ if (WITH_QRENCODE)
     message(FATAL_ERROR "WITH_QRENCODE not yet implemented")
   endif (NO_CONAN_AT_ALL)
 endif()
+
+
+# Implement --JUST_BITPRIM_SOURCES for linting.
+#------------------------------------------------------------------------------
+option(JUST_BITPRIM_SOURCES "Just Bitprim source code to be linted." OFF)
+if (JUST_BITPRIM_SOURCES)
+  message(STATUS "Bitprim: Just Bitprim source code to be linted: enabled")
+endif()
+
 
 
 set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Version.")
@@ -321,7 +330,7 @@ if (ENABLE_SHARED)
   set(MODE SHARED)
 endif()
 
-set(bitprim_core_sources 
+set(bitprim_core_sources_just_libbitcoin
         src/chain/block.cpp
         src/chain/chain_state.cpp
         src/chain/compact.cpp
@@ -489,7 +498,6 @@ set(bitprim_core_sources
 
         src/wallet/bitcoin_uri.cpp
         
-
         src/wallet/dictionary.cpp
         src/wallet/ec_private.cpp
         src/wallet/ec_public.cpp
@@ -513,29 +521,55 @@ set(bitprim_core_sources
         src/wallet/parse_encrypted_keys/parse_encrypted_token.cpp
         src/wallet/parse_encrypted_keys/parse_encrypted_token.hpp
         src/wallet/payment_address.cpp
-        
         src/wallet/qrcode.cpp
         src/wallet/select_outputs.cpp
-
         src/wallet/select_outputs.cpp
         src/wallet/stealth_address.cpp
         src/wallet/stealth_receiver.cpp
         src/wallet/stealth_sender.cpp
         src/wallet/uri.cpp
-        src/wallet/transaction_functions.cpp)
+        src/wallet/transaction_functions.cpp
+)
+
+set(bitprim_core_sources_just_bitprim
+)
 
 if (${CURRENCY} STREQUAL "BCH")
-    set(bitprim_core_sources ${bitprim_core_sources}         
+    set(bitprim_core_sources_just_bitprim 
+      ${bitprim_core_sources_just_bitprim}
       src/wallet/cashaddr.cpp)
 endif()
 
-
-# if (WITH_LITECOIN)
 if (${CURRENCY} STREQUAL "LTC")
-    set(bitprim_core_sources ${bitprim_core_sources}         
+    set(bitprim_core_sources_just_bitprim 
+      ${bitprim_core_sources_just_bitprim}         
       src/math/external/scrypt.cpp
       src/math/external/scrypt-sse2.cpp)
 endif()
+
+if (WITH_KEOKEN)
+  set(bitprim_core_sources_just_bitprim 
+    ${bitprim_core_sources_just_bitprim}
+    src/bitprim/keoken/transaction_extractor.cpp
+    src/bitprim/keoken/entities/asset.cpp
+    src/bitprim/keoken/message/base.cpp
+    src/bitprim/keoken/message/create_asset.cpp
+    src/bitprim/keoken/message/send_tokens.cpp
+    src/bitprim/keoken/wallet/create_transanction.cpp
+  )
+endif()
+
+if (NOT JUST_BITPRIM_SOURCES)
+  set(bitprim_core_sources 
+    ${bitprim_core_sources_just_libbitcoin}
+  )
+endif()
+
+set(bitprim_core_sources 
+  ${bitprim_core_sources}   
+  ${bitprim_core_sources_just_bitprim}         
+)
+
 
 add_library(bitprim-core ${MODE} ${bitprim_core_sources})
 
@@ -737,7 +771,9 @@ if (WITH_TESTS)
         test/wallet/stealth_address.cpp
         test/wallet/uri.cpp
         test/wallet/uri_reader.cpp
-        test/wallet/transaction_functions.cpp)
+        test/wallet/transaction_functions.cpp
+    )
+
 
 # Simplified Test Project for testing Packaging purposes
 
@@ -854,7 +890,8 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
     uri_tests
     verack_tests
     version_tests
-    transaction_functions_tests)
+    transaction_functions_tests
+  )
 
   if (WITH_PNG)
     _add_tests(bitprim_core_test png_tests)
@@ -866,33 +903,17 @@ _group_sources(bitprim_core_test "${CMAKE_CURRENT_LIST_DIR}/test")
 endif()
 
 if (WITH_TESTS_NEW)
+  if (WITH_KEOKEN)
+    add_executable(bitprim_core_test_new
+            test_new/main.cpp
+            test_new/create_transaction.cpp
+    )
+    target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
 
-  add_custom_target(testsfer ALL
-      COMMAND ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure -R "test.+"
-      COMMENT "Build and run all the unit tests.")
-
-  add_executable(bitprim_core_test_new
-          test_new/main.cpp
-  )
-
-  target_link_libraries(bitprim_core_test_new PUBLIC bitprim-core)
-
-  # _group_sources(bitprim_core_test_new "${CMAKE_CURRENT_LIST_DIR}/test_new")
-
-  add_test(NAME test.new_tests COMMAND bitprim_core_test_new)
-
-  add_dependencies(testsfer test.new_tests)
-
-#    add_test(
-#            NAME test.core.new_tests
-#            COMMAND ${target}
-#            --run_test=${_test_name}
-#            --show_progress=no
-#            --detect_memory_leak=0
-#            --report_level=no
-#            --build_info=yes)
-
+    add_test(NAME bitprim_core_test_new COMMAND bitprim_core_test_new)
+  endif()
 endif()
+
 
 # Examples
 #==============================================================================
@@ -901,7 +922,6 @@ endif()
 if (WITH_EXAMPLES)
   add_executable(bitprim_core_examples
     examples/main.cpp)
-
 
   target_link_libraries(bitprim_core_examples PUBLIC bitprim-core)
 
