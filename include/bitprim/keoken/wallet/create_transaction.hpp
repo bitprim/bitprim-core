@@ -85,7 +85,7 @@ result_t send_token_tx_complete(libbitcoin::chain::input_point const& output_to_
                                 asset_id_t asset_id,
                                 amount_t asset_amount);
 
-} // namespace message
+} // namespace wallet
 } // namespace keoken
 } // namespace bitprim
 
