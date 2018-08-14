@@ -25,6 +25,10 @@
 #include <bitprim/keoken/message/base.hpp>
 #include <bitprim/keoken/message/create_asset.hpp>
 #include <bitprim/keoken/message/send_tokens.hpp>
+#include <bitprim/keoken/message/sell_offer.hpp>
+#include <bitprim/keoken/message/buy_offer.hpp>
+#include <bitprim/keoken/message/pay_offer.hpp>
+
 
 namespace bitprim {
 namespace keoken {
@@ -113,6 +117,68 @@ result_t tx_encode_send_token(input_point::list const& outputs_to_spend,
     return tx_encode(outputs_to_spend, outputs, {create_keoken_output(send_tokens.to_data())}, locktime, tx_version, script_version);
 }
 
+result_t tx_encode_sell_offer(input_point::list const& outputs_to_spend,
+                              payment_address const& asset_owner,
+                              uint64_t utxo_satoshis,
+                              uint64_t dust,
+                              asset_id_t asset_id,
+                              amount_t token_amount,
+                              amount_t amount_expected,
+                              time_window_t payment_window,
+                              time_window_t offer_validity,
+                              amount_t minimum_fee,
+                              uint32_t locktime,
+                              uint32_t tx_version,
+                              uint8_t script_version) {
+
+    raw_output_list outputs {
+        {asset_owner, (utxo_satoshis - wallet::fees)}
+    };
+
+    message::sell_offer sell_offer(asset_id, token_amount, amount_expected, payment_window, offer_validity, minimum_fee);
+    return tx_encode(outputs_to_spend, outputs, {create_keoken_output(sell_offer.to_data())}, locktime, tx_version, script_version);
+}
+
+result_t tx_encode_buy_offer(input_point::list const& outputs_to_spend,
+                              payment_address const& buyer,
+                              uint64_t utxo_satoshis,
+                              payment_address const& seller,
+                              uint64_t dust,
+                              asset_id_t asset_id,
+                              amount_t token_amount,
+                              uint32_t locktime,
+                              uint32_t tx_version,
+                              uint8_t script_version) {
+
+    raw_output_list outputs {
+        {seller, dust},
+        {buyer, utxo_satoshis - dust - wallet::fees}
+    };
+
+    message::buy_offer buy_offer(asset_id, token_amount);
+    return tx_encode(outputs_to_spend, outputs, {create_keoken_output(buy_offer.to_data())}, locktime, tx_version, script_version);
+}
+
+result_t tx_encode_pay_offer(input_point::list const& outputs_to_spend,
+                              payment_address const& buyer,
+                              uint64_t utxo_satoshis,
+                              payment_address const& seller,
+                              uint64_t payment,
+                              asset_id_t asset_id,
+                              uint32_t locktime,
+                              uint32_t tx_version,
+                              uint8_t script_version) {
+
+    raw_output_list outputs {
+        {seller, payment},
+        {buyer, utxo_satoshis - payment - wallet::fees}
+    };
+
+    message::pay_offer pay_offer(asset_id);
+    return tx_encode(outputs_to_spend, outputs, {create_keoken_output(pay_offer.to_data())}, locktime, tx_version, script_version);
+}
+
+
 result_t create_asset_tx_complete(input_point const& output_to_spend,
                                   script const& output_script,
                                   ec_secret const& private_key,
@@ -161,6 +227,89 @@ result_t send_token_tx_complete(input_point const& output_to_spend,
 
     return {success, sign_and_set_result.second};
 }
+
+result_t sell_offer_tx_complete(input_point const& output_to_spend,
+                                script const& output_script,
+                                ec_secret const& private_key,
+                                ec_public const& public_key,
+                                uint64_t amount,
+                                payment_address const& addr_origin,
+                                payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id,
+                                amount_t token_amount,
+                                amount_t amount_expected,
+                                time_window_t payment_window,
+                                time_window_t offer_validity,
+                                amount_t minimum_fee) {
+
+    // Create raw transaction using the generated data
+    auto raw_tx = tx_encode_sell_offer({output_to_spend}, addr_origin, amount, addr_dest, dust,
+     asset_id, token_amount, amount_expected, payment_window, offer_validity, minimum_fee);
+    if (raw_tx.first != success ) {
+        return {raw_tx.first, {}};
+    }
+
+    // Sign the transaction
+    auto sign_and_set_result = detail::sign_and_set(output_script, private_key, public_key, amount, raw_tx.second);
+    if (sign_and_set_result.first != success) {
+        return {sign_and_set_result.first, {}};
+    }
+
+    return {success, sign_and_set_result.second};
+}
+
+result_t buy_offer_tx_complete(input_point const& output_to_spend,
+                                script const& output_script,
+                                ec_secret const& private_key,
+                                ec_public const& public_key,
+                                uint64_t amount,
+                                payment_address const& addr_origin,
+                                payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id,
+                                amount_t token_amount) {
+
+    // Create raw transaction using the generated data
+    auto raw_tx = tx_encode_buy_offer({output_to_spend}, addr_origin, amount, addr_dest, dust, asset_id, token_amount);
+    if (raw_tx.first != success ) {
+        return {raw_tx.first, {}};
+    }
+
+    // Sign the transaction
+    auto sign_and_set_result = detail::sign_and_set(output_script, private_key, public_key, amount, raw_tx.second);
+    if (sign_and_set_result.first != success) {
+        return {sign_and_set_result.first, {}};
+    }
+
+    return {success, sign_and_set_result.second};
+}
+
+result_t pay_offer_tx_complete(input_point const& output_to_spend,
+                                script const& output_script,
+                                ec_secret const& private_key,
+                                ec_public const& public_key,
+                                uint64_t amount,
+                                payment_address const& addr_origin,
+                                payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id) {
+
+    // Create raw transaction using the generated data
+    auto raw_tx = tx_encode_pay_offer({output_to_spend}, addr_origin, amount, addr_dest, dust, asset_id);
+    if (raw_tx.first != success ) {
+        return {raw_tx.first, {}};
+    }
+
+    // Sign the transaction
+    auto sign_and_set_result = detail::sign_and_set(output_script, private_key, public_key, amount, raw_tx.second);
+    if (sign_and_set_result.first != success) {
+        return {sign_and_set_result.first, {}};
+    }
+
+    return {success, sign_and_set_result.second};
+}
+
 
 } // namespace wallet
 } // namespace keoken

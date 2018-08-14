@@ -63,6 +63,46 @@ result_t tx_encode_send_token(libbitcoin::chain::input_point::list const& output
                               uint32_t tx_version = 1,
                               uint8_t script_version = 5);
 
+
+
+BC_API 
+result_t tx_encode_sell_offer(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                              libbitcoin::wallet::payment_address const& asset_owner,
+                              uint64_t utxo_satoshis,
+                              uint64_t dust,
+                              asset_id_t asset_id,
+                              amount_t token_amount,
+                              amount_t amount_expected,
+                              time_window_t payment_window,
+                              time_window_t offer_validity,
+                              amount_t minimum_fee,
+                              uint32_t locktime = 0,
+                              uint32_t tx_version = 1,
+                              uint8_t script_version = 5);
+
+BC_API 
+result_t tx_encode_buy_offer(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                              libbitcoin::wallet::payment_address const& buyer,
+                              uint64_t utxo_satoshis,
+                              libbitcoin::wallet::payment_address const& seller,
+                              uint64_t dust,
+                              asset_id_t asset_id,
+                              amount_t token_amount,
+                              uint32_t locktime = 0,
+                              uint32_t tx_version = 1,
+                              uint8_t script_version = 5);
+
+BC_API 
+result_t tx_encode_pay_offer(libbitcoin::chain::input_point::list const& outputs_to_spend,
+                              libbitcoin::wallet::payment_address const& asset_owner,
+                              uint64_t utxo_satoshis,
+                              libbitcoin::wallet::payment_address const& asset_receiver,
+                              uint64_t payment_value,
+                              asset_id_t asset_id,                            
+                              uint32_t locktime = 0,
+                              uint32_t tx_version = 1,
+                              uint8_t script_version = 5);                                                            
+
 BC_API 
 result_t create_asset_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
                                   libbitcoin::chain::script const& output_script,
@@ -84,6 +124,45 @@ result_t send_token_tx_complete(libbitcoin::chain::input_point const& output_to_
                                 uint64_t dust,
                                 asset_id_t asset_id,
                                 amount_t asset_amount);
+
+BC_API 
+result_t sell_offer_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                libbitcoin::chain::script const& output_script,
+                                libbitcoin::ec_secret const& private_key,
+                                libbitcoin::wallet::ec_public const& public_key,
+                                uint64_t amount,
+                                libbitcoin::wallet::payment_address const& addr_origin,
+                                libbitcoin::wallet::payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id,
+                                amount_t token_amount,
+                                amount_t amount_expected,
+                                time_window_t payment_window,
+                                time_window_t offer_validity,
+                                amount_t minimum_fee);
+
+BC_API 
+result_t buy_offer_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                libbitcoin::chain::script const& output_script,
+                                libbitcoin::ec_secret const& private_key,
+                                libbitcoin::wallet::ec_public const& public_key,
+                                uint64_t amount,
+                                libbitcoin::wallet::payment_address const& addr_origin,
+                                libbitcoin::wallet::payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id,
+                                amount_t token_amount);
+
+BC_API 
+result_t pay_offer_tx_complete(libbitcoin::chain::input_point const& output_to_spend,
+                                libbitcoin::chain::script const& output_script,
+                                libbitcoin::ec_secret const& private_key,
+                                libbitcoin::wallet::ec_public const& public_key,
+                                uint64_t amount,
+                                libbitcoin::wallet::payment_address const& addr_origin,
+                                libbitcoin::wallet::payment_address const& addr_dest,
+                                uint64_t dust,
+                                asset_id_t asset_id);
 
 } // namespace wallet
 } // namespace keoken

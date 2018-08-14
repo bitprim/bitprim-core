@@ -555,6 +555,9 @@ if (WITH_KEOKEN)
     src/bitprim/keoken/message/base.cpp
     src/bitprim/keoken/message/create_asset.cpp
     src/bitprim/keoken/message/send_tokens.cpp
+    src/bitprim/keoken/message/sell_offer.cpp
+    src/bitprim/keoken/message/buy_offer.cpp
+    src/bitprim/keoken/message/pay_offer.cpp
     src/bitprim/keoken/wallet/create_transanction.cpp
   )
 endif()

@@ -26,7 +26,7 @@ namespace keoken {
 
 using asset_id_t = uint32_t;
 using amount_t = int64_t;
-
+using time_window_t = uint16_t;
 } // namespace keoken
 } // namespace bitprim
 
