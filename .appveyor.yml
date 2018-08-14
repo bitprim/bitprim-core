@@ -65,6 +65,7 @@ test_script:
         $a = python ci_utils/set_envvars_and_files.py
         Write-Host $a
         Invoke-Expression $a
+        python ci_utils/process_conan_reqs.py
       }
   - ps: |
       If ($env:WAIT_FOR_DEPS -eq 1) {
