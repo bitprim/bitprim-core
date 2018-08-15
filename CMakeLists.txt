@@ -130,6 +130,7 @@ endif()
 
 set(BITPRIM_PROJECT_VERSION "-" CACHE STRING "Specify the Bitprim Project Version.")
 # message(${BITPRIM_PROJECT_VERSION})
+message( STATUS "Bitprim: Compiling version ${BITPRIM_PROJECT_VERSION}")
 
 set(MICROARCHITECTURE "x86_64" CACHE STRING "Specify the Cryptocurrency (x86_64|...).")
 message( STATUS "Bitprim: Compiling for ${MICROARCHITECTURE}")
@@ -594,7 +595,7 @@ if (NOT ENABLE_SHARED)
     target_compile_definitions(bitprim-core PUBLIC -DBC_STATIC) #TODO(fernando): manage with Conan????
 endif()
 
-target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_PROJECT_VERSION="\\"${BITPRIM_PROJECT_VERSION}\\"") #TODO(fernando): manage with Conan????
+target_compile_definitions(bitprim-core PUBLIC -DBITPRIM_PROJECT_VERSION="${BITPRIM_PROJECT_VERSION}") #TODO(fernando): manage with Conan????
 
 
 target_include_directories(bitprim-core SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
