@@ -20,6 +20,9 @@ from conans import CMake
 from ci_utils import option_on_off, march_conan_manip, pass_march_to_compiler
 from ci_utils import BitprimConanFile
 
+
+
+
 class BitprimCoreConan(BitprimConanFile):
     name = "bitprim-core"
     # version = get_version()
@@ -69,6 +72,8 @@ class BitprimCoreConan(BitprimConanFile):
     package_files = "build/lbitprim-core.a"
     build_policy = "missing"
 
+
+
     @property
     def is_keoken(self):
         return self.options.currency == "BCH" and self.options.get_safe("keoken")
@@ -85,6 +90,8 @@ class BitprimCoreConan(BitprimConanFile):
 
         if self.options.with_qrencode:
             self.requires("libqrencode/4.0.0@bitprim/stable")
+
+        # self.bitprim_requires(["secp256k1/0.X@%s/%s"])
 
     def config_options(self):
         if self.settings.arch != "x86_64":
