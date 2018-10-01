@@ -179,7 +179,6 @@ class BitprimCoreConan(BitprimConanFile):
         if self.options.cflags != "_DUMMY_":
             cmake.definitions["CONAN_C_FLAGS"] = cmake.definitions.get("CONAN_C_FLAGS", "") + " " + str(self.options.cflags)
 
-
         cmake.definitions["MICROARCHITECTURE"] = self.options.microarchitecture
         cmake.definitions["BITPRIM_PROJECT_VERSION"] = self.version
 
