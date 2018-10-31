@@ -96,6 +96,8 @@ BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 
 BC_CONSTEXPR size_t max_block_size_old = 8000000; //eight million bytes
 BC_CONSTEXPR size_t max_block_size_new = 32000000; //thirty two million bytes
 
+BC_CONSTEXPR size_t min_transaction_size = 100;   //one hundred bytes
+
 #else
 
 BC_CONSTEXPR size_t max_block_size = 1000000; //one million bytes
