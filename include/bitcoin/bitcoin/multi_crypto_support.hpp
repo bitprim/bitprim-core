@@ -55,6 +55,7 @@ config::currency get_currency();
 // void set_network(uint32_t identifier);
 // config::settings get_network();
 config::settings get_network(uint32_t identifier);
+config::settings get_network(bool easy_blocks, bool retarget);
 
 #ifdef BITPRIM_CURRENCY_BCH
 std::string cashaddr_prefix();

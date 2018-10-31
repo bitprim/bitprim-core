@@ -55,6 +55,12 @@ public:
     static 
     boost::filesystem::path get_config_option(variables_map& variables, std::string const& name);
 
+    static
+    config::checkpoint::list default_checkpoints(bool easy_blocks, bool retarget);
+
+    static
+    void fix_checkpoints(bool easy_blocks, bool retarget, config::checkpoint::list& checkpoints);
+
     /// Load command line options (named).
     virtual 
     options_metadata load_options() = 0;
