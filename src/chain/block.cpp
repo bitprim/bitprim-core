@@ -800,7 +800,7 @@ bool block::is_forward_reference() const
     return false;
 }
 
-bool block_basis::is_canonical_ordered() const {
+bool block::is_canonical_ordered() const {
     //precondition: transactions_.size() > 1
     
     auto const hash_cmp = [](transaction const& a, transaction const& b){
