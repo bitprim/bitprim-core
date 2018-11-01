@@ -804,11 +804,11 @@ bool block::is_canonical_ordered() const {
     //precondition: transactions_.size() > 1
     
     auto const hash_cmp = [](transaction const& a, transaction const& b){
-        return a.hash() < b.hash();
+        return std::lexicographical_compare(a.hash().rbegin(), a.hash().rend(), b.hash().rbegin(), b.hash().rend());
     };
 
     // Skip the coinbase
-    std::is_sorted(transactions_.begin() + 1, transactions_.end(), hash_cmp);
+    return std::is_sorted(transactions_.begin() + 1, transactions_.end(), hash_cmp);
 }
 
 // This is an early check that is redundant with block pool accept checks.
@@ -1072,7 +1072,7 @@ code block::accept(chain_state const& state, bool transactions) const
     //Note(bitprim): LTOR (Legacy Transaction ORdering) is a check just for Bitcoin (BTC) 
     //               and for BitcoinCash (BCH) before 2018-Nov-15.
 
-    else if (state.is_magnetic_anomaly_enabled() && is_canonical_ordered())
+    else if (state.is_magnetic_anomaly_enabled() && ! is_canonical_ordered())
         return error::non_canonical_ordered;
 
     else if ( ! state.is_magnetic_anomaly_enabled() && is_forward_reference())
