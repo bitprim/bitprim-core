@@ -356,12 +356,12 @@ chain_state::activations chain_state::activation(data const& values, uint32_t fo
 
     auto mtp = median_time_past(values, 0);
     if (is_mtp_activated(mtp, magnetic_anomaly_activation_time)) {
-        result.forks |= (rule_fork::cash_replay_protection & forks);
+        result.forks |= (rule_fork::cash_checkdatasig & forks);
     }
 
-    // if (is_mtp_activated(mtp, great_wall_activation_time)) {
-    //     result.forks |= (rule_fork::???? & forks);
-    // }
+    if (is_mtp_activated(mtp, great_wall_activation_time)) {
+        result.forks |= (rule_fork::cash_replay_protection & forks);
+    }
 #endif  //BITPRIM_CURRENCY_BCH
 
     return result;
