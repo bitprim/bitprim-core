@@ -85,11 +85,12 @@ test_script:
         }
         Write-Host "secp256k1/0.X@bitprim/staging found"
       }
-      Else {
-        python build.py
-      }
+      # Else {
+      #   python build.py
+      # }
 
-
+  - PowerShell .\.appveyor\build.ps1
+   
 
 for:
   -
