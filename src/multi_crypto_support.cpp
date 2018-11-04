@@ -105,6 +105,13 @@ config::settings get_network(uint32_t identifier) {
 #endif //BITPRIM_CURRENCY_LTC
 }
 
+config::settings get_network(bool easy_blocks, bool retarget) {
+    if ( ! retarget && ! easy_blocks ) {
+        return config::settings::regtest;
+    }
+    return easy_blocks ? config::settings::testnet : config::settings::mainnet;
+}
+
 #ifdef BITPRIM_CURRENCY_BCH
 std::string cashaddr_prefix() {
     return cashaddr_prefix_;

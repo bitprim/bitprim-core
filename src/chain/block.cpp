@@ -775,6 +775,8 @@ size_t block::non_coinbase_input_count() const
     return std::accumulate(txs.begin() + 1, txs.end(), size_t(0), counter);
 }
 
+//Note(bitprim): LTOR (Legacy Transaction ORdering) is a check just for Bitcoin (BTC) 
+//               and for BitcoinCash (BCH) before 2018-Nov-15.
 //****************************************************************************
 // CONSENSUS: This is only necessary because satoshi stores and queries as it
 // validates, imposing an otherwise unnecessary partial transaction ordering.
@@ -796,6 +798,17 @@ bool block::is_forward_reference() const
     }
 
     return false;
+}
+
+bool block::is_canonical_ordered() const {
+    //precondition: transactions_.size() > 1
+    
+    auto const hash_cmp = [](transaction const& a, transaction const& b){
+        return std::lexicographical_compare(a.hash().rbegin(), a.hash().rend(), b.hash().rbegin(), b.hash().rend());
+    };
+
+    // Skip the coinbase
+    return std::is_sorted(transactions_.begin() + 1, transactions_.end(), hash_cmp);
 }
 
 // This is an early check that is redundant with block pool accept checks.
@@ -983,9 +996,13 @@ code block::check() const
     else if (is_extra_coinbases())
         return error::extra_coinbases;
 
+#if ! defined(BITPRIM_CURRENCY_BCH) // BTC and LTC
+    //Note(bitprim): LTOR (Legacy Transaction ORdering) is a check just for Bitcoin (BTC) 
+    //               and for BitcoinCash (BCH) before 2018-Nov-15.
     // TODO: determinable from tx pool graph.
     else if (is_forward_reference())
         return error::forward_reference;
+#endif
 
     // This is subset of is_internal_double_spend if collisions cannot happen.
     ////else if (!is_distinct_transaction_set())
@@ -1049,6 +1066,18 @@ code block::accept(chain_state const& state, bool transactions) const
 
     else if (state.is_under_checkpoint())
         return error::success;
+
+
+#if defined(BITPRIM_CURRENCY_BCH)
+    //Note(bitprim): LTOR (Legacy Transaction ORdering) is a check just for Bitcoin (BTC) 
+    //               and for BitcoinCash (BCH) before 2018-Nov-15.
+
+    else if (state.is_magnetic_anomaly_enabled() && ! is_canonical_ordered())
+        return error::non_canonical_ordered;
+
+    else if ( ! state.is_magnetic_anomaly_enabled() && is_forward_reference())
+            return error::forward_reference;
+#endif
 
     // TODO: relates height to total of tx.size(true) (pool cache).
     // NOTE: for BCH bit141 is set as false

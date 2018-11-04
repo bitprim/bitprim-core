@@ -105,6 +105,7 @@ enum error_code_t
     forward_reference = 79,
     merkle_mismatch = 31,
     block_legacy_sigop_limit = 30,
+    non_canonical_ordered = 84,
 
     // accept block
     block_non_final = 34,

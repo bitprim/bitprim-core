@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bitcoin/bitcoin/built_in_type.hpp>
 #include <bitcoin/bitcoin/compat.hpp>
 #include <bitcoin/bitcoin/config/checkpoint.hpp>
 #include <bitcoin/bitcoin/define.hpp>
@@ -94,6 +95,8 @@ BC_CONSTEXPR size_t bitcoin_cash_offset_tip_minus_6 = bitcoin_cash_offset_tip - 
 
 BC_CONSTEXPR size_t max_block_size_old = 8000000; //eight million bytes
 BC_CONSTEXPR size_t max_block_size_new = 32000000; //thirty two million bytes
+
+BC_CONSTEXPR size_t min_transaction_size = 100;   //one hundred bytes
 
 #else
 
@@ -217,19 +220,34 @@ BC_CONSTEXPR uint32_t bip9_version_bit1 = 1u << 1;
 BC_CONSTEXPR uint32_t bip9_version_base = 0x20000000;
 
 #ifdef BITPRIM_CURRENCY_BCH
-// BC_CONSTEXPR size_t   bch_activation_height = 478559 //478558;                       //2017-August-01 hard fork
-// BC_CONSTEXPR uint32_t bch_daa_activation_time = 1510600000;                 //2017-November-13 hard fork
-BC_CONSTEXPR uint32_t bch_monolith_activation_time = 1526400000;            //2018-May hard fork
-BC_CONSTEXPR uint32_t bch_magnetic_anomaly_activation_time = 1542300000;    //2018-November hard fork
+
+struct monolith_t : built_in_t<uint64_t> {
+    using base = built_in_t<uint64_t>;
+    using base::base;
+};
+
+struct magnetic_anomaly_t : built_in_t<uint64_t> {
+    using base = built_in_t<uint64_t>;
+    using base::base;
+};
+
+struct great_wall_t : built_in_t<uint64_t> {
+    using base = built_in_t<uint64_t>;
+    using base::base;
+};
+
+// BC_CONSTEXPR size_t          bch_activation_height = 478559 //478558;            //2017-August-01   hard fork
+// BC_CONSTEXPR uint32_t        bch_daa_activation_time = 1510600000;               //2017-November-13 hard fork
+// BC_CONSTEXPR uint32_t        bch_monolith_activation_time = 1526400000;          //2018-May-15      hard fork
+BC_CONSTEXPR magnetic_anomaly_t bch_magnetic_anomaly_activation_time = 1542300000;  //2018-November-15 hard fork
+BC_CONSTEXPR great_wall_t       bch_great_wall_activation_time = 1557921600;        //2019-May-15      hard fork
 
 // inline constexpr
 // bool is_uahf_enabled(const Config &config, int nHeight) {
 //     return nHeight >= config.GetChainParams().GetConsensus().uahfHeight;
 // }
 
-
-#endif //BITPRIM_CURRENCY_BCH
-
+#endif  //BITPRIM_CURRENCY_BCH
 
 #ifdef BITPRIM_CURRENCY_LTC
 
@@ -414,26 +432,41 @@ static const config::checkpoint regtest_bip9_bit1_active_checkpoint
 #endif
 
 
+
 #ifdef BITPRIM_CURRENCY_BCH
 
-static const config::checkpoint mainnet_uahf_active_checkpoint {
-    "000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec", 478559
-};
+//2017-August-01 hard fork
+//TODO(fernando): remove this commented lines (old code)
+// static const config::checkpoint mainnet_uahf_active_checkpoint{
+//     "000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec", 478559};
 
-static const config::checkpoint testnet_uahf_active_checkpoint {
-    "00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5", 1155876
-};
+// static const config::checkpoint testnet_uahf_active_checkpoint{
+//     "00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5", 1155876};
 
-static const config::checkpoint mainnet_daa_active_checkpoint {
-    "0000000000000000011ebf65b60d0a3de80b8175be709d653b4c1a1beeb6ab9c", 504031
-};
+static const config::checkpoint mainnet_uahf_active_checkpoint{
+    "0000000000000000011865af4122fe3b144e2cbeea86142e8ff2fb4107352d43", 478558};
 
-static const config::checkpoint testnet_daa_active_checkpoint {
-    "0000000000170ed0918077bde7b4d36cc4c91be69fa09211f748240dabe047fb", 1188697
-};
+static const config::checkpoint testnet_uahf_active_checkpoint{
+    "00000000000e38fef93ed9582a7df43815d5c2ba9fd37ef70c9a0ea4a285b8f5", 1155876};
+
+//2017-November-13 hard fork
+static const config::checkpoint mainnet_daa_active_checkpoint{
+    "0000000000000000011ebf65b60d0a3de80b8175be709d653b4c1a1beeb6ab9c", 504031};
+
+static const config::checkpoint testnet_daa_active_checkpoint{
+    "0000000000170ed0918077bde7b4d36cc4c91be69fa09211f748240dabe047fb", 1188697};
+
+//2018-May hard fork
+static const config::checkpoint mainnet_monolith_active_checkpoint{
+    "0000000000000000011ada8bd08f46074f44a8f155396f43e38acf9501c49103", 530359};
+
+static const config::checkpoint testnet_monolith_active_checkpoint{
+    "0000000000327972b8470c11755adf8f4319796bafae01f5a6650490b98a17db", 1233078};
+
+//2018-November hard fork
+// Complete after the hard fork
 
 #endif
-
 
 // Network protocol constants.
 //-----------------------------------------------------------------------------

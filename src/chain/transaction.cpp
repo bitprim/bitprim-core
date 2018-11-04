@@ -1180,6 +1180,11 @@ code transaction::accept(const chain_state& state, bool transaction_pool) const
     if (transaction_pool && state.is_under_checkpoint())
         return error::premature_validation;
 
+#ifdef BITPRIM_CURRENCY_BCH
+    else if (state.is_magnetic_anomaly_enabled() && serialized_size(true, false) < min_transaction_size)
+        return error::transaction_size_limit;
+#endif
+
     // A segregated tx should appear empty if bip141 is not enabled.
     else if (!bip141 && is_segregated())
         return error::empty_transaction;
