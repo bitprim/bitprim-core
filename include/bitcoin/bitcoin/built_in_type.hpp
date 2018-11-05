@@ -36,7 +36,7 @@ struct built_in_t {
 
     constexpr
     // explicit
-    operator T() {
+    operator T() const {
         return val_;
     }
 
