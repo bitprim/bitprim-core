@@ -118,7 +118,7 @@ load_error parser::load_configuration_variables_path(variables_map& variables, b
 config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool retarget) {
     config::checkpoint::list checkpoints;
 
-//TODO(fernando): Set Litecoin checkpoints
+    //TODO(fernando): Set Litecoin checkpoints
 #if defined(BITPRIM_CURRENCY_BCH)
     if (get_network(easy_blocks, retarget) == config::settings::testnet) {
         // BCH Testnet
@@ -147,7 +147,11 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("00000000d91bdbb5394bcf457c0f0b7a7e43eb978e2d881b6c2a4c2756abc558", 1200000);
 
         //2018-May Hardfork - (1526400000)
+        checkpoints.emplace_back("00000000001e844212a0d7db21b5cca7cb3ceca7815a4a3f6c6a9e4de4d95049", 1233077); //time: 1526412819 - May 15, 2018 4:33:39 PM
+        checkpoints.emplace_back("0000000000327972b8470c11755adf8f4319796bafae01f5a6650490b98a17db", 1233078); //time: 1526414036 - May 15, 2018 4:53:56 PM
+
         //2018-Nov Hardfork - (1542300000)
+        //2019-May Hardfork - (1557921600)
     } else if (get_network(easy_blocks, retarget) == config::settings::mainnet) {
         // BCH Mainnet
         checkpoints.reserve(32);
@@ -191,7 +195,13 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("0000000000000000001b09302aa6a8dc65b7542dd195866907dd4e4ccba30d58", 515000);
 
         //2018-May Hardfork - (1526400000)
+        checkpoints.emplace_back("00000000000000000031687b7320832e5035abe8e3f81fb71517fc541765de83", 530358);  //time: 1526408267 - May 15, 2018 3:17:47 PM
+        checkpoints.emplace_back("0000000000000000011ada8bd08f46074f44a8f155396f43e38acf9501c49103", 530359);  //time: 1526410186 - May 15, 2018 3:49:46 PM
+
+        checkpoints.emplace_back("000000000000000000fc66aae55a178fec2ba2f2bc86eb6c6f632b5bc2b40af1", 545000);  //time: 1526408267 - May 15, 2018 3:17:47 PM
+
         //2018-Nov Hardfork - (1542300000)
+        //2019-May Hardfork - (1557921600)
     } else {
         // BCH Regtest
         checkpoints.reserve(1);
@@ -219,6 +229,8 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("0000000093b3cdf2b50a05fa1527810f52d6826781916ef129098e06ee03fb18", 1155876);
 
         checkpoints.emplace_back("00000000000025c23a19cc91ad8d3e33c2630ce1df594e1ae0bf0eabe30a9176", 1200000);
+        checkpoints.emplace_back("000000007ec390190c60b5010a8ea14f5ce53e35be684eacc36486fec3b34744", 1300000);
+        checkpoints.emplace_back("000000000000fce208da3e3b8afcc369835926caa44044e9c2f0caa48c8eba0f", 1400000);
     } else if (get_network(easy_blocks, retarget) == config::settings::mainnet) {
         // BTC Mainnet
         checkpoints.reserve(30);
@@ -254,6 +266,8 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148", 478559);
 
         checkpoints.emplace_back("00000000000000000024fb37364cbf81fd49cc2d51c09c75c35433c3a1945d04", 500000);
+        checkpoints.emplace_back("0000000000000000003ca88d20895d2535f304cca8afb08e7e5503fcac1da752", 515000);
+        checkpoints.emplace_back("000000000000000000024e9be1c7b56cab6428f07920f21ad8457221a91371ae", 530000);
     } else {
         // BCH Regtest
         checkpoints.reserve(1);
