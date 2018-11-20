@@ -61,6 +61,13 @@ test_script:
   # - python ci_utils/print_version.py
 
 
+  # - dir C:\MinGW
+  - set PATH=C:\MinGW\bin;%PATH%
+
+  - IF "%MINGW_CONFIGURATIONS%" NEQ "" (
+      gcc --version
+    )
+
   - ps: |
       If ($env:WAIT_FOR_DEPS -ne 1) {
         $a = python ci_utils/set_envvars_and_files.py
