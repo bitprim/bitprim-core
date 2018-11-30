@@ -164,8 +164,7 @@ BC_CONSTEXPR size_t sigops_per_million_bytes = 20000;
 
 BC_CONSTFUNC inline
 size_t get_allowed_sigops(size_t block_size) {
-    // return (1 + ((block_size - 1) / one_million_bytes_block)) * sigops_per_million_bytes;
-    return (block_size - 1) / max_sigops_factor + sigops_per_million_bytes;
+    return (1 + ((block_size - 1) / one_million_bytes_block)) * sigops_per_million_bytes;
 }
 
 // Relative locktime constants.
