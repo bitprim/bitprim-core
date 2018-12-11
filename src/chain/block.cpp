@@ -952,9 +952,11 @@ code block::accept_transactions(const chain_state& state) const
 {
     code ec;
 
-    for (const auto& tx: transactions_)
-        if ((ec = tx.accept(state, false)))
+    for (const auto& tx: transactions_) {
+        if ( ! tx.validation.validated && (ec = tx.accept(state, false))) {
             return ec;
+        }
+    }
 
     return error::success;
 }
@@ -963,9 +965,11 @@ code block::connect_transactions(const chain_state& state) const
 {
     code ec;
 
-    for (const auto& tx: transactions_)
-        if ((ec = tx.connect(state)))
+    for (const auto& tx: transactions_) {
+        if ( ! tx.validation.validated && (ec = tx.connect(state))) {
             return ec;
+        }
+    }
 
     return error::success;
 }
