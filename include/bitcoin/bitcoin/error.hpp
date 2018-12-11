@@ -286,7 +286,7 @@ enum error_code_t
     low_benefit_transaction,
     duplicate_transaction,
     double_spend_mempool,
-    double_spend_blockchain,
+    double_spend_blockchain
 
 };
 
