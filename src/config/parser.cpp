@@ -151,7 +151,11 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("0000000000327972b8470c11755adf8f4319796bafae01f5a6650490b98a17db", 1233078); //time: 1526414036 - May 15, 2018 4:53:56 PM
 
         //2018-Nov Hardfork - (1542300000)
+        checkpoints.emplace_back("00000000000001fae0095cd4bea16f1ce8ab63f3f660a03c6d8171485f484b24", 1267996); //time: 1542300039 - Nov 15, 2018 2:00:05 PM
+        checkpoints.emplace_back("00000000000002773f8970352e4a3368a1ce6ef91eb606b64389b36fdbf1bd56", 1267997); //time: 1542300144 - Nov 15, 2018 2:13:43 PM
+
         //2019-May Hardfork - (1557921600)
+
     } else if (get_network(easy_blocks, retarget) == config::settings::mainnet) {
         // BCH Mainnet
         checkpoints.reserve(32);
@@ -201,6 +205,9 @@ config::checkpoint::list parser::default_checkpoints(bool easy_blocks, bool reta
         checkpoints.emplace_back("000000000000000000fc66aae55a178fec2ba2f2bc86eb6c6f632b5bc2b40af1", 545000);  //time: 1526408267 - May 15, 2018 3:17:47 PM
 
         //2018-Nov Hardfork - (1542300000)
+        checkpoints.emplace_back("00000000000000000102d94fde9bd0807a2cc7582fe85dd6349b73ce4e8d9322", 556766);  //time: 1542304321 - Nov 15, 2018 2:52:01 PM
+        checkpoints.emplace_back("0000000000000000004626ff6e3b936941d341c5932ece4357eeccac44e6d56c", 556767);  //time: 1542304936 - Nov 15, 2018 3:02:16 PM
+
         //2019-May Hardfork - (1557921600)
     } else {
         // BCH Regtest
