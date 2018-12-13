@@ -87,7 +87,7 @@ option(WITH_EXAMPLES "Compile with examples." OFF)
 option(WITH_KEOKEN "Keoken enabled." OFF)
 if (WITH_KEOKEN)
   message(STATUS "Bitprim: Keoken enabled")
-  add_definitions(-DWITH_KEOKEN)
+  add_definitions(-DBITPRIM_WITH_KEOKEN)
 endif()
 
 # Implement --with-icu and define BOOST_HAS_ICU and output ${icu}.
