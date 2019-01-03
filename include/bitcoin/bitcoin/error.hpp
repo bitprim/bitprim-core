@@ -279,7 +279,14 @@ enum error_code_t
     invalid_output,
     lock_time_conflict,
     input_index_out_of_range,
-    input_sign_failed
+    input_sign_failed,
+
+
+    // Mining
+    low_benefit_transaction,
+    duplicate_transaction,
+    double_spend_mempool,
+    double_spend_blockchain
 
 };
 

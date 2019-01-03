@@ -58,6 +58,11 @@ public:
         /// The output cache contains the output referenced by the input point.
         /// If the cache.value is not_found (default) the output is not found.
         output cache = output{};
+
+        //TODO(fernando): add a compilation flag to exclude this...
+        /// Tells if the output cache was found in the mempool or in the UTXO Set.
+        bool from_mempool = false;
+
     };
 
     // Constructors.
