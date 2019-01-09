@@ -180,14 +180,14 @@ for:
         #   BITPRIM_CI_CURRENCY: BTC
         # - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
 
-        # - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
+        # - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
         #   BITPRIM_CI_CURRENCY: BCH
         #   BITPRIM_WITH_KEOKEN: true
-        # - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
-        #   BITPRIM_CI_CURRENCY: BCH
-        #   BITPRIM_WITH_KEOKEN: false
-        # - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
-        #   BITPRIM_CI_CURRENCY: BTC
+        - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
+          BITPRIM_CI_CURRENCY: BCH
+          BITPRIM_WITH_KEOKEN: false
+        - MINGW_CONFIGURATIONS: "8@x86_64@seh@posix"
+          BITPRIM_CI_CURRENCY: BTC
 
 
         # - MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
